@@ -1,19 +1,32 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
-
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { routes } from './app.router';
+import { BookingReservationComponent } from './booking-reservation/booking-reservation.component'; 
+import { NewReservationComponent } from './new-reservation/new-reservation.component'; 
+// import { PlanningChartComponent } from './Components/planning-chart/planning-chart.component';
+import { FilterComponent } from './filter/filter.component';
+import { HeaderComponent } from './header/header.component';
+import { provideHttpClient } from '@angular/common/http';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    BookingReservationComponent,
+    NewReservationComponent,
+    FilterComponent,
+    HeaderComponent,
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    routes,
+    FormsModule, ReactiveFormsModule 
   ],
   providers: [
-    provideClientHydration()
+    provideClientHydration(), provideHttpClient()
   ],
   bootstrap: [AppComponent]
 })

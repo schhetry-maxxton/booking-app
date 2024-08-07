@@ -1,0 +1,81 @@
+<div class="container">
+  <div class="row">
+    <div class="col-4">
+      <div class="filter-container">
+        <h2>Plan your Stay with us.</h2>
+          <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+            <div class="form-group">
+              <label for="location">Location</label>
+              <select id="location" formControlName="location"  >
+                <option value="">Select Location</option>
+                <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
+              </select>
+            </div>
+        
+            <div class="form-group">
+              <label for="dateFrom">Date From</label>
+              <input id="dateFrom" type="date" formControlName="dateFrom">
+            </div>
+        
+            <div class="form-group">
+              <label for="dateTo">Date To</label>
+              <input id="dateTo" type="date" formControlName="dateTo">
+            </div>
+        
+            <div class="form-group">
+              <label for="guests">Number of Guests</label>
+              <input id="guests" type="number" formControlName="guests">
+            </div>
+        
+            <div class="form-group">
+              <label for="maxPrice">Max Price</label>
+              <input id="maxPrice" type="number" formControlName="maxPrice">
+            </div>
+        
+            <div class="form-group">
+              <label for="minStay">Min Stay (days)</label>
+              <input id="minStay" type="number" formControlName="minStay">
+            </div>
+        
+            <div class="form-group">
+              <label for="maxStay">Max Stay (days)</label>
+              <input id="maxStay" type="number" formControlName="maxStay">
+            </div>
+        
+            <button type="submit">Apply Filters</button>
+          </form>
+        
+          <div *ngIf="filteredRooms.length > 0">
+            <h3>Filtered Rooms</h3>
+            <ul>
+              <li *ngFor="let room of filteredRooms">
+                {{ room.roomName }} - {{ room.pricePerDayPerPerson }}
+              </li>
+            </ul>
+          </div>
+          <div *ngIf="filteredRooms.length === 0">
+            <p>No rooms match the selected criteria.</p>
+          </div>
+        </div>
+    </div>
+    <div class="col-8">
+      <div class="room-cards">
+        <div *ngFor="let room of filteredRooms" class="card">
+          
+          <div class="card-header">
+            <h3>Room Name : {{ room.roomName }}</h3>
+            <p>Location: {{ room.locationName }}</p>
+          </div>
+          <div class="card-body">
+            <p>Price per day per person: {{ room.pricePerDayPerPerson }}</p>
+            <p>Guest Capacity: {{ room.guestCapacity }}</p>
+          </div>
+          <div class="card-footer">
+            <button class="btn btn-primary"><a>Book</a></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  
