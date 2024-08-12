@@ -8,17 +8,18 @@ import { ReservationService } from '../Services/Reservation/reservation.service'
   styleUrl: './booking-reservation.component.css'
 })
 export class BookingReservationComponent {
-  // reservations: IReservation[]=[];
+  reservations: IReservation[]=[];
 
-  // constructor(private reservationService:ReservationService){}
+  constructor(private reservationService:ReservationService){}
 
-  // ngOnInit(){
-  //   this.reservationService.getReservations()
-  //   .then(response =>{
-  //     this.reservations=response.data;
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-  //       });
-  //   }
+  ngOnInit(){
+    // this.reservationService.getReservations()
+    // .then(response =>{
+    //   this.reservations=response.data;
+    //   })
+    //   .catch(error => {
+    //     console.log(error);
+    //     });
+    return this.reservations;
+    }
 }

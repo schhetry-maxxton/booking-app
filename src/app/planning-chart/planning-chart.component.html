@@ -1,10 +1,36 @@
-<p>planning-chart works!</p>
-<!-- <div>
-    <canvas baseChart
-            [data]="chartData"
-            [options]="chartOptions"
-            [legend]="true"
-            [chartType]="'bar'">
-    </canvas>
+<!-- <div class="result-section p-3 border">
+  <h3 style="color: darkcyan;">Room Availability Details</h3>
+<table class="table table-light table-striped table-hover mt-4">
+  <thead>
+    <tr>
+      <th>Room ID</th>
+      <th>Room Name</th>
+      <th>Stay Date From</th>
+      <th>Stay Date To</th>
+      <th>Arrival Days</th>
+      <th>Departure Days</th>
+      <th>Min Stay</th>
+      <th>Max Stay</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let room of availabilityTable">
+      <td>{{ room.roomId }}</td>
+      <td>{{ room.roomName }}</td>
+      <td>{{ room.stayDateFrom }}</td>
+      <td>{{ room.stayDateTo }}</td>
+      <td>{{ room.arrivalDays.join(', ') }}</td>
+      <td>{{ room.departureDays.join(', ') }}</td>
+      <td>{{ room.minStay }}</td>
+      <td>{{ room.maxStay }}</td>
+    </tr>
+  </tbody>
+</table>
+</div> -->
+<div class="container mt-4 mb-4">
+  <h2 class="text-center mb-4">Room Availability Gantt Chart</h2>
+  <div class="chart-container mb-4">
+    <div id="ganttChart"></div>
   </div>
-   -->
+</div>
+

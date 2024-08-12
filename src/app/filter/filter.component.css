@@ -1,8 +1,11 @@
 .filter-container {
     width: 100%;
-    max-width: 600px;
-    margin: auto;
-    padding: 1em;
+    /* margin: auto; */
+    /* padding: 1em; */
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat; 
+    color: white;
   }
   
   .form-group {
@@ -30,6 +33,6 @@
   }
   
   button:hover {
-    background-color: #0056b3;
+    background-color: #1a65bb;
   }
   

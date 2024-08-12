@@ -1,81 +1,210 @@
-<div class="container">
+<div class="container-fluid">
   <div class="row">
-    <div class="col-4">
-      <div class="filter-container">
-        <h2>Plan your Stay with us.</h2>
-          <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
-            <div class="form-group">
+    <!-- Filter Form Row -->
+    <div class="col-12 mb-4">
+      <div class="filter-container p-5 rounded" style="background-image: url('Assets/filterIMG.jpg'); ">
+        <h2 class="mb-4 text-center">Plan Your Stay with Us</h2>
+        <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+          <div class="row">
+            <div class="form-group col-md-2 mb-3">
               <label for="location">Location</label>
-              <select id="location" formControlName="location"  >
+              <select id="location" formControlName="location" class="form-control">
                 <option value="">Select Location</option>
                 <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
               </select>
             </div>
-        
-            <div class="form-group">
+
+            <div class="form-group col-md-2 mb-3">
               <label for="dateFrom">Date From</label>
-              <input id="dateFrom" type="date" formControlName="dateFrom">
+              <input id="dateFrom" type="date" formControlName="dateFrom" class="form-control">
             </div>
-        
-            <div class="form-group">
+
+            <div class="form-group col-md-2 mb-3">
               <label for="dateTo">Date To</label>
-              <input id="dateTo" type="date" formControlName="dateTo">
+              <input id="dateTo" type="date" formControlName="dateTo" class="form-control">
             </div>
-        
-            <div class="form-group">
-              <label for="guests">Number of Guests</label>
-              <input id="guests" type="number" formControlName="guests">
+
+            <div class="form-group col-md-2 mb-3">
+              <label for="numberOfPersons">Guests</label>
+              <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
             </div>
-        
-            <div class="form-group">
+
+            <div class="form-group col-md-2 mb-3">
               <label for="maxPrice">Max Price</label>
-              <input id="maxPrice" type="number" formControlName="maxPrice">
+              <input id="maxPrice" type="number" formControlName="maxPrice" class="form-control">
             </div>
-        
-            <div class="form-group">
-              <label for="minStay">Min Stay (days)</label>
-              <input id="minStay" type="number" formControlName="minStay">
+
+            <div class="form-group col-md-1 mb-3">
+              <label for="minStay">Min Stay</label>
+              <input id="minStay" type="number" formControlName="minStay" class="form-control">
             </div>
-        
-            <div class="form-group">
-              <label for="maxStay">Max Stay (days)</label>
-              <input id="maxStay" type="number" formControlName="maxStay">
+
+            <div class="form-group col-md-1 mb-3">
+              <label for="maxStay">Max Stay</label>
+              <input id="maxStay" type="number" formControlName="maxStay" class="form-control">
             </div>
-        
-            <button type="submit">Apply Filters</button>
-          </form>
-        
-          <div *ngIf="filteredRooms.length > 0">
-            <h3>Filtered Rooms</h3>
-            <ul>
-              <li *ngFor="let room of filteredRooms">
-                {{ room.roomName }} - {{ room.pricePerDayPerPerson }}
-              </li>
-            </ul>
           </div>
-          <div *ngIf="filteredRooms.length === 0">
-            <p>No rooms match the selected criteria.</p>
+
+          <div class="text-center">
+            <button type="submit" class="btn btn-outline-light">Apply Filters</button>
           </div>
+        </form>
+
+        <div *ngIf="filteredRooms.length === 0" class="mt-3">
+          <p class="text-muted text-center">No rooms match the selected criteria.</p>
         </div>
+      </div>
     </div>
-    <div class="col-8">
-      <div class="room-cards">
-        <div *ngFor="let room of filteredRooms" class="card">
-          
-          <div class="card-header">
-            <h3>Room Name : {{ room.roomName }}</h3>
-            <p>Location: {{ room.locationName }}</p>
-          </div>
-          <div class="card-body">
-            <p>Price per day per person: {{ room.pricePerDayPerPerson }}</p>
-            <p>Guest Capacity: {{ room.guestCapacity }}</p>
-          </div>
-          <div class="card-footer">
-            <button class="btn btn-primary"><a>Book</a></button>
+
+    <!-- Room Cards Column -->
+    <div class="col-12">
+      <div class="room-cards row">
+        <div *ngFor="let room of filteredRooms" class="col-md-6 col-lg-4 mb-4">
+          <div class="card h-100 shadow-sm">
+            <img src="Assets/resort1.jpg" class="card-img-top" alt="Room Image">
+            <div class="card-body">
+              <h5 class="card-title">{{ room.roomName }}</h5>
+              <p class="card-text">
+                <strong>Location:</strong> {{ room.locationName }}<br>
+                <strong>Price per day:</strong> {{ room.pricePerDayPerPerson | currency }}<br>
+                <strong>Guest Capacity:</strong> {{ room.guestCapacity }}
+              </p>
+            </div>
+            <div class="card-footer text-center">
+              <button class="btn btn-primary" (click)="selectRoom(room)">Book Now</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Stepper form -->
+
+  <div *ngIf="currentStep > 1" class="mt-4">
+    <form [formGroup]="bookingForm" (ngSubmit)="submitBooking()">
+      <div *ngIf="currentStep === 2">
+        <!-- Step 1: Reservation Details -->
+        <div class="form-group">
+          <label>Reservation ID</label>
+          <input type="number" formControlName="reservationId" class="form-control" readonly>
+        </div>
+        <div class="form-group">
+          <label>Room No.</label>
+          <input type="number" formControlName="roomNo" class="form-control">
+        </div>
+    
+        <div class="form-group">
+          <label>Stay Date From</label>
+          <input type="date" formControlName="stayDateFrom" class="form-control">
+        </div>
+    
+        <div class="form-group">
+          <label>Stay Date To</label>
+          <input type="date" formControlName="stayDateTo" class="form-control">
+        </div>
+    
+        <div class="form-group">
+          <label>Number of Days</label>
+          <input type="number" formControlName="numberOfDays" class="form-control" (input)="calculateTotalPrice()">
+        </div>
+    
+        <div class="form-group">
+          <label>Total Number of Guest</label>
+          <input type="number" formControlName="totalNumberOfGuest" class="form-control" (input)="calculateTotalPrice()">
+        </div>
+    
+        <div class="form-group">
+          <label>Price per Day per Person</label>
+          <input type="number" formControlName="pricePerDayPerPerson" class="form-control" (input)="calculateTotalPrice()">
+        </div>
+    
+        <div class="form-group">
+          <label>Total Price</label>
+          <input type="number" formControlName="totalPrice" class="form-control" readonly>
+        </div>
+
+        <button class="btn btn-secondary" (click)="goToPreviousStep()">Back</button>
+        <button class="btn btn-primary" (click)="goToNextStep()">Next</button>
+      </div>
+
+      <div *ngIf="currentStep === 3">
+        <!-- Step 2: Customer Details -->
+        
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" formControlName="name" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="age">Age</label>
+          <input type="number" id="age" formControlName="age" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="birthDate">Birth Date</label>
+          <input type="date" id="birthDate" formControlName="birthDate" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="initialAddress">Initial Address</label>
+          <input type="text" id="initialAddress" formControlName="initialAddress" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="mobileNumber">Mobile Number</label>
+          <input type="text" id="mobileNumber" formControlName="mobileNumber" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="pincode">Pincode</label>
+          <input type="text" id="pincode" formControlName="pincode" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="district">District</label>
+          <input type="text" id="district" formControlName="district" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="city">City</label>
+          <input type="text" id="city" formControlName="city" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="state">State</label>
+          <input type="text" id="state" formControlName="state" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="country">Country</label>
+          <input type="text" id="country" formControlName="country" class="form-control">
+        </div>
+        <button class="btn btn-secondary" (click)="goToPreviousStep()">Back</button>
+        <button class="btn btn-primary" (click)="goToNextStep()">Next</button>
+      </div>
+
+      <div *ngIf="currentStep === 4">
+        <!-- Step 3: Payment Details -->
+        <div class="form-group">
+  <label for="paymentId">Payment ID</label>
+  <input type="number" id="paymentId" formControlName="paymentId" class="form-control">
 </div>
-  
+
+<div class="form-group">
+  <label for="paymentMode">Payment Mode</label>
+  <input type="text" id="paymentMode" formControlName="paymentMode" class="form-control">
+</div>
+
+<div class="form-group">
+  <label for="paidAmount">Paid Amount</label>
+  <input type="number" id="paidAmount" formControlName="paidAmount" class="form-control">
+</div>
+
+        <button class="btn btn-secondary" (click)="goToPreviousStep()">Back</button>
+        <button class="btn btn-success" type="submit">Submit Booking</button>
+      </div>
+    </form>
+  </div>
+</div>
+

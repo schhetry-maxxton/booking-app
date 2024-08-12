@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { ChartData, ChartOptions } from 'chart.js';
-
 import { IRoom } from '../Interface/iroom';
-import { RoomsService } from '../Services/Rooms/rooms.service'; 
-import { IRoomAvailability } from '../Interface/iroom-availability'; 
+import { IRoomAvailability } from '../Interface/iroom-availability';
+import { ReservationService } from '../Services/Reservation/reservation.service';
+
+declare var google: any;
 
 @Component({
   selector: 'app-planning-chart',
@@ -11,65 +11,63 @@ import { IRoomAvailability } from '../Interface/iroom-availability';
   styleUrls: ['./planning-chart.component.css']
 })
 export class PlanningChartComponent implements OnInit {
-
-  chartData: ChartData<'bar'> = { labels: [], datasets: [] };
-  chartOptions: ChartOptions<'bar'> = {
-    responsive: true,
-    scales: {
-      x: {
-        beginAtZero: true
-      },
-      y: {
-        beginAtZero: true
-      }
-    }
-  };
   rooms: IRoom[] = [];
-  availability: IRoomAvailability[] = [];
-  
-  constructor(private roomsService: RoomsService) { }
+  stays: IRoomAvailability[] = [];
+  availabilityTable: any[] = [];
 
-  async ngOnInit(): Promise<void> {
-    try {
-      // Fetch room data
-      this.rooms = await this.roomsService.getRooms();
-      
-      // Mock availability data
-      // Replace with real API call to fetch availability
-      this.availability = await this.getRoomAvailability(); 
-      
-      // Transform data for chart
-      this.prepareChartData();
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  }
+  constructor(private reservationService: ReservationService) { }
 
-  private async getRoomAvailability(): Promise<IRoomAvailability[]> {
-   
-    const response = await fetch('https://jadhavsudhit.github.io/Booking-module/stays.json');
-    return await response.json();
-  }
-
-  private prepareChartData(): void {
-   
-    const labels = this.rooms.map(room => room.roomName);
-    const availabilityData = this.rooms.map(room => {
-      const roomAvailability = this.availability.find(avail => avail.roomId === room.roomId);
-      return roomAvailability ? roomAvailability.maxStay - roomAvailability.minStay : 0;
+  ngOnInit(): void {
+    this.reservationService.getRoomsAndStays().subscribe(({ rooms, stays }) => {
+      this.rooms = rooms;
+      this.stays = stays;
+      this.getRoomAvailability();
+      this.drawChart();
     });
+  }
 
-    this.chartData = {
-      labels: labels,
-      datasets: [
-        {
-          data: availabilityData,
-          label: 'Room Availability (Days)',
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1
+  getRoomAvailability(): void {
+    this.availabilityTable = this.stays.map(stay => {
+      const room = this.rooms.find(room => room.roomId === stay.roomId);
+      return { ...room, ...stay };
+    });
+  }
+
+  drawChart(): void {
+    google.charts.load('current', { packages: ['gantt'] });
+    google.charts.setOnLoadCallback(() => {
+      const dataTable = new google.visualization.DataTable();
+      dataTable.addColumn('string', 'Task ID');
+      dataTable.addColumn('string', 'Room Name');
+      dataTable.addColumn('date', 'Start Date');
+      dataTable.addColumn('date', 'End Date');
+      dataTable.addColumn('number', 'Duration');
+      dataTable.addColumn('number', 'Percent Complete');
+      dataTable.addColumn('string', 'Dependencies');
+
+      const data = this.availabilityTable.map(item => [
+        `Room_${item.roomId}`,
+        item.roomName,
+        new Date(item.stayDateFrom),
+        new Date(item.stayDateTo),
+        null,  // Duration is auto-calculated
+        100,  // Assuming stays are fully complete
+        null  // No dependencies
+      ]);
+
+      dataTable.addRows(data);
+
+      const chart = new google.visualization.Gantt(document.getElementById('ganttChart'));
+
+      const options = {
+        height: 600,
+        width: '100%',
+        gantt: {
+          trackHeight: 30
         }
-      ]
-    };
+      };
+
+      chart.draw(dataTable, options);
+    });
   }
 }
