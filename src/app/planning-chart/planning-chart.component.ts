@@ -44,15 +44,18 @@ export class PlanningChartComponent implements OnInit {
       dataTable.addColumn('number', 'Duration');
       dataTable.addColumn('number', 'Percent Complete');
       dataTable.addColumn('string', 'Dependencies');
+      dataTable.addColumn('string', 'Status');
 
       const data = this.availabilityTable.map(item => [
+        
         `Room_${item.roomId}`,
         item.roomName,
         new Date(item.stayDateFrom),
         new Date(item.stayDateTo),
-        null,  // Duration is auto-calculated
+        null,  
         100,  // Assuming stays are fully complete
-        null  // No dependencies
+        null,  // No dependencies
+        'available',
       ]);
 
       dataTable.addRows(data);
@@ -71,3 +74,4 @@ export class PlanningChartComponent implements OnInit {
     });
   }
 }
+

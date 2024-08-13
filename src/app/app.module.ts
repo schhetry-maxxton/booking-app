@@ -13,8 +13,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { CustomerComponent } from './customer/customer.component';
 import { HomeComponent } from './home/home.component';
 import { CharttComponent } from './chartt/chartt.component';
-
-
+// import { ChartsModule } from 'ng2-charts';
 
 @NgModule({
   declarations: [
@@ -33,7 +32,7 @@ import { CharttComponent } from './chartt/chartt.component';
     AppRoutingModule,
     routes,
     FormsModule, 
-    ReactiveFormsModule ,
+    ReactiveFormsModule,
   ],
   providers: [
     provideClientHydration(), 

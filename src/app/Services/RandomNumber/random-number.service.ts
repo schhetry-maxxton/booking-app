@@ -9,7 +9,7 @@ export class RandomNumberService {
   
   constructor() { }
 
-  generateRandomNumber(): void {
-    this.randomNumber = Math.floor(Math.random() * 900000 + 100000);
+  generateRandomNumber(): number {
+    return this.randomNumber = Math.floor(Math.random() * 900000 + 100000);
   }
 }

@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { IRoom } from '../Interface/iroom';
 import { IRoomAvailability } from '../Interface/iroom-availability';
 import { ReservationService } from '../Services/Reservation/reservation.service';
+import { RandomNumberService } from '../Services/RandomNumber/random-number.service';
 
 @Component({
   selector: 'app-filter',
@@ -15,58 +16,36 @@ export class FilterComponent implements OnInit {
   availability: IRoomAvailability[] = [];
   locations: string[] = [];
   filterForm: FormGroup;
+  selectedRoom: IRoom | null = null;
   bookingForm: FormGroup;
-  currentStep: number = 1;
 
   constructor(
     private reservationService: ReservationService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private randomNumberService: RandomNumberService
   ) {
     this.filterForm = this.fb.group({
       location: [''],
-      dateFrom: ['', Validators.required],
-      dateTo: ['', Validators.required],
-      numberOfPersons: [1, [Validators.required, Validators.min(1)]],
+      dateFrom: [''],
+      dateTo: [''],
+      numberOfPersons: [0],
       maxPrice: [0],
       minStay: [0],
       maxStay: [0]
     });
 
     this.bookingForm = this.fb.group({
-      reservation: this.fb.group({
-        reservationId: [null, Validators.required],
-        locationId: [null, Validators.required],
-        roomId: [null, Validators.required],
-        customerId: [null, Validators.required],
-        arrivalDate: ['', Validators.required],
-        departureDate: ['', Validators.required],
-        reservationDate: [new Date().toISOString(), Validators.required],
-        totalPrice: [0, Validators.required],
-        status: ['CONFIRM', Validators.required],
-        paidAmount: [0, Validators.required],
-        numberOfGuest: [1, [Validators.required, Validators.min(1)]],
-      }),
-      customer: this.fb.group({
-        customerId: [null, Validators.required],
-        age: [null, Validators.required],
-        birthDate: [null, Validators.required],
-        firstName: ['', Validators.required],
-        middleName: [''],
-        lastName: ['', Validators.required],
-        country: ['', Validators.required],
-        state: ['', Validators.required],
-        city: ['', Validators.required],
-        pinCode: [null, Validators.required],
-        initialAddress: ['', Validators.required],
-        mobileNumber1: [null, Validators.required],
-        mobileNumber2: [null],
-      }),
-      payment: this.fb.group({
-        paymentMode: ['', Validators.required],
-        paidAmount: [0, Validators.required],
-        dueAmount: [0, Validators.required],
-      }),
+      reservationId: [''],
+      roomNo: [''],
+      stayDateFrom: [''],
+      stayDateTo: [''],
+      numberOfDays: [''],
+      totalNumberOfGuests: [''],
+      pricePerDayPerPerson: [''],
+      totalPrice: [0]
     });
+
+
   }
 
   ngOnInit(): void {
@@ -84,16 +63,22 @@ export class FilterComponent implements OnInit {
   }
 
   initializeLocations(): void {
-    const locationN = this.rooms.map(room => room.locationName);
+    const locationN=this.rooms.map(room => room.locationName);
+    // console.log(locationN);
     const uniqueLocations = Array.from(new Set(locationN));
     this.locations = uniqueLocations;
   }
 
+  // Filter method to apply to the rooms based on filter values
+  
   applyFilters(): void {
     const filters = this.filterForm.value;
 
     const filteredAvailability = this.availability.filter(avail => {
-      const room = this.rooms.find(room => room.roomId === avail.roomId);
+      const room = this.rooms.find(room => room.roomId === avail.roomId);   // this will fetch all the available rooms 
+      // console.log(room);
+      // console.log(!filters.location);
+      
       return (
         (!filters.location || (room && room.locationName === filters.location)) &&
         this.isAvailable(avail, filters) &&
@@ -105,12 +90,18 @@ export class FilterComponent implements OnInit {
 
     this.filteredRooms = filteredAvailability.map(avail => {
       const room = this.rooms.find(room => room.roomId === avail.roomId);
-      return room ? { ...room, ...avail } : null;
-    }).filter(room => room !== null);
+      return room ? { ...room, ...avail } : null; // Combine room and availability details
+    }).filter(room => room !== null); 
+
   }
 
   private isAvailable(avail: IRoomAvailability | undefined, filters: any): boolean {
-    if (!avail) return false;
+  
+    if (!avail)
+    {
+      return false;
+    }
+
     const stayDateFrom = new Date(filters.dateFrom);
     const stayDateTo = new Date(filters.dateTo);
     const availFrom = new Date(avail.stayDateFrom);
@@ -121,7 +112,9 @@ export class FilterComponent implements OnInit {
 
   private isCapacityMatch(room: IRoom, filters: any): boolean {
     const numberOfPersons = filters.numberOfPersons;
-    if (numberOfPersons <= 0) return true;
+    if (numberOfPersons <= 0) {
+      return true;
+    }
     return room.guestCapacity >= numberOfPersons;
   }
 
@@ -131,40 +124,69 @@ export class FilterComponent implements OnInit {
   }
 
   private isWithinStayDuration(avail: IRoomAvailability | undefined, filters: any): boolean {
-    if (!avail) return false;
+    if (!avail) 
+      {
+        return false;
+      }
+
     const minStay = filters.minStay;
     const maxStay = filters.maxStay;
-    return (minStay <= 0 || minStay <= avail.minStay) &&
-           (maxStay === 0 || maxStay >= avail.maxStay);
+
+    return (minStay <= 0 || minStay<=avail.minStay) &&
+           (maxStay === 0 || maxStay>=avail.maxStay);
   }
 
-  selectRoom(room: IRoom) {
-    const reservationGroup = this.bookingForm.get('reservation') as FormGroup;
-    reservationGroup.patchValue({
-      roomId: room.roomId,
-      locationId: room.locationId,
-      totalPrice: room.pricePerDayPerPerson * reservationGroup.get('numberOfGuest')?.value
+  openBookingModal(room: IRoom): void {
+    this.selectedRoom = room;
+
+    // Populate booking form with details
+    const stayDateFrom = this.filterForm.get('dateFrom')?.value;
+    const stayDateTo = this.filterForm.get('dateTo')?.value;
+    const numberOfPerson = this.filterForm.get('numberOfPersons')?.value;
+    const pricePerDays = room.pricePerDayPerPerson;
+
+    // Calculate number of days
+    const startDate = new Date(stayDateFrom);
+    const endDate = new Date(stayDateTo);
+    const numberOfDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+
+    // Calculate total price
+    const totalPrice = numberOfDays * numberOfPerson * pricePerDays;
+
+    this.bookingForm.patchValue({
+      reservationId : this.randomNumberService.generateRandomNumber(),
+      roomNo: room.roomId,
+      stayDateFrom,
+      stayDateTo,
+      numberOfDays,
+      totalNumberOfGuests:numberOfPerson,
+      pricePerDayPerPerson: pricePerDays,
+      totalPrice: totalPrice
     });
+
+    const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal')!);
+    bookingModal.show();
   }
 
-  goToNextStep() {
-    this.currentStep++;
+  closeBookingModal(): void {
+    // Hide the modal
+    const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal')!);
+    bookingModal.hide();
   }
 
-  goToPreviousStep() {
-    this.currentStep--;
-  }
+  confirmBooking(): void {
+    if (this.bookingForm.valid) {
+      // Implement booking confirmation logic, e.g., save to database, show confirmation message
+      console.log('Booking Confirmed:', this.bookingForm.value);
 
-  calculateTotalPrice(): void {
-    const numberOfDays = this.bookingForm.get('numberOfDays')?.value;
-    const totalNumberOfGuest = this.bookingForm.get('totalNumberOfGuest')?.value;
-    const pricePerDayPerPerson = this.bookingForm.get('pricePerDayPerPerson')?.value;
-    const totalPrice = numberOfDays * totalNumberOfGuest * pricePerDayPerPerson;
-    this.bookingForm.get('totalPrice')?.setValue(totalPrice);
-  }
-  submitBooking() {
-    const bookingData = this.bookingForm.value;
-    localStorage.setItem('bookingData', JSON.stringify(bookingData));
-    alert('Booking submitted!');
+      // Hide the modal
+      this.closeBookingModal();
+
+      // Clear form or reset state as needed
+      this.bookingForm.reset();
+      this.selectedRoom = null;
+    } else {
+      console.log('Form is invalid');
+    }
   }
 }

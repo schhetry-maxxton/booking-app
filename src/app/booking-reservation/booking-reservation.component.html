@@ -1,28 +1,27 @@
-<h1>Component</h1>
-
- <div class="container">
-    <div class="row">
-        <div class="col">
-            <table>
-                <thead>
-                    <th>Room ID</th>
-                    <th>From Date</th>
-                    <th>To Date</th>
-                    <th>Arrival Days</th>
-                    <th>Departure Days</th>
-                    <th>Min Stay</th>
-                    <th>Max Stay</th>
-                </thead>
-                <tbody *ngFor="let reservation of reservations">
-                
-                        <td>{{reservation.roomId}}</td>
-                        <td>{{reservation.roomId}}</td>
-                        <td>{{reservation.roomId}}</td>
-                        <td>{{reservation.arrivalDate}}</td>
-                        <td>{{reservation.departureDate}}</td>
-
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div> 
+<div class="result-section p-3 border">
+  <h3 style="color: darkcyan; text-align: center;" >Reservations</h3>
+<table class="table table-light table-striped table-hover mt-4">
+  <thead>
+    <tr>
+      <th>Reservation ID</th>
+      <th>Room Name</th>
+      <th>Arrival Day</th>
+      <th>Departure Day</th>
+      <th>Reservation Date</th>
+      <th>No. of Guests</th>
+      <th>Total Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let reservation of reservations">
+      <td>{{ reservation.reservationId }}</td>
+      <td>{{ reservation.roomId }}</td>
+      <td>{{ reservation.arrivalDate }}</td>
+      <td>{{ reservation.departureDate }}</td>
+      <td>{{ reservation.reservationDate }}</td>
+      <td>{{ reservation.numberOfGuest }}</td>
+      <td>{{ reservation.totalPrice}}</td>
+    </tr>
+  </tbody>
+</table>
+</div>
