@@ -15,6 +15,7 @@ export class PlanningChartComponent implements OnInit {
   stays: IRoomAvailability[] = [];
   availabilityTable: any[] = [];
 
+
   constructor(private reservationService: ReservationService) { }
 
   ngOnInit(): void {

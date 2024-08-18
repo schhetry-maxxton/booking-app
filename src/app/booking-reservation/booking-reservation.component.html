@@ -4,23 +4,31 @@
   <thead>
     <tr>
       <th>Reservation ID</th>
-      <th>Room Name</th>
-      <th>Arrival Day</th>
-      <th>Departure Day</th>
+      <th>Location ID</th>
+      <th>Room ID</th>
+      <th>Customer ID</th>
+      <th>Arrival Date</th>
+      <th>Departure Date</th>
       <th>Reservation Date</th>
-      <th>No. of Guests</th>
       <th>Total Price</th>
+      <th>Status</th>
+      <th>Paid Amount</th>
+      <th>Number of Guests</th>
     </tr>
   </thead>
   <tbody>
     <tr *ngFor="let reservation of reservations">
       <td>{{ reservation.reservationId }}</td>
+      <td>{{ reservation.locationId }}</td>
       <td>{{ reservation.roomId }}</td>
-      <td>{{ reservation.arrivalDate }}</td>
-      <td>{{ reservation.departureDate }}</td>
-      <td>{{ reservation.reservationDate }}</td>
+      <td>{{ reservation.customerId }}</td>
+      <td>{{ reservation.arrivalDate | date:'yyyy-MM-dd' }}</td>
+      <td>{{ reservation.departureDate | date:'yyyy-MM-dd' }}</td>
+      <td>{{ reservation.reservationDate | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+      <td>{{ reservation.totalPrice }}</td>
+      <td>{{ reservation.status }}</td>
+      <td>{{ reservation.paidAmount }}</td>
       <td>{{ reservation.numberOfGuest }}</td>
-      <td>{{ reservation.totalPrice}}</td>
     </tr>
   </tbody>
 </table>

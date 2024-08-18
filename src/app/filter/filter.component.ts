@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IRoom } from '../Interface/iroom';
 import { IRoomAvailability } from '../Interface/iroom-availability';
 import { ReservationService } from '../Services/Reservation/reservation.service';
 import { RandomNumberService } from '../Services/RandomNumber/random-number.service';
+import { IReservation } from '../Interface/ireservation';
 
 @Component({
   selector: 'app-filter',
@@ -11,13 +12,19 @@ import { RandomNumberService } from '../Services/RandomNumber/random-number.serv
   styleUrls: ['./filter.component.css']
 })
 export class FilterComponent implements OnInit {
+  
   rooms: IRoom[] = [];
-  filteredRooms: IRoom[] = [];
+  filteredRooms: Array<IRoom & IRoomAvailability> = [];
   availability: IRoomAvailability[] = [];
   locations: string[] = [];
   filterForm: FormGroup;
   selectedRoom: IRoom | null = null;
   bookingForm: FormGroup;
+  customerForm: FormGroup;
+  paymentForm: FormGroup;
+  currentStep: number = 1;  // to track the current step in the form
+  reservations: IReservation[] = [];
+  filteredRoomsCount: number | null = null;
 
   constructor(
     private reservationService: ReservationService,
@@ -28,10 +35,10 @@ export class FilterComponent implements OnInit {
       location: [''],
       dateFrom: [''],
       dateTo: [''],
-      numberOfPersons: [0],
-      maxPrice: [0],
-      minStay: [0],
-      maxStay: [0]
+      numberOfPersons: [1, [Validators.min(1)]],
+      maxPrice: [4000],
+      minStay: [0, [Validators.min(0)]],
+      maxStay: [0, [Validators.min(0)]]
     });
 
     this.bookingForm = this.fb.group({
@@ -40,12 +47,43 @@ export class FilterComponent implements OnInit {
       stayDateFrom: [''],
       stayDateTo: [''],
       numberOfDays: [''],
-      totalNumberOfGuests: [''],
+      reservationDate:[''],
+      totalNumberOfGuests: [1, [Validators.required, Validators.min(1)]], 
       pricePerDayPerPerson: [''],
       totalPrice: [0]
     });
 
+    this.customerForm = this.fb.group({
+      customerId: [''],
+      name: ['', [Validators.required]],
+      age: ['', [Validators.required, Validators.min(1)]],
+      birthDate: ['', [Validators.required]],
+      address: [''],
+      mobileNumber: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      pincode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+      district: [''],
+      city: [''],
+      state: [''],
+      country: ['']
+    });
 
+    this.paymentForm = this.fb.group({
+      paymentId: this.randomNumberService.generateRandomNumber(),
+      paymentMode: [''],
+      paidAmount: ['', [Validators.required, Validators.min(0)]]
+    });
+
+    this.bookingForm.get('totalNumberOfGuests')?.valueChanges.subscribe(() => {
+      this.updateTotalPrice();
+    });
+
+    this.filterForm.get('location')?.valueChanges.subscribe(() => {
+      this.applyFilters();
+    });
+
+    this.filterForm.get('maxPrice')?.valueChanges.subscribe(() => {
+      this.applyFilters();
+    });
   }
 
   ngOnInit(): void {
@@ -64,18 +102,38 @@ export class FilterComponent implements OnInit {
 
   initializeLocations(): void {
     const locationN=this.rooms.map(room => room.locationName);
-    // console.log(locationN);
     const uniqueLocations = Array.from(new Set(locationN));
     this.locations = uniqueLocations;
   }
+
+  onLocationChange(event: Event): void {
+    const selectedLocation = (event.target as HTMLSelectElement).value;
+    this.filterForm.patchValue({ location: selectedLocation });
+    this.applyFilters();
+  }
+
+  getImageUrl(imageFileName: string): string {
+    return `Assets/images/${imageFileName}`;
+  }
+  
 
   // Filter method to apply to the rooms based on filter values
   
   applyFilters(): void {
     const filters = this.filterForm.value;
 
-    const filteredAvailability = this.availability.filter(avail => {
-      const room = this.rooms.find(room => room.roomId === avail.roomId);   // this will fetch all the available rooms 
+    if (this.filterForm.invalid) {
+      alert("Invalid input");
+      this.filterForm.patchValue({
+        numberOfPersons: [1],
+        minStay: [0],
+        maxStay: [0]
+      });
+      return;
+    }
+
+     const filteredAvailability = this.availability.filter(avail => {
+       const room = this.rooms.find(room => room.roomId === avail.roomId);   // this will fetch all the available rooms 
       // console.log(room);
       // console.log(!filters.location);
       
@@ -88,11 +146,14 @@ export class FilterComponent implements OnInit {
       );
     });
 
+    
+
     this.filteredRooms = filteredAvailability.map(avail => {
       const room = this.rooms.find(room => room.roomId === avail.roomId);
       return room ? { ...room, ...avail } : null; // Combine room and availability details
-    }).filter(room => room !== null); 
-
+    }).filter(room => room !== null);
+    
+    this.filteredRoomsCount = this.filteredRooms.length;
   }
 
   private isAvailable(avail: IRoomAvailability | undefined, filters: any): boolean {
@@ -104,6 +165,12 @@ export class FilterComponent implements OnInit {
 
     const stayDateFrom = new Date(filters.dateFrom);
     const stayDateTo = new Date(filters.dateTo);
+
+    if (stayDateFrom >= stayDateTo) {
+      // Invalid date range in the filters
+      return false;
+    }
+
     const availFrom = new Date(avail.stayDateFrom);
     const availTo = new Date(avail.stayDateTo);
 
@@ -120,7 +187,7 @@ export class FilterComponent implements OnInit {
 
   private isWithinPriceRange(room: IRoom, filters: any): boolean {
     const maxPrice = filters.maxPrice;
-    return maxPrice === 0 || room.pricePerDayPerPerson <= maxPrice;
+    return maxPrice === 4000 || room.pricePerDayPerPerson <= maxPrice;
   }
 
   private isWithinStayDuration(avail: IRoomAvailability | undefined, filters: any): boolean {
@@ -128,12 +195,25 @@ export class FilterComponent implements OnInit {
       {
         return false;
       }
-
     const minStay = filters.minStay;
     const maxStay = filters.maxStay;
 
-    return (minStay <= 0 || minStay<=avail.minStay) &&
-           (maxStay === 0 || maxStay>=avail.maxStay);
+    return (minStay <= 0 || avail.minStay>=minStay) &&
+           (maxStay === 0 || avail.maxStay<=maxStay);
+  }
+
+  private getISTDateTime(): string {
+    const now = new Date();
+    const istDate = new Date(now.getTime());
+  
+    // Format as 'YYYY-MM-DDTHH:MM'
+    const year = istDate.getFullYear();
+    const month = String(istDate.getMonth() + 1).padStart(2, '0');
+    const day = String(istDate.getDate()).padStart(2, '0');
+    const hours = String(istDate.getHours()).padStart(2, '0');
+    const minutes = String(istDate.getMinutes()).padStart(2, '0');
+  
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   openBookingModal(room: IRoom): void {
@@ -150,8 +230,7 @@ export class FilterComponent implements OnInit {
     const endDate = new Date(stayDateTo);
     const numberOfDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
 
-    // Calculate total price
-    const totalPrice = numberOfDays * numberOfPerson * pricePerDays;
+    const formattedDateTime= this.getISTDateTime();
 
     this.bookingForm.patchValue({
       reservationId : this.randomNumberService.generateRandomNumber(),
@@ -159,34 +238,104 @@ export class FilterComponent implements OnInit {
       stayDateFrom,
       stayDateTo,
       numberOfDays,
+      reservationDate:formattedDateTime,
       totalNumberOfGuests:numberOfPerson,
       pricePerDayPerPerson: pricePerDays,
-      totalPrice: totalPrice
     });
+
+    this.bookingForm.get('totalNumberOfGuests')?.setValidators([
+      Validators.required,
+      Validators.min(1),
+      Validators.max(room.guestCapacity)
+    ]);
+
+    this.bookingForm.get('totalNumberOfGuests')?.updateValueAndValidity();
+
+    this.currentStep = 1; 
 
     const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal')!);
     bookingModal.show();
   }
 
   closeBookingModal(): void {
-    // Hide the modal
     const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal')!);
     bookingModal.hide();
   }
 
-  confirmBooking(): void {
-    if (this.bookingForm.valid) {
-      // Implement booking confirmation logic, e.g., save to database, show confirmation message
-      console.log('Booking Confirmed:', this.bookingForm.value);
-
-      // Hide the modal
-      this.closeBookingModal();
-
-      // Clear form or reset state as needed
-      this.bookingForm.reset();
-      this.selectedRoom = null;
-    } else {
-      console.log('Form is invalid');
+  nextStep(): void {
+    // console.log("I am clicked");
+    if (this.currentStep === 1 && this.bookingForm.valid) {
+      this.updateCustomerForm();
+      this.currentStep = 2;
+    } else if (this.currentStep === 2 && this.customerForm.valid) {
+      this.currentStep = 3;
+    } else if (this.currentStep === 3 && this.paymentForm.valid) {
+      this.submitBooking();
+    }else {
+      alert("Please fill in all required fields.");
     }
+  }
+
+  previousStep(): void {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+    }
+  }
+
+  private updateCustomerForm(): void {
+    // Example of patching values; update these fields as needed
+    this.customerForm.patchValue({
+      customerId: this.randomNumberService.generateRandomNumber(), // Or any logic to set the customer ID
+      name: '',
+      age: '',
+      birthDate: '',
+      address: '',
+      mobileNumber: '',
+      pincode: '',
+      district: '',
+      city: '',
+      state: '',
+      country: ''
+    });
+  }
+
+  private updateTotalPrice(): void {
+    const numberOfDays = this.bookingForm.get('numberOfDays')?.value;
+    const numberOfGuests = this.bookingForm.get('totalNumberOfGuests')?.value;
+    const pricePerDayPerPerson = this.bookingForm.get('pricePerDayPerPerson')?.value;
+
+    if (numberOfDays && numberOfGuests && pricePerDayPerPerson) {
+      const totalPrice = numberOfDays * numberOfGuests * pricePerDayPerPerson;
+      this.bookingForm.get('totalPrice')?.setValue(totalPrice);
+    }
+  }
+
+  private submitBooking(): void {
+    if(this.paymentForm.valid){
+      const bookingData = {
+        booking: this.bookingForm.value,
+        customer: this.customerForm.value,
+        payment: this.paymentForm.value
+      };
+      
+      localStorage.setItem('bookingData', JSON.stringify(bookingData));
+      this.resetForms();
+      // alert("Booking confirmed and stored successfully.");
+    }
+    else{
+      alert("Please fill in all required fields.");
+    }
+  }
+
+    // Close the modal and reset forms
+    private resetForms(): void {
+    this.closeBookingModal();
+    this.bookingForm.reset();
+    this.customerForm.reset();
+    this.paymentForm.reset();
+    this.selectedRoom = null;
+    this.currentStep = 1; 
+    // Optionally notify the user
+    alert('Booking confirmed and stored successfully.');
   }
 }

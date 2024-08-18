@@ -20,6 +20,8 @@ export class BookingReservationComponent {
     //   .catch(error => {
     //     console.log(error);
     //     });
+
+    this.reservations = this.reservationService.getReservations();
     return this.reservations;
     }
 }

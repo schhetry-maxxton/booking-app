@@ -1,3 +1,5 @@
+
+
 <div class="container-fluid">
   <div class="row">
     <!-- Filter Form Row -->
@@ -8,19 +10,20 @@
           <div class="row">
             <div class="form-group col-md-2 mb-3">
               <label for="location">Location</label>
-              <select id="location" formControlName="location" class="form-control">
+              <select id="location" formControlName="location" class="form-control" (change)="onLocationChange($event)">
                 <option value="">Select Location</option>
                 <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
               </select>
             </div>
+            
 
             <div class="form-group col-md-2 mb-3">
-              <label for="dateFrom">Date From</label>
+              <label for="dateFrom">Check In</label>
               <input id="dateFrom" type="date" formControlName="dateFrom" class="form-control">
             </div>
 
             <div class="form-group col-md-2 mb-3">
-              <label for="dateTo">Date To</label>
+              <label for="dateTo">Check Out</label>
               <input id="dateTo" type="date" formControlName="dateTo" class="form-control">
             </div>
 
@@ -29,10 +32,16 @@
               <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
             </div>
 
-            <div class="form-group col-md-2 mb-3">
+            <!-- <div class="form-group col-md-2 mb-3">
               <label for="maxPrice">Max Price</label>
               <input id="maxPrice" type="number" formControlName="maxPrice" class="form-control">
+            </div> -->
+            <div class="form-group col-md-2 mb-3">
+              <label for="maxPrice" class="form-label">Price</label>
+              <input type="range" class="form-range" min="0" max="4000" id="maxPrice" formControlName="maxPrice">
+              <output id="priceOutput">{{ filterForm.get('maxPrice')?.value }}</output>
             </div>
+            
 
             <div class="form-group col-md-1 mb-3">
               <label for="minStay">Min Stay</label>
@@ -46,21 +55,57 @@
           </div>
 
           <div class="text-center">
-            <button type="submit" class="btn btn-outline-light">Apply Filters</button>
+            <button type="submit" class="btn btn-outline-light">Find Rooms</button>
           </div>
         </form>
 
-        <div *ngIf="filteredRooms.length === 0" class="mt-3">
-          <p class="text-muted text-center">No rooms match the selected criteria.</p>
-        </div>
+       
+      </div>
+      <div *ngIf="filteredRooms.length === 0" class="mt-3">
+        <p class="text-muted text-center">No rooms match the selected criteria.</p>
       </div>
     </div>
 
+    <div class="filtered-rooms-count" *ngIf="filteredRoomsCount !== null">
+      <p>Number of rooms available: {{ filteredRoomsCount }}</p>
+    </div>
+
+    <div class="container my-2" *ngIf="filteredRooms.length > 0">
+      <!-- <h2 class="text-center mb-4" style="color: slategrey;">Filtered Rooms</h2> -->
+      <table class="table table-striped table-bordered table-hover">
+        <thead class="thead-dark">
+          <tr>
+            <th>Room Name</th>
+            <th>Location</th>
+            <th>Price per Day</th>
+            <th>Guest Capacity</th>
+            <th>Min Stay</th>
+            <th>Max Stay</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let room of filteredRooms">
+            <td>{{ room.roomName }}</td>
+            <td>{{ room.locationName }}</td>
+            <td>{{ room.pricePerDayPerPerson | currency }}</td>
+            <td>{{ room.guestCapacity }}</td>
+            <td>{{ room.minStay }}</td>
+            <td>{{ room.maxStay }}</td>
+            <td>
+              <button class="btn btn-primary" (click)="openBookingModal(room)">Book Now</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
     <!-- Room Cards Column -->
     <div class="col-12">
       <div class="row room-cards">
         <div *ngFor="let room of filteredRooms" class="col-md-6 col-lg-4 mb-4">
           <div class="card h-100 shadow-lg border-0">
+            <!-- <img [src]="getImageUrl(room.imageFileName)" class="card-img-top" alt="{{ room.roomName }}"> -->
             <img src="Assets/resort1.jpg" class="card-img-top" alt="Room Image">
             <div class="card-body">
               <h5 class="card-title">{{ room.roomName }}</h5>
@@ -89,44 +134,119 @@
         <button type="button" class="btn-close" (click)="closeBookingModal()"></button>
       </div>
       <div class="modal-body">
-        <form [formGroup]="bookingForm">
-          <div class="mb-3">
-            <label for="reservationId" class="form-label">Reservation ID</label>
-            <input type="text" id="reservationId" class="form-control" formControlName="reservationId" readonly>
+        <div *ngIf="currentStep === 1">
+          <div class="modal-step-content">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Reservation ID</label>
+                <p class="form-text">{{ bookingForm.get('reservationId')?.value }}</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Room No.</label>
+                <p class="form-text">{{ bookingForm.get('roomNo')?.value }}</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Arrival Date</label>
+                <p class="form-text">{{ bookingForm.get('stayDateFrom')?.value | date }}</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Departure Date</label>
+                <p class="form-text">{{ bookingForm.get('stayDateTo')?.value | date }}</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Number of Days</label>
+                <p class="form-text">{{ bookingForm.get('numberOfDays')?.value }}</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Reservation Date</label>
+                <p class="form-text">{{ bookingForm.get('reservationDate')?.value | date:'short' }}</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Total Number of Guests</label>
+                <p class="form-text">{{ bookingForm.get('totalNumberOfGuests')?.value }}</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Price Per Day Per Person</label>
+                <p class="form-text">{{ bookingForm.get('pricePerDayPerPerson')?.value | currency }}</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Total Price</label>
+                <p class="form-text">{{ bookingForm.get('totalPrice')?.value | currency }}</p>
+              </div>
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="roomNo" class="form-label">Room No.</label>
-            <input type="text" id="roomNo" class="form-control" formControlName="roomNo" readonly>
-          </div>
-          <div class="mb-3">
-            <label for="stayDateFrom" class="form-label">Stay Date From</label>
-            <input type="date" id="stayDateFrom" class="form-control" formControlName="stayDateFrom" readonly>
-          </div>
-          <div class="mb-3">
-            <label for="stayDateTo" class="form-label">Stay Date To</label>
-            <input type="date" id="stayDateTo" class="form-control" formControlName="stayDateTo" readonly>
-          </div>
-          <div class="mb-3">
-            <label for="numberOfDays" class="form-label">Number of Days</label>
-            <input type="number" id="numberOfDays" class="form-control" formControlName="numberOfDays" readonly>
-          </div>
-          <div class="mb-3">
-            <label for="totalNumberOfGuests" class="form-label">Total Number of Guests</label>
-            <input type="number" id="totalNumberOfGuests" class="form-control" formControlName="totalNumberOfGuests" >
-          </div>
-          <div class="mb-3">
-            <label for="pricePerDayPerPerson" class="form-label">Price Per Day Per Person</label>
-            <input type="number" id="pricePerDayPerPerson" class="form-control" formControlName="pricePerDayPerPerson" readonly>
-          </div>
-          <div class="mb-3">
-            <label for="totalPrice" class="form-label">Total Price</label>
-            <input type="number" id="totalPrice" class="form-control" formControlName="totalPrice" readonly>
-          </div>
-        </form>
+        </div>
+        <div *ngIf="currentStep === 2">
+          <form [formGroup]="customerForm" class="form-row">
+            <div class="mb-3">
+              <label for="customerId" class="form-label">Customer ID</label>
+              <input type="text" id="customerId" class="form-control" formControlName="customerId" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="name" class="form-label">Name</label>
+              <input type="text" id="name" class="form-control" formControlName="name">
+            </div>
+            <div class="mb-3">
+              <label for="age" class="form-label">Age</label>
+              <input type="number" id="age" class="form-control" formControlName="age">
+            </div>
+            <div class="mb-3">
+              <label for="birthDate" class="form-label">Birth Date</label>
+              <input type="date" id="birthDate" class="form-control" formControlName="birthDate">
+            </div>
+            <div class="mb-3">
+              <label for="address" class="form-label">Address</label>
+              <input type="text" id="address" class="form-control" formControlName="address">
+            </div>
+            <div class="mb-3">
+              <label for="mobileNumber" class="form-label">Mobile Number</label>
+              <input type="text" id="mobileNumber" class="form-control" formControlName="mobileNumber">
+            </div>
+            <div class="mb-3">
+              <label for="pincode" class="form-label">Pincode</label>
+              <input type="text" id="pincode" class="form-control" formControlName="pincode">
+            </div>
+            <div class="mb-3">
+              <label for="district" class="form-label">District</label>
+              <input type="text" id="district" class="form-control" formControlName="district">
+            </div>
+            <div class="mb-3">
+              <label for="city" class="form-label">City</label>
+              <input type="text" id="city" class="form-control" formControlName="city">
+            </div>
+            <div class="mb-3">
+              <label for="state" class="form-label">State</label>
+              <input type="text" id="state" class="form-control" formControlName="state">
+            </div>
+            <div class="mb-3">
+              <label for="country" class="form-label">Country</label>
+              <input type="text" id="country" class="form-control" formControlName="country">
+            </div>
+          </form>
+        </div>
+        <div *ngIf="currentStep === 3">
+          <form [formGroup]="paymentForm" *ngIf="currentStep === 3">
+            <div class="mb-3">
+              <label for="paymentId" class="form-label">Payment ID</label>
+              <input type="text" id="paymentId" class="form-control" formControlName="paymentId" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="paymentMode" class="form-label">Payment Mode</label>
+              <input type="text" id="paymentMode" class="form-control" formControlName="paymentMode">
+            </div>
+            <div class="mb-3">
+              <label for="paidAmount" class="form-label">Paid Amount</label>
+              <input type="number" id="paidAmount" class="form-control" formControlName="paidAmount">
+            </div>
+          </form>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeBookingModal()">Close</button>
-        <button type="button" class="btn btn-primary" (click)="confirmBooking()">Confirm Booking</button>
+        <button type="button" class="btn btn-primary" (click)="previousStep()" [hidden]="currentStep === 1">Previous</button>
+        <button type="button" class="btn btn-primary" (click)="nextStep()">
+          {{ currentStep === 3 ? 'Submit Booking' : 'Next' }}
+        </button>
       </div>
     </div>
   </div>

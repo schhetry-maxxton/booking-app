@@ -1,5 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { Chart, ChartConfiguration } from 'chart.js';
+import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import { ReservationService } from '../Services/Reservation/reservation.service'; 
+import { IRoomAvailability } from '../Interface/iroom-availability'; 
+import { IRoom } from '../Interface/iroom';
+
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-chartt',
@@ -7,18 +12,30 @@ import { Chart, ChartConfiguration } from 'chart.js';
   styleUrls: ['./chartt.component.css']
 })
 export class CharttComponent implements OnInit {
-
   chart: Chart | undefined;
 
+  rooms: IRoom[] = [];
+  stays: IRoomAvailability[] = [];
+  availabilityTable: any[] = [];
+
+
+  constructor(private reservationService: ReservationService) { }
+
+  getRoomAvailability(): void {
+    this.availabilityTable = this.stays.map(stay => {
+      const room = this.rooms.find(room => room.roomId === stay.roomId);
+      return { ...room, ...stay };
+    });
+  }
   ngOnInit(): void {
     const config: ChartConfiguration<'bar'> = {
       type: 'bar',
       data: {
-        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+        labels: ['Room 1','Room 2', 'Room 3','Room 4','Room 5','Room 6','Room 7','Room 8','Room 9','Room 10','Room 11','Room 12','Room 13','Room 14','Room 15','Room 16','Room 17','Room 18','Room 19','Room 20'],
         datasets: [{
-          label: 'My First Dataset',
-          data: [65, 59, 80, 81, 56, 55, 40],
-          // fill: false,
+          label: 'Room availability',
+          data: [91,91,88,88,84,84,84,81,79,76,82,82,77,77,77,76,72,71,69,69],
+          //  fill: false,
           backgroundColor: [
             'rgba(255, 99, 132, 0.2)',
             'rgba(255, 159, 64, 0.2)',
@@ -38,6 +55,7 @@ export class CharttComponent implements OnInit {
             'rgb(201, 203, 207)'
           ],
           borderWidth: 1
+
         }]
       },
       options: {
@@ -45,6 +63,6 @@ export class CharttComponent implements OnInit {
       },
     };
 
-    this.chart = new Chart('canvas', config);
+    this.chart = new Chart('chartCanvas', config);
   }
 }

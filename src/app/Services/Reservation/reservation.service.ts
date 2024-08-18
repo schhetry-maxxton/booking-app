@@ -10,6 +10,9 @@ import { forkJoin, Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class ReservationService {
+
+  private reservations: IReservation[] = [];
+  
   private roomsUrl = 'https://jadhavsudhit.github.io/Booking-module/rooms.json';
   private staysUrl = 'https://jadhavsudhit.github.io/Booking-module/stays.json';
 
@@ -20,6 +23,14 @@ export class ReservationService {
       rooms: this.http.get<IRoom[]>(this.roomsUrl),
       stays: this.http.get<IRoomAvailability[]>(this.staysUrl)
     });
+  }
+
+  addReservation(reservation: IReservation): void {
+    this.reservations.push(reservation);
+  }
+
+  getReservations(): IReservation[] {
+    return this.reservations;
   }
 
   }
