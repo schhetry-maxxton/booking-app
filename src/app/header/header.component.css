@@ -1,37 +1,37 @@
-/* Add padding to the navbar brand */
+
 .navbar-brand {
-    padding-left: 20px; /* Adjust padding as needed */
+    padding-left: 20px; 
     margin-right: auto; 
   }
   
-  /* Ensure the navbar items are aligned to the right */
   .navbar-nav {
     flex-direction: row;
     margin-left: auto;
   }
   
   .nav-item {
-    margin-left: 20px; /* Spacing between items */
+    margin-left: 20px; 
     margin-right: 20px;
   }
   
   .nav-link {
-    color: #333; /* Default text color */
+    color: #333; 
     font-weight: 500;
     transition: color 0.3s, background-color 0.3s, transform 0.3s;
   }
   
-  /* Hover effect for nav links */
+  
   .nav-link:hover {
-    color: #007bff; /* Color on hover */
-    background-color: rgba(0, 123, 255, 0.1); /* Background color on hover */
-    border-radius: 5px; /* Rounded corners */
-    transform: scale(1.05); /* Slightly enlarge the link */
+    color: #007bff; 
+    background-color: rgba(0, 123, 255, 0.1); 
+    border-radius: 5px; 
+    transform: scale(1.05); 
   }
   
-  /* Styling for active nav link */
   .nav-link.active {
-    color: #007bff; /* Active link color */
-    font-weight: 700; /* Bold active link */
+    color: #ada08b; 
+    font-weight: 700; 
   }
   
+
+   

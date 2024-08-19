@@ -5,6 +5,7 @@ import { IRoomAvailability } from '../Interface/iroom-availability';
 import { ReservationService } from '../Services/Reservation/reservation.service';
 import { RandomNumberService } from '../Services/RandomNumber/random-number.service';
 import { IReservation } from '../Interface/ireservation';
+import { ICustomer } from '../Interface/icustomer';
 
 @Component({
   selector: 'app-filter',
@@ -55,8 +56,10 @@ export class FilterComponent implements OnInit {
 
     this.customerForm = this.fb.group({
       customerId: [''],
-      name: ['', [Validators.required]],
-      age: ['', [Validators.required, Validators.min(1)]],
+      firstName: ['', [Validators.required]],
+      middleName: ['', [Validators.required]],
+      lastName: ['', [Validators.required]],
+      age:  [{value: '', disabled: true}, [Validators.required, Validators.min(1)]],
       birthDate: ['', [Validators.required]],
       address: [''],
       mobileNumber: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
@@ -69,8 +72,11 @@ export class FilterComponent implements OnInit {
 
     this.paymentForm = this.fb.group({
       paymentId: this.randomNumberService.generateRandomNumber(),
-      paymentMode: [''],
-      paidAmount: ['', [Validators.required, Validators.min(0)]]
+      paymentMode: ['creditCard'],
+      totalAmount: [''],
+      paidAmount: ['', [Validators.required]],
+      dueAmount: ['']
+      
     });
 
     this.bookingForm.get('totalNumberOfGuests')?.valueChanges.subscribe(() => {
@@ -146,8 +152,6 @@ export class FilterComponent implements OnInit {
       );
     });
 
-    
-
     this.filteredRooms = filteredAvailability.map(avail => {
       const room = this.rooms.find(room => room.roomId === avail.roomId);
       return room ? { ...room, ...avail } : null; // Combine room and availability details
@@ -167,7 +171,6 @@ export class FilterComponent implements OnInit {
     const stayDateTo = new Date(filters.dateTo);
 
     if (stayDateFrom >= stayDateTo) {
-      // Invalid date range in the filters
       return false;
     }
 
@@ -205,7 +208,6 @@ export class FilterComponent implements OnInit {
   private getISTDateTime(): string {
     const now = new Date();
     const istDate = new Date(now.getTime());
-  
     // Format as 'YYYY-MM-DDTHH:MM'
     const year = istDate.getFullYear();
     const month = String(istDate.getMonth() + 1).padStart(2, '0');
@@ -216,10 +218,26 @@ export class FilterComponent implements OnInit {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
+  onBirthDateChange(): void {
+    const birthDate = this.customerForm.get('birthDate')?.value;
+    if (birthDate) {
+      this.customerForm.get('age')?.setValue(this.calculateAge(new Date(birthDate)));
+    }
+  }
+
+  calculateAge(birthDate: Date): number {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
   openBookingModal(room: IRoom): void {
     this.selectedRoom = room;
 
-    // Populate booking form with details
     const stayDateFrom = this.filterForm.get('dateFrom')?.value;
     const stayDateTo = this.filterForm.get('dateTo')?.value;
     const numberOfPerson = this.filterForm.get('numberOfPersons')?.value;
@@ -283,10 +301,11 @@ export class FilterComponent implements OnInit {
   }
 
   private updateCustomerForm(): void {
-    // Example of patching values; update these fields as needed
     this.customerForm.patchValue({
       customerId: this.randomNumberService.generateRandomNumber(), // Or any logic to set the customer ID
-      name: '',
+      firstName: '',
+      middleName: '',
+      lastName: '',
       age: '',
       birthDate: '',
       address: '',
@@ -307,35 +326,74 @@ export class FilterComponent implements OnInit {
     if (numberOfDays && numberOfGuests && pricePerDayPerPerson) {
       const totalPrice = numberOfDays * numberOfGuests * pricePerDayPerPerson;
       this.bookingForm.get('totalPrice')?.setValue(totalPrice);
+      this.paymentForm.get('totalAmount')?.setValue(totalPrice);
+      this.paymentForm.get('dueAmount')?.setValue(totalPrice);
     }
   }
 
+  updateDueAmount(): void {
+    const totalAmount = this.paymentForm.get('totalAmount')?.value;
+    const paidAmount = this.paymentForm.get('paidAmount')?.value;
+    const dueAmount = totalAmount - paidAmount;
+    this.paymentForm.get('dueAmount')?.setValue(dueAmount);
+  }
+
   private submitBooking(): void {
-    if(this.paymentForm.valid){
+    if (this.paymentForm.valid) {
       const bookingData = {
         booking: this.bookingForm.value,
         customer: this.customerForm.value,
         payment: this.paymentForm.value
       };
+
+      const newReservation: IReservation = {
+        reservationId: bookingData.booking.reservationId,
+        locationId: this.selectedRoom?.locationId || 0,
+        roomId: this.selectedRoom?.roomId || 0,
+        customerId: bookingData.customer.customerId,
+        arrivalDate: new Date(bookingData.booking.stayDateFrom),
+        departureDate: new Date(bookingData.booking.stayDateTo),
+        reservationDate: new Date(bookingData.booking.reservationDate),
+        totalPrice: bookingData.booking.totalPrice,
+        status: 'CONFIRM',
+        paidAmount: bookingData.payment.paidAmount,
+        numberOfGuest: bookingData.booking.totalNumberOfGuests
+      };
+
+      const newCustomer: ICustomer = {
+        customerId: bookingData.customer.customerId,
+        age: bookingData.customer.age,
+        birthDate: new Date(bookingData.customer.birthDate).getTime(), // Save as timestamp
+        firstName: bookingData.customer.firstName,
+        middleName: bookingData.customer.middleName,
+        lastName: bookingData.customer.lastName,
+        country: bookingData.customer.country,
+        state: bookingData.customer.state,
+        city: bookingData.customer.city,
+        pinCode: bookingData.customer.pincode
+      };
+
+      let reservations: IReservation[] = JSON.parse(localStorage.getItem('reservations') || '[]');
+      reservations.push(newReservation);
+      localStorage.setItem('reservations', JSON.stringify(reservations));
+
+      let customers: ICustomer[] = JSON.parse(localStorage.getItem('customers') || '[]');
+      customers.push(newCustomer);
+      localStorage.setItem('customers', JSON.stringify(customers));
       
-      localStorage.setItem('bookingData', JSON.stringify(bookingData));
       this.resetForms();
-      // alert("Booking confirmed and stored successfully.");
-    }
-    else{
-      alert("Please fill in all required fields.");
+    } else {
+      alert('Please fill in all required fields.');
     }
   }
 
-    // Close the modal and reset forms
-    private resetForms(): void {
+  private resetForms(): void {
     this.closeBookingModal();
     this.bookingForm.reset();
     this.customerForm.reset();
     this.paymentForm.reset();
     this.selectedRoom = null;
     this.currentStep = 1; 
-    // Optionally notify the user
     alert('Booking confirmed and stored successfully.');
   }
 }

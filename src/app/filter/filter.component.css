@@ -26,17 +26,23 @@
     box-sizing: border-box;
   }
   
-  button {
+  /* button {
     padding: 0.5em 1em;
     background-color: #007bff;
     color: #fff;
     border: none;
     border-radius: 0.25em;
     cursor: pointer;
-  }
+  } */
   
-  button:hover {
+  /* button:hover {
     background-color: #1a65bb;
+  } */
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+    color: #fff;
+    transform: scale(1.05);
   }
   
   /* .card{
@@ -91,6 +97,8 @@
   font-weight: bold; /* Bold text */
   margin: 0; /* Remove default margin */
 }
+
+
 
 .container {
   padding: 0.5rem;
