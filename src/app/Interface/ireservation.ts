@@ -2,6 +2,7 @@ export interface IReservation {
     reservationId : number,
     locationId: number,
     roomId : number,
+    roomName: string | undefined,
     customerId : number,
     arrivalDate: Date     // "YYYY-MM-DD",
     departureDate: Date     // "YYYY-MM-DD",

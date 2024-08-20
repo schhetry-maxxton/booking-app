@@ -41,19 +41,19 @@ export class CustomerComponent{
   //   console.log(randomNumber);
   // }
 
-  onSubmit(): void {
+  // onSubmit(): void {
     
-    const customer: ICustomer = this.customerForm.value;
-    const exists = this.customerService.getCustomer(customer.customerId);
+  //   const customer: ICustomer = this.customerForm.value;
+  //   const exists = this.customerService.getCustomer(customer.customerId);
 
-    if (exists) {
-      console.log('Customer already exists:', exists);
-      alert("Customer already exists");
-    } else {
-      this.customerService.createCustomer(customer);
-      console.log('Customer added:', customer);
-    }
+  //   if (exists) {
+  //     console.log('Customer already exists:', exists);
+  //     alert("Customer already exists");
+  //   } else {
+  //     this.customerService.createCustomer(customer);
+  //     console.log('Customer added:', customer);
+  //   }
     
-  }
+  // }
   
 }

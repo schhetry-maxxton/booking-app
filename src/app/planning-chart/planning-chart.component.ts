@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { IRoom } from '../Interface/iroom';
 import { IRoomAvailability } from '../Interface/iroom-availability';
 import { ReservationService } from '../Services/Reservation/reservation.service';
-
+import { IReservation } from '../Interface/ireservation';
 declare var google: any;
 
 @Component({
@@ -14,7 +14,8 @@ export class PlanningChartComponent implements OnInit {
   rooms: IRoom[] = [];
   stays: IRoomAvailability[] = [];
   availabilityTable: any[] = [];
-
+  reservations: IReservation[] = [];
+  roomNameMap: Map<number, string> = new Map(); // Map to hold roomId to roomName mapping
 
   constructor(private reservationService: ReservationService) { }
 
@@ -23,7 +24,9 @@ export class PlanningChartComponent implements OnInit {
       this.rooms = rooms;
       this.stays = stays;
       this.getRoomAvailability();
-      this.drawChart();
+      this.reservations = this.reservationService.getReservations();
+      this.createRoomNameMap(); // Create map after fetching rooms
+      this.drawChart(); // Call drawChart after both data are available
     });
   }
 
@@ -34,45 +37,51 @@ export class PlanningChartComponent implements OnInit {
     });
   }
 
+  createRoomNameMap(): void {
+    this.roomNameMap = new Map(this.rooms.map(room => [room.roomId, room.roomName]));
+  }
+
   drawChart(): void {
-    google.charts.load('current', { packages: ['gantt'] });
+    google.charts.load('current', { packages: ['timeline'] });
     google.charts.setOnLoadCallback(() => {
       const dataTable = new google.visualization.DataTable();
-      dataTable.addColumn('string', 'Task ID');
-      dataTable.addColumn('string', 'Room Name');
-      dataTable.addColumn('date', 'Start Date');
-      dataTable.addColumn('date', 'End Date');
-      dataTable.addColumn('number', 'Duration');
-      dataTable.addColumn('number', 'Percent Complete');
-      dataTable.addColumn('string', 'Dependencies');
-      dataTable.addColumn('string', 'Status');
+      dataTable.addColumn({ type: 'string', id: 'Room Name' });
+      dataTable.addColumn({ type: 'string', id: 'Task' });
+      dataTable.addColumn({ type: 'date', id: 'Start Date' });
+      dataTable.addColumn({ type: 'date', id: 'End Date' });
 
-      const data = this.availabilityTable.map(item => [
-        
-        `Room_${item.roomId}`,
+      const availabilityData = this.availabilityTable.map(item => [
         item.roomName,
+        'Available',
         new Date(item.stayDateFrom),
-        new Date(item.stayDateTo),
-        null,  
-        100,  // Assuming stays are fully complete
-        null,  // No dependencies
-        'available',
+        new Date(item.stayDateTo)
       ]);
 
-      dataTable.addRows(data);
+      const reservationData = this.reservations.map(reservation => [
+        this.roomNameMap.get(reservation.roomId) || `Room ${reservation.roomId}`, // Use roomName from the map
+        'Booked',
+        new Date(reservation.arrivalDate),
+        new Date(reservation.departureDate)
+      ]);
 
-      const chart = new google.visualization.Gantt(document.getElementById('ganttChart'));
+      const combinedData = [...availabilityData, ...reservationData];
+      dataTable.addRows(combinedData);
 
       const options = {
-        height: 600,
-        width: '100%',
-        gantt: {
-          trackHeight: 30
-        }
+        timeline: {
+          showRowLabels: true,
+          showBarLabels: true,
+        },
+        avoidOverlappingGridLines: false,
+        height: this.availabilityTable.length * 50,
+        hAxis: {
+          format: 'MMM dd, yyyy',
+        },
+        colors: ['#008000', '#FF0000'] // Green and Red
       };
 
+      const chart = new google.visualization.Timeline(document.getElementById('ganttChart'));
       chart.draw(dataTable, options);
     });
   }
 }
-

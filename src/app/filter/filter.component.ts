@@ -6,6 +6,7 @@ import { ReservationService } from '../Services/Reservation/reservation.service'
 import { RandomNumberService } from '../Services/RandomNumber/random-number.service';
 import { IReservation } from '../Interface/ireservation';
 import { ICustomer } from '../Interface/icustomer';
+import { CustomersService } from '../Services/Customers/customers.service';
 
 @Component({
   selector: 'app-filter',
@@ -30,7 +31,8 @@ export class FilterComponent implements OnInit {
   constructor(
     private reservationService: ReservationService,
     private fb: FormBuilder,
-    private randomNumberService: RandomNumberService
+    private randomNumberService: RandomNumberService,
+    private customerService: CustomersService
   ) {
     this.filterForm = this.fb.group({
       location: [''],
@@ -118,14 +120,13 @@ export class FilterComponent implements OnInit {
     this.applyFilters();
   }
 
-  getImageUrl(imageFileName: string): string {
-    return `Assets/images/${imageFileName}`;
+  getImageUrl(index: number): string {
+    const imageIndex = index + 1;  
+    return `Assets/images/Room${imageIndex}.jpg`;
   }
-  
 
-  // Filter method to apply to the rooms based on filter values
   
-  applyFilters(): void {
+  applyFilters(): void {  // Filter method to apply to the rooms based on filter values
     const filters = this.filterForm.value;
 
     if (this.filterForm.invalid) {
@@ -140,8 +141,6 @@ export class FilterComponent implements OnInit {
 
      const filteredAvailability = this.availability.filter(avail => {
        const room = this.rooms.find(room => room.roomId === avail.roomId);   // this will fetch all the available rooms 
-      // console.log(room);
-      // console.log(!filters.location);
       
       return (
         (!filters.location || (room && room.locationName === filters.location)) &&
@@ -161,7 +160,6 @@ export class FilterComponent implements OnInit {
   }
 
   private isAvailable(avail: IRoomAvailability | undefined, filters: any): boolean {
-  
     if (!avail)
     {
       return false;
@@ -177,7 +175,7 @@ export class FilterComponent implements OnInit {
     const availFrom = new Date(avail.stayDateFrom);
     const availTo = new Date(avail.stayDateTo);
 
-    return (!filters.dateFrom || !filters.dateTo || (stayDateFrom <= availTo && stayDateTo >= availFrom));
+    return (!filters.dateFrom || !filters.dateTo || (stayDateFrom <= availTo && stayDateTo > availFrom));
   }
 
   private isCapacityMatch(room: IRoom, filters: any): boolean {
@@ -281,7 +279,6 @@ export class FilterComponent implements OnInit {
   }
 
   nextStep(): void {
-    // console.log("I am clicked");
     if (this.currentStep === 1 && this.bookingForm.valid) {
       this.updateCustomerForm();
       this.currentStep = 2;
@@ -289,7 +286,10 @@ export class FilterComponent implements OnInit {
       this.currentStep = 3;
     } else if (this.currentStep === 3 && this.paymentForm.valid) {
       this.submitBooking();
-    }else {
+      this.currentStep = 4; 
+    } else if (this.currentStep === 4) {
+      this.resetForms();
+    } else {
       alert("Please fill in all required fields.");
     }
   }
@@ -302,7 +302,7 @@ export class FilterComponent implements OnInit {
 
   private updateCustomerForm(): void {
     this.customerForm.patchValue({
-      customerId: this.randomNumberService.generateRandomNumber(), // Or any logic to set the customer ID
+      customerId: this.randomNumberService.generateRandomNumber(), 
       firstName: '',
       middleName: '',
       lastName: '',
@@ -338,7 +338,7 @@ export class FilterComponent implements OnInit {
     this.paymentForm.get('dueAmount')?.setValue(dueAmount);
   }
 
-  private submitBooking(): void {
+  submitBooking(): void {
     if (this.paymentForm.valid) {
       const bookingData = {
         booking: this.bookingForm.value,
@@ -350,6 +350,7 @@ export class FilterComponent implements OnInit {
         reservationId: bookingData.booking.reservationId,
         locationId: this.selectedRoom?.locationId || 0,
         roomId: this.selectedRoom?.roomId || 0,
+        roomName: this.selectedRoom?.roomName,
         customerId: bookingData.customer.customerId,
         arrivalDate: new Date(bookingData.booking.stayDateFrom),
         departureDate: new Date(bookingData.booking.stayDateTo),
@@ -373,27 +374,24 @@ export class FilterComponent implements OnInit {
         pinCode: bookingData.customer.pincode
       };
 
-      let reservations: IReservation[] = JSON.parse(localStorage.getItem('reservations') || '[]');
-      reservations.push(newReservation);
-      localStorage.setItem('reservations', JSON.stringify(reservations));
-
-      let customers: ICustomer[] = JSON.parse(localStorage.getItem('customers') || '[]');
-      customers.push(newCustomer);
-      localStorage.setItem('customers', JSON.stringify(customers));
-      
-      this.resetForms();
+      const reservationData = newReservation;
+      const customerData = newCustomer;
+   
+      // Save to local storage
+      this.reservationService.saveReservation(reservationData);
+      this.customerService.saveCustomer(customerData);
+      this.currentStep = 4;
     } else {
       alert('Please fill in all required fields.');
     }
   }
 
-  private resetForms(): void {
+  resetForms(): void {
     this.closeBookingModal();
     this.bookingForm.reset();
     this.customerForm.reset();
     this.paymentForm.reset();
     this.selectedRoom = null;
     this.currentStep = 1; 
-    alert('Booking confirmed and stored successfully.');
   }
 }

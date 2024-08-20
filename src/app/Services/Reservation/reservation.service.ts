@@ -9,9 +9,10 @@ import { forkJoin, Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class ReservationService {
 
-  private reservations: IReservation[] = [];
+export class ReservationService {
+  private storageKey = 'reservations';
+  // private reservations: IReservation[] = [];
   
   private roomsUrl = 'https://jadhavsudhit.github.io/Booking-module/rooms.json';
   private staysUrl = 'https://jadhavsudhit.github.io/Booking-module/stays.json';
@@ -25,12 +26,19 @@ export class ReservationService {
     });
   }
 
-  addReservation(reservation: IReservation): void {
-    this.reservations.push(reservation);
+  saveReservation(reservation: IReservation): void {
+    const existingReservations = this.getReservations();
+    existingReservations.push(reservation);
+    localStorage.setItem('reservations', JSON.stringify(existingReservations));
   }
 
   getReservations(): IReservation[] {
-    return this.reservations;
+    const reservations = localStorage.getItem(this.storageKey);
+    return reservations ? JSON.parse(reservations) : [];
   }
 
+  clearReservations(): void {
+    localStorage.removeItem(this.storageKey);
   }
+
+}
