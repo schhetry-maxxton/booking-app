@@ -4,7 +4,15 @@ import { ReservationService } from '../Services/Reservation/reservation.service'
 import { IRoomAvailability } from '../Interface/iroom-availability'; 
 import { IRoom } from '../Interface/iroom';
 
-Chart.register(...registerables);
+interface Availability {
+  start: number;
+  end: number;
+}
+
+interface RoomData {
+  room: number;
+  availability: Availability[];
+}
 
 @Component({
   selector: 'app-chartt',
@@ -12,57 +20,52 @@ Chart.register(...registerables);
   styleUrls: ['./chartt.component.css']
 })
 export class CharttComponent implements OnInit {
-  chart: Chart | undefined;
 
-  rooms: IRoom[] = [];
-  stays: IRoomAvailability[] = [];
-  availabilityTable: any[] = [];
-
-
-  constructor(private reservationService: ReservationService) { }
-
-  getRoomAvailability(): void {
-    this.availabilityTable = this.stays.map(stay => {
-      const room = this.rooms.find(room => room.roomId === stay.roomId);
-      return { ...room, ...stay };
-    });
-  }
   ngOnInit(): void {
-    const config: ChartConfiguration<'bar'> = {
-      type: 'bar',
-      data: {
-        labels: ['Room 1','Room 2', 'Room 3','Room 4','Room 5','Room 6','Room 7','Room 8','Room 9','Room 10','Room 11','Room 12','Room 13','Room 14','Room 15','Room 16','Room 17','Room 18','Room 19','Room 20'],
-        datasets: [{
-          label: 'Room availability',
-          data: [91,91,88,88,84,84,84,81,79,76,82,82,77,77,77,76,72,71,69,69],
-          //  fill: false,
-          backgroundColor: [
-            'rgba(255, 99, 132, 0.2)',
-            'rgba(255, 159, 64, 0.2)',
-            'rgba(255, 205, 86, 0.2)',
-            'rgba(75, 192, 192, 0.2)',
-            'rgba(54, 162, 235, 0.2)',
-            'rgba(153, 102, 255, 0.2)',
-            'rgba(201, 203, 207, 0.2)'
-          ],
-          borderColor: [
-            'rgb(255, 99, 132)',
-            'rgb(255, 159, 64)',
-            'rgb(255, 205, 86)',
-            'rgb(75, 192, 192)',
-            'rgb(54, 162, 235)',
-            'rgb(153, 102, 255)',
-            'rgb(201, 203, 207)'
-          ],
-          borderWidth: 1
-
-        }]
-      },
-      options: {
-        indexAxis: 'y', // This sets the chart to be horizontal
-      },
-    };
-
-    this.chart = new Chart('chartCanvas', config);
+    
   }
+
+  days: number[] = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  rooms = [
+    { roomId: 1, locationId: 101, roomName: 'Ocean View Suite' },
+    { roomId: 2, locationId: 101, roomName: 'Garden Room' },
+    { roomId: 3, locationId: 101, roomName: 'Deluxe Villa' },
+    { roomId: 4, locationId: 101, roomName: 'Beachfront Bungalow' },
+    { roomId: 5, locationId: 101, roomName: 'Family Suite' },
+    { roomId: 6, locationId: 101, roomName: 'Poolside Room' },
+    { roomId: 7, locationId: 101, roomName: 'Honeymoon Suite' },
+    { roomId: 8, locationId: 101, roomName: 'Penthouse Suite' },
+    { roomId: 9, locationId: 101, roomName: 'Standard Room' },
+    { roomId: 10, locationId: 101, roomName: 'Executive Suite' },
+    { roomId: 11, locationId: 102, roomName: 'Alpine Room' },
+    { roomId: 12, locationId: 102, roomName: 'Chalet Suite' },
+    { roomId: 13, locationId: 102, roomName: 'Rustic Cabin' },
+    { roomId: 14, locationId: 102, roomName: 'Hillside Room' },
+    { roomId: 15, locationId: 102, roomName: 'Lodge Suite' },
+    { roomId: 16, locationId: 102, roomName: 'Summit View Room' },
+    { roomId: 17, locationId: 102, roomName: 'Cozy Nook' },
+    { roomId: 18, locationId: 102, roomName: 'Pine Forest Room' },
+    { roomId: 19, locationId: 102, roomName: 'Luxe Suite' },
+    { roomId: 20, locationId: 102, roomName: 'Woodland Retreat' },
+  ];
+
+  currentMonth: Date = new Date(); // Start with the current month
+  daysInMonth: Date[] = [];
+
+  isMouseDown = false;
+  selectedCells: Set<string> = new Set();
+ 
+
+  constructor() {
+    this.updateDaysInMonth();
+  }
+
+  updateDaysInMonth() {
+    const year = this.currentMonth.getFullYear();
+    const month = this.currentMonth.getMonth();
+    const numDays = new Date(year, month + 1, 0).getDate(); // Get the number of days in the month
+    this.daysInMonth = Array.from({ length: numDays }, (_, i) => new Date(year, month, i + 1));
+  }
+
 }

@@ -1,13 +1,30 @@
+<div class="container">
+  <h1 style="text-align: center;">Planning Chart</h1>
 
-<!-- <div>
-    <canvas #myChart></canvas>
-</div> -->
-<!-- 
-<div style="width: 40%;">
-    <canvas
-      baseChart
-    >
-    </canvas>
-  </div> -->
-
-  <canvas id="chartCanvas" ></canvas>
+  <div class="booking-chart-container">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th class="room-names" rowspan="2">Room ID</th>
+          <th colspan="31" class="month-header">
+            {{ currentMonth | date: 'MMMM yyyy' }} 
+          </th>
+        </tr>
+        <tr>
+          <th class="date-cell" *ngFor="let day of daysInMonth">
+            {{ day | date: 'dd' }} 
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let room of rooms">
+          <td class="room-name">{{ room.roomId }}</td>
+          <td class="booking-cell"
+              *ngFor="let day of daysInMonth"
+              >
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

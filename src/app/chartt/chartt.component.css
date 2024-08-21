@@ -1,0 +1,120 @@
+body {
+    font-family: Arial, sans-serif;
+  }
+  
+  .chart-container {
+    overflow-x: auto;
+    margin: 20px 0;
+    width: 100%;
+  }
+  
+  .chart {
+    display: grid;
+    grid-template-columns: repeat(32, 1fr); /* 1 for room names + 30 days */
+    grid-gap: 1px;
+    background-color: #dee2e6;
+  }
+  
+  .room-name {
+    grid-column: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    height: 30px;
+    padding: 0 5px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  
+  .day-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f1f1f1;
+    border-bottom: 1px solid #dee2e6;
+    height: 30px;
+  }
+  
+  .cell {
+    height: 30px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  
+  .available {
+    background-color: #d4edda;
+  }
+  
+  .not-available {
+    background-color: #ffffff;
+  }
+  
+  .weekend {
+    background-color: #e4d234; /* Light yellow for weekends */
+  }
+  
+
+  .booking-chart-container {
+    display: flex;
+    overflow-x: auto;
+  }
+  
+  .room-names {
+    flex: 0 0 15vw;
+    background-color: #f8f9fa;
+    border-right: 1px solid #ddd;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+  }
+  
+  .room-name {
+    padding: 1rem;
+    border-bottom: 0.1rem solid #ddd;
+    text-align: center;
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+  
+  .booking-grid {
+    flex: 1;
+    overflow-x: auto;
+  }
+  
+  .date-row, .booking-row {
+    display: flex;
+  }
+  
+  .date-cell {
+    min-width: 4vw;
+    padding: 1rem;
+    text-align: center;
+    border-bottom: 0.1rem solid #ddd;
+    background-color: #f1f1f1;
+    white-space: nowrap;
+  }
+  
+  .booking-cell {
+    min-width: 2vw;
+    height: 3vh;
+    border: 0.1rem solid #ddd;
+    text-align: center;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  
+  .booking-cell.selected {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .month-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
