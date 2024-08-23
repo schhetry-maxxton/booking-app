@@ -13,15 +13,17 @@ export class BookingReservationComponent {
   constructor(private reservationService:ReservationService){}
 
   ngOnInit(){
-    // this.reservationService.getReservations()
-    // .then(response =>{
-    //   this.reservations=response.data;
-    //   })
-    //   .catch(error => {
-    //     console.log(error);
-    //     });
-
     this.reservations = this.reservationService.getReservations();
     return this.reservations;
     }
+
+    // onStatusChange(reservation: IReservation): void {
+    //   try {
+    //     this.reservationService.updateReservationStatus(reservation);
+    //     console.log('Reservation status updated successfully', reservation.status);
+    //   } catch (error) {
+    //     console.error('Error updating reservation status', error);
+    //   }
+    // }
+    
 }

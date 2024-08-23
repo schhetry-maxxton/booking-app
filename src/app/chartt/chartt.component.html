@@ -1,27 +1,40 @@
 <div class="container">
-  <h1 style="text-align: center;">Planning Chart</h1>
+  <h1>Booking Chart</h1>
+
+  <!-- Month Navigation -->
+  <div class="month-navigation">
+    <button (click)="prevMonth()" class="btn btn-primary">Previous</button>
+    <span>{{ currentMonth | date: 'MMMM yyyy' }}</span> <!-- Display current month and year -->
+    <button (click)="nextMonth()" class="btn btn-primary">Next</button>
+  </div>
 
   <div class="booking-chart-container">
     <table class="table table-bordered">
       <thead>
+        <!-- Month Header Row Spanning Across All Days -->
         <tr>
-          <th class="room-names" rowspan="2">Room ID</th>
+          <th class="room-names" rowspan="2">Room Name</th>
           <th colspan="31" class="month-header">
-            {{ currentMonth | date: 'MMMM yyyy' }} 
+            {{ currentMonth | date: 'MMMM yyyy' }} <!-- Display current month and year -->
           </th>
         </tr>
         <tr>
+          <!-- Day of the Month Row -->
           <th class="date-cell" *ngFor="let day of daysInMonth">
-            {{ day | date: 'dd' }} 
+            {{ day | date: 'dd' }} <!-- Display the day of the month -->
           </th>
         </tr>
       </thead>
       <tbody>
+        <!-- Booking Rows -->
         <tr *ngFor="let room of rooms">
-          <td class="room-name">{{ room.roomId }}</td>
+          <td class="room-name">{{ room.roomName }}</td>
           <td class="booking-cell"
               *ngFor="let day of daysInMonth"
-              >
+              [ngClass]="{'selected': isSelected(room.roomId, day)}"
+              (mousedown)="onMouseDown(room.roomId, day, $event)"
+              (mouseover)="onMouseOver(room.roomId, day, $event)"
+              (mouseup)="onMouseUp($event)">
           </td>
         </tr>
       </tbody>

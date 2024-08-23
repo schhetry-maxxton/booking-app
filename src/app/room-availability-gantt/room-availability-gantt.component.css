@@ -12,6 +12,7 @@ body {
   display: grid;
   grid-template-columns: repeat(32, 1fr); /* 1 for room names + 30 days */
   grid-gap: 1px;
+  /* border-bottom: 0.1rem solid #949090; */
   background-color: #dee2e6;
 }
 
@@ -26,7 +27,7 @@ body {
   padding: 0 5px;
   white-space: nowrap;
   text-overflow: ellipsis;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .day-header {
@@ -39,6 +40,7 @@ body {
 }
 
 .cell {
+  position: relative;
   height: 30px;
   text-align: center;
   vertical-align: middle;
@@ -48,15 +50,89 @@ body {
   background-color: #d4edda;
 }
 
+.cell.available{
+  cursor: move;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
 .not-available {
   background-color: #ffffff;
 }
 
 .weekend {
-  background-color: #fff3cd; /* Light yellow for weekends */
+  background-color: #fff3cd; 
 }
 
-/* Override weekend background if the cell is available */
+.reserved {
+  background-color: red;
+  gap: 0;
+  z-index: 1;
+}
+
+/* .cell .reserved{
+  border: none;
+} */
+
 .available.weekend {
   background-color: #d4edda;
+}
+.resizable-bar {
+  position: absolute;
+  height: 100%;
+  background-color: rgba(0, 123, 255, 0.5);
+  cursor: move;
+  z-index: 10;
+}
+
+.resizer {
+  width: 10px;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  background-color: rgba(0, 123, 255, 0.7);
+  cursor: ew-resize;
+}
+
+.resizer.left {
+  left: 0;
+}
+
+.resizer.right {
+  right: 0;
+}
+
+.highlight {
+  background-color: rgba(0, 123, 255, 0.5);
+}
+
+.example-box {
+  width: 200px;
+  height: 200px;
+  border: solid 1px #ccc;
+  color: rgba(0, 0, 0, 0.87);
+  cursor: move;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: #fff;
+  border-radius: 4px;
+  margin-right: 25px;
+  position: relative;
+  z-index: 1;
+  transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
+  box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
+              0 2px 2px 0 rgba(0, 0, 0, 0.14),
+              0 1px 5px 0 rgba(0, 0, 0, 0.12);
+}
+
+.example-box:active {
+  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+              0 8px 10px 1px rgba(0, 0, 0, 0.14),
+              0 3px 14px 2px rgba(0, 0, 0, 0.12);
 }

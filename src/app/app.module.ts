@@ -5,7 +5,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { routes } from './app.router';
 import { BookingReservationComponent } from './booking-reservation/booking-reservation.component'; 
-// import { NewReservationComponent } from './new-reservation/new-reservation.component'; 
 import { PlanningChartComponent } from './planning-chart/planning-chart.component';
 import { FilterComponent } from './filter/filter.component';
 import { HeaderComponent } from './header/header.component';
@@ -13,16 +12,16 @@ import { provideHttpClient } from '@angular/common/http';
 import { CustomerComponent } from './customer/customer.component';
 import { HomeComponent } from './home/home.component';
 import { CharttComponent } from './chartt/chartt.component';
-// import { ChartsModule } from 'ng2-charts';
-//  import { NgxGanttModule } from 'ngx-gantt';
-
+import { AngularResizeEventModule } from 'angular-resize-event';
+import {OverlayModule} from '@angular/cdk/overlay';
 import { RoomAvailabilityGanttComponent } from './room-availability-gantt/room-availability-gantt.component';
+import { EventResizerComponent } from './event-resizer/event-resizer.component';
+import {CdkDrag} from '@angular/cdk/drag-drop';
 
 @NgModule({
   declarations: [
     AppComponent,
     BookingReservationComponent,
-    // NewReservationComponent,
     FilterComponent,
     HeaderComponent,
     CustomerComponent,
@@ -30,6 +29,7 @@ import { RoomAvailabilityGanttComponent } from './room-availability-gantt/room-a
     HomeComponent,
     CharttComponent,
     RoomAvailabilityGanttComponent,
+    EventResizerComponent,
   ],
   imports: [
     BrowserModule,
@@ -37,6 +37,9 @@ import { RoomAvailabilityGanttComponent } from './room-availability-gantt/room-a
     routes,
     FormsModule, 
     ReactiveFormsModule,
+    AngularResizeEventModule,
+    OverlayModule,
+    CdkDrag,
   ],
   providers: [
     provideClientHydration(), 

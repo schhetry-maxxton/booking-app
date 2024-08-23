@@ -24,7 +24,6 @@ export class CharttComponent implements OnInit {
   ngOnInit(): void {
     
   }
-
   days: number[] = Array.from({ length: 31 }, (_, i) => i + 1);
 
   rooms = [
@@ -68,4 +67,43 @@ export class CharttComponent implements OnInit {
     this.daysInMonth = Array.from({ length: numDays }, (_, i) => new Date(year, month, i + 1));
   }
 
+  prevMonth() {
+    this.currentMonth.setMonth(this.currentMonth.getMonth() - 1);
+    this.updateDaysInMonth();
+  }
+
+  nextMonth() {
+    this.currentMonth.setMonth(this.currentMonth.getMonth() + 1);
+    console.log(this.currentMonth)
+    this.updateDaysInMonth();
+  }
+
+  onMouseDown(roomId: number, day: Date, event: MouseEvent) {
+    event.preventDefault();
+    this.isMouseDown = true;
+    this.toggleSelection(roomId, day);
+  }
+
+  onMouseOver(roomId: number, day: Date, event: MouseEvent) {
+    if (this.isMouseDown) {
+      this.toggleSelection(roomId, day);
+    }
+  }
+
+  onMouseUp(event: MouseEvent) {
+    this.isMouseDown = false;
+  }
+
+  toggleSelection(roomId: number, day: Date) {
+    const cellKey = `${roomId}-${day.toISOString().split('T')[0]}`;
+    if (this.selectedCells.has(cellKey)) {
+      this.selectedCells.delete(cellKey);
+    } else {
+      this.selectedCells.add(cellKey);
+    }
+  }
+
+  isSelected(roomId: number, day: Date): boolean {
+    return this.selectedCells.has(`${roomId}-${day.toISOString().split('T')[0]}`);
+  }
 }

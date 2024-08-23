@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NewReservationComponent } from './new-reservation.component';
+import { EventResizerComponent } from './event-resizer.component';
 
-describe('NewReservationComponent', () => {
-  let component: NewReservationComponent;
-  let fixture: ComponentFixture<NewReservationComponent>;
+describe('EventResizerComponent', () => {
+  let component: EventResizerComponent;
+  let fixture: ComponentFixture<EventResizerComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [NewReservationComponent]
+      declarations: [EventResizerComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(NewReservationComponent);
+    fixture = TestBed.createComponent(EventResizerComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

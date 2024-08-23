@@ -58,18 +58,18 @@ export class FilterComponent implements OnInit {
 
     this.customerForm = this.fb.group({
       customerId: [''],
-      firstName: ['', [Validators.required]],
-      middleName: ['', [Validators.required]],
-      lastName: ['', [Validators.required]],
+      firstName: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2,}$/)]],
+      middleName: ['',[Validators.pattern(/^[A-Za-z]+$/)]],
+      lastName: ['',[Validators.pattern(/^[A-Za-z]+$/)]],
       age:  [{value: '', disabled: true}, [Validators.required, Validators.min(1)]],
       birthDate: ['', [Validators.required]],
-      address: [''],
-      mobileNumber: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      address: ['',[Validators.required,Validators.pattern(/^[a-zA-Z0-9\s\,\''\-]*$/)]],
+      mobileNumber: ['', [Validators.required, Validators.pattern(/^(\+?\d{1,4}[\s-]?)?\(?\d{1,4}\)?[\s-]?\d{1,4}[\s-]?\d{1,9}$/)]],
       pincode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
-      district: [''],
-      city: [''],
-      state: [''],
-      country: ['']
+      district: ['', [Validators.required]],
+      city: ['', [Validators.required]],
+      state: ['', [Validators.required]],
+      country: ['', [Validators.required]]
     });
 
     this.paymentForm = this.fb.group({
@@ -106,6 +106,7 @@ export class FilterComponent implements OnInit {
         console.error('Error fetching data', error);
       }
     );
+    this.reservations = this.reservationService.getReservations(); 
   }
 
   initializeLocations(): void {
@@ -125,10 +126,9 @@ export class FilterComponent implements OnInit {
     return `Assets/images/Room${imageIndex}.jpg`;
   }
 
-  
-  applyFilters(): void {  // Filter method to apply to the rooms based on filter values
+  applyFilters(): void {
     const filters = this.filterForm.value;
-
+  
     if (this.filterForm.invalid) {
       alert("Invalid input");
       this.filterForm.patchValue({
@@ -139,68 +139,72 @@ export class FilterComponent implements OnInit {
       return;
     }
 
-     const filteredAvailability = this.availability.filter(avail => {
-       const room = this.rooms.find(room => room.roomId === avail.roomId);   // this will fetch all the available rooms 
-      
+    const unavailableRoomIds = this.reservations
+    .filter(res => this.isDateRangeOverlapping(
+      new Date(filters.dateFrom),
+      new Date(filters.dateTo),
+      new Date(res.arrivalDate),
+      new Date(res.departureDate)
+    ))
+    .map(res => res.roomId);
+  
+    const filteredAvailability = this.availability.filter(avail => {
+      const room = this.rooms.find(room => room.roomId === avail.roomId);
+  
+      // if (!room) return false;
+      if (!room || unavailableRoomIds.includes(room.roomId)) return false;
+  
       return (
-        (!filters.location || (room && room.locationName === filters.location)) &&
+        (!filters.location || room.locationName === filters.location) &&
         this.isAvailable(avail, filters) &&
         this.isWithinStayDuration(avail, filters) &&
-        (room && this.isCapacityMatch(room, filters)) &&
-        (room && this.isWithinPriceRange(room, filters))
+        this.isCapacityMatch(room, filters) &&
+        this.isWithinPriceRange(room, filters)
       );
     });
-
+  
     this.filteredRooms = filteredAvailability.map(avail => {
       const room = this.rooms.find(room => room.roomId === avail.roomId);
-      return room ? { ...room, ...avail } : null; // Combine room and availability details
-    }).filter(room => room !== null);
-    
+      return { ...room, ...avail } as IRoom & IRoomAvailability;
+    });
+  
     this.filteredRoomsCount = this.filteredRooms.length;
   }
-
-  private isAvailable(avail: IRoomAvailability | undefined, filters: any): boolean {
-    if (!avail)
-    {
-      return false;
-    }
-
+  
+  private isAvailable(avail: IRoomAvailability, filters: any): boolean {
     const stayDateFrom = new Date(filters.dateFrom);
     const stayDateTo = new Date(filters.dateTo);
-
-    if (stayDateFrom >= stayDateTo) {
-      return false;
-    }
-
     const availFrom = new Date(avail.stayDateFrom);
     const availTo = new Date(avail.stayDateTo);
-
-    return (!filters.dateFrom || !filters.dateTo || (stayDateFrom <= availTo && stayDateTo > availFrom));
+  
+    return (!filters.dateFrom || !filters.dateTo || (stayDateFrom >= availFrom && stayDateTo <= availTo));
   }
-
+  
   private isCapacityMatch(room: IRoom, filters: any): boolean {
-    const numberOfPersons = filters.numberOfPersons;
-    if (numberOfPersons <= 0) {
-      return true;
-    }
+    const numberOfPersons = filters.numberOfPersons || 1;
     return room.guestCapacity >= numberOfPersons;
   }
-
+  
   private isWithinPriceRange(room: IRoom, filters: any): boolean {
-    const maxPrice = filters.maxPrice;
-    return maxPrice === 4000 || room.pricePerDayPerPerson <= maxPrice;
+    const maxPrice = filters.maxPrice || 4000;
+    return room.pricePerDayPerPerson <= maxPrice;
+  }
+  
+  private isWithinStayDuration(avail: IRoomAvailability, filters: any): boolean {
+    const minStay = filters.minStay || 0;
+    const maxStay = filters.maxStay || 0;
+  
+    return (minStay <= 0 || avail.minStay >= minStay) &&
+           (maxStay <= 0 || avail.maxStay <= maxStay);
   }
 
-  private isWithinStayDuration(avail: IRoomAvailability | undefined, filters: any): boolean {
-    if (!avail) 
-      {
-        return false;
-      }
-    const minStay = filters.minStay;
-    const maxStay = filters.maxStay;
-
-    return (minStay <= 0 || avail.minStay>=minStay) &&
-           (maxStay === 0 || avail.maxStay<=maxStay);
+  private isDateRangeOverlapping(
+    stayDateFrom: Date,
+    stayDateTo: Date,
+    availFrom: Date,
+    availTo: Date
+  ): boolean {
+    return (stayDateFrom <= availTo && stayDateTo >= availFrom);
   }
 
   private getISTDateTime(): string {
@@ -382,7 +386,8 @@ export class FilterComponent implements OnInit {
       this.customerService.saveCustomer(customerData);
       this.currentStep = 4;
     } else {
-      alert('Please fill in all required fields.');
+      this.customerForm.markAllAsTouched();
+      this.paymentForm.markAllAsTouched();
     }
   }
 

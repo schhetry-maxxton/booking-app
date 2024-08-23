@@ -32,6 +32,14 @@ export class ReservationService {
     localStorage.setItem('reservations', JSON.stringify(existingReservations));
   }
 
+  // updateReservationStatus(reservation: IReservation): void {
+  //   const foundReservation = this.getReservations().find(r => r.reservationId === reservation.reservationId);
+  //   if (foundReservation) {
+  //     foundReservation.status = reservation.status;
+  //     this.saveReservation(foundReservation);
+  //   }
+  // }
+
   getReservations(): IReservation[] {
     const reservations = localStorage.getItem(this.storageKey);
     return reservations ? JSON.parse(reservations) : [];
