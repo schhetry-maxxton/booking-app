@@ -42,15 +42,6 @@ body {
   height: 30px;
 }
 
-.cell {
-  position: relative;
-  height: 30px;
-  text-align: center;
-  vertical-align: middle;
-  /* border-right: 1px solid #dee2e6;
-  border-bottom: 1px solid #dee2e6; */
-  border:  0.1rem solid #ddd;
-}
 
 .available {
   background-color: #d4edda;
@@ -85,7 +76,16 @@ body {
  border: none;
 }
 
-.cell.selected{
+.cell {
+  position: relative;
+  height: 30px;
+  text-align: center;
+  vertical-align: middle;
+  border: 0.1rem solid #ddd;
+  /* Ensure border color does not overlap */
+}
+
+.cell.selected {
   background-color: #007bff;
   border: none;
 }

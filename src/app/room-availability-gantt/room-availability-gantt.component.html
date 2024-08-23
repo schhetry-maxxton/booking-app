@@ -21,14 +21,15 @@
           <ng-container *ngFor="let room of rooms">
             <div class="room-name">Room {{ room.roomId }}</div>
             <div *ngFor="let day of days" 
-              [ngClass]="getCellClass(room.roomId,day)"
-              (mousedown)="onMouseDown(room.roomId, day, $event)"
-              (mouseover)="onMouseOver(room.roomId, day, $event)"
-              (mouseup)="onMouseUp($event)"
-              class="cell" 
-              [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, day) ? 'auto' : 'none' }"
-            >
-            </div>
+            [ngClass]="getCellClass(room.roomId,day)"
+            (mousedown)="onMouseDown(room.roomId, day, $event)"
+            (mouseover)="onMouseOver(room.roomId, day, $event)"
+            (mouseup)="onMouseUp($event)"
+            (click)="onCellClick(room.roomId, day)"
+            class="cell" 
+            [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, day) ? 'auto' : 'none' }"
+          >
+          </div>
           </ng-container>
 
         </div>
@@ -36,5 +37,7 @@
     </div>
   </div>
 </div>
+<button (click)="logSelectedRange()">Log Selected Range</button>
+
 
 
