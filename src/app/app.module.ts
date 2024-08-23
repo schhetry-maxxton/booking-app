@@ -18,6 +18,7 @@ import { RoomAvailabilityGanttComponent } from './room-availability-gantt/room-a
 import { EventResizerComponent } from './event-resizer/event-resizer.component';
 import {CdkDrag} from '@angular/cdk/drag-drop';
 
+
 @NgModule({
   declarations: [
     AppComponent,

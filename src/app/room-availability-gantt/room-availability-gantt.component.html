@@ -20,12 +20,15 @@
           </div>
           <ng-container *ngFor="let room of rooms">
             <div class="room-name">Room {{ room.roomId }}</div>
-            <div *ngFor="let day of days" [ngClass]="getCellClass(room.roomId,day)"
-             class="cell" 
-             (mousedown)="onCellClick(room.roomId, day)"
-             
+            <div *ngFor="let day of days" 
+              [ngClass]="getCellClass(room.roomId,day)"
+              (mousedown)="onMouseDown(room.roomId, day, $event)"
+              (mouseover)="onMouseOver(room.roomId, day, $event)"
+              (mouseup)="onMouseUp($event)"
+              class="cell" 
+              [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, day) ? 'auto' : 'none' }"
             >
-          </div>
+            </div>
           </ng-container>
 
         </div>

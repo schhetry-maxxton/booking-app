@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { ReservationService } from '../Services/Reservation/reservation.service';
 import { IRoom } from '../Interface/iroom';
 import { IRoomAvailability } from '../Interface/iroom-availability';
@@ -39,10 +39,10 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   days: number[] = [];
   selectedMonth: number = 8;
   year: number = 2024;
-  selectedCell: { roomId: number; day: number } | null = null; // Track selected cell
-  dragging = false;
-  resizing = false;
-
+  // selectedCell: { roomId: number; day: number } | null = null; // Track selected cell
+  isMouseDown = false;
+  selectedCells: Set<string> = new Set();
+  
   constructor(private reservationService: ReservationService) {}
 
   ngOnInit(): void {
@@ -114,23 +114,51 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   getCellClass(roomId: number, day: number): string {
     const date = new Date(this.year, this.selectedMonth - 1, day);
     date.setHours(0, 0, 0, 0); // Normalize date to start at midnight
-
+  
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
-
+  
     if (!roomData) return '';
-
+  
     const isAvailable = roomData.availability.some(
       avail => date >= avail.start && date <= avail.end
     );
-
+  
     const isReserved = roomData.reservations.some(
       reserv => date >= reserv.start && date <= reserv.end
     );
-
+  
+    const isSelected = this.selectedCells.has(`${roomId}-${day}`);
     if (isReserved) return 'reserved'; // Red color for reservations
-    if (isAvailable) return 'available'; // Green color for availability
+    if (isAvailable) return isSelected ? 'selected available' : 'available'; // Green color for availability
+    if (isSelected) return 'selected'; // Blue colour for selected cells
     return 'not-available'; // Default color
   }
+
+//   getCellClass(roomId: number, day: number): string {
+//   const baseClass = this.selectedCell && this.selectedCell.roomId === roomId && this.selectedCell.day === day
+//     ? 'highlight'
+//     : '';
+
+//   const date = new Date(this.year, this.selectedMonth - 1, day);
+//   date.setHours(0, 0, 0, 0); // Normalize date to start at midnight
+
+//   const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+
+//   if (!roomData) return baseClass;
+
+//   const isAvailable = roomData.availability.some(
+//     avail => date >= avail.start && date <= avail.end
+//   );
+
+//   const isReserved = roomData.reservations.some(
+//     reserv => date >= reserv.start && date <= reserv.end
+//   );
+
+//   if (isReserved) return `${baseClass} reserved`; // Red color for reservations
+//   if (isAvailable) return `${baseClass} available`; // Green color for availability
+//   return `${baseClass} not-available`; // Default color
+// }
+
 
   calculateWidth(startDate: Date, endDate: Date): number {
     const timeDiff = endDate.getTime() - startDate.getTime();
@@ -154,10 +182,79 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return dayOfWeek === 0 || dayOfWeek === 6;
   }
   
-  onCellClick(roomId: number, day: number): void {
-    if (this.getCellClass(roomId, day) === 'available') {
-      this.selectedCell = { roomId, day };
+  // onCellClick(roomId: number, day: number): void {
+  //   if (this.getCellClass(roomId, day) === 'available') {
+  //     this.selectedCell = { roomId, day };
+  //   }
+  // }
+
+  onMouseDown(roomId: number, day: number, event: MouseEvent) {
+    event.preventDefault();
+    this.isMouseDown = true;
+    this.toggleSelection(roomId, day);
+  }
+
+  onMouseOver(roomId: number, day: number, event: MouseEvent) {
+    if (this.isMouseDown) {
+      this.toggleSelection(roomId, day);
     }
+  }
+
+  onMouseUp(event: MouseEvent) {
+    this.isMouseDown = false;
+  }
+
+  toggleSelection(roomId: number, day: number) {
+    const cellKey = `${roomId}-${day}`;
+    
+    // Find the availability range for the room
+    const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+    if (!roomData) return;
+  
+    // Get the start date of the selection
+    const startDate = new Date(this.year, this.selectedMonth - 1, day);
+    startDate.setHours(0, 0, 0, 0);
+  
+    // Check for booked dates and ensure selection starts again after a booked period
+    const isValidSelection = roomData.availability.some(avail => 
+      startDate >= avail.start && startDate <= avail.end &&
+      !roomData.reservations.some(reserv => 
+        startDate >= reserv.start && startDate <= reserv.end
+      )
+    );
+    
+    if (!isValidSelection) return;
+    
+    if (this.selectedCells.has(cellKey)) {
+      this.selectedCells.delete(cellKey);
+    } else {
+      this.selectedCells.add(cellKey);
+    }
+  }
+  
+
+  isSelected(roomId: number, day: number): boolean {
+    return this.selectedCells.has(`${roomId}-${day}`);
+  }
+ 
+  isCellClickable(roomId: number, day: number): boolean {
+    const date = new Date(this.year, this.selectedMonth - 1, day);
+    date.setHours(0, 0, 0, 0); // Normalize date to start at midnight
+    
+    const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+    
+    if (!roomData) return false;
+    
+    const isAvailable = roomData.availability.some(
+      avail => date >= avail.start && date <= avail.end
+    );
+    
+    if (!isAvailable) return false;
+    
+    // Check for overlapping booked dates
+    return !roomData.reservations.some(
+      reserv => date >= reserv.start && date <= reserv.end
+    );
   }
   
 }

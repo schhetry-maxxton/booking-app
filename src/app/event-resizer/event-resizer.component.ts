@@ -16,6 +16,7 @@ export class EventResizerComponent {
   private startWidth!: number;
   private startPositionLeft!: number;
   private resizeDirection!: 'left' | 'right';
+  
 
   @HostListener('window:mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {

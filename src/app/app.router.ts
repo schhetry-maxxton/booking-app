@@ -14,7 +14,6 @@ export const router: Routes = [
     { path : 'home' , component : HomeComponent},
     { path : 'rooms' , component : FilterComponent},
     { path : 'ganttChart' , component : PlanningChartComponent},
-    // { path : 'createReservation' , component : NewReservationComponent},
     { path : 'reservationDetails' , component : BookingReservationComponent},
     { path : 'customer' , component : CustomerComponent},
     { path : 'chart' , component : CharttComponent},
