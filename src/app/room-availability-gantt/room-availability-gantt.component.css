@@ -11,8 +11,6 @@ body {
 .chart {
   display: grid;
   grid-template-columns: repeat(32, 1fr); /* 1 for room names + 30 days */
-  /* grid-gap: 1px; */
-  /* border-bottom: 0.1rem solid #949090; */
   background-color: #dee2e6;
 }
 
@@ -22,14 +20,11 @@ body {
   align-items: center;
   justify-content: center;
   background-color: #f8f9fa;
-  /* border-right: 2px solid #dee2e6;
-  border-bottom: 2px solid #dee2e6; */
   border: 0.1rem solid #ddd;
   height: 30px;
   padding: 0 5px;
   white-space: nowrap;
   text-overflow: ellipsis;
-  /* overflow: hidden; */
 }
 
 .day-header {
@@ -42,16 +37,16 @@ body {
   height: 30px;
 }
 
-
 .available {
   background-color: #d4edda;
 }
 
-.cell.available{
+.cell.available {
   display: inline-flex;
   justify-content: center;
   align-items: center;
   text-align: center;
+ 
 }
 
 .not-available {
@@ -59,21 +54,20 @@ body {
 }
 
 .weekend {
-  background-color: #fff3cd; 
+  background-color: #fff3cd;
 }
 
 .reserved {
   background-color: red;
-  gap: 0;
-  z-index: 1;
+ 
 }
 
 .available.weekend {
   background-color: #d4edda;
 }
 
-.cell.reserved{
- border: none;
+.cell.reserved {
+  border: none;
 }
 
 .cell {
@@ -81,15 +75,22 @@ body {
   height: 30px;
   text-align: center;
   vertical-align: middle;
-  border: 0.1rem solid #ddd;
-  /* Ensure border color does not overlap */
+  border: 1px solid white; /* Updated border for readability */
 }
 
 .cell.selected {
   background-color: #007bff;
-  border: none;
+  border: 2px solid #007bff;
 }
 
 .selected {
   border: 2px solid #007bff; /* Blue border for selected cells */
+}
+
+.cell.selected-start {
+  border-left: 2px solid #007bff;
+}
+
+.cell.selected-end {
+  border-right: 2px solid #007bff;
 }

@@ -151,6 +151,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const target = event.target as HTMLSelectElement;
     this.selectedMonth = Number(target.value);
     this.generateChart(this.selectedMonth);
+    this.clearAllSelections();
   }
 
   isWeekend(day: number): boolean {
@@ -258,6 +259,10 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     });
   }
 
+  clearAllSelections() {
+    this.selectedCells.clear();
+  }
+  
 
   isSelected(roomId: number, day: number): boolean {
     return this.selectedCells.has(`${roomId}-${day}`);
