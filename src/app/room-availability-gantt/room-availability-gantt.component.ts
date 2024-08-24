@@ -3,8 +3,7 @@ import { ReservationService } from '../Services/Reservation/reservation.service'
 import { IRoom } from '../Interface/iroom';
 import { IRoomAvailability } from '../Interface/iroom-availability';
 import { IReservation } from '../Interface/ireservation'; // Import this if not already imported
-import { OverlayModule } from '@angular/cdk/overlay';
-import { CdkDrag } from '@angular/cdk/drag-drop';
+
 
 interface Availability {
   start: Date;
@@ -17,6 +16,8 @@ interface RoomData {
   roomId: number;
   availability: Availability[];
   reservations: Availability[];
+  minStay: number; // Add minStay
+  maxStay: number; // Add maxStay
 }
 
 @Component({
@@ -61,53 +62,65 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   updateRoomAvailability(): void {
     const availabilityMap: { [roomId: number]: Availability[] } = {};
     const reservationMap: { [roomId: number]: Availability[] } = {};
-
+    const minStayMap: { [roomId: number]: number } = {};
+    const maxStayMap: { [roomId: number]: number } = {};
+  
     this.stays.forEach(stay => {
       const roomId = stay.roomId;
       const startDate = new Date(stay.stayDateFrom);
       const endDate = new Date(stay.stayDateTo);
-
-      // Normalize dates to start at midnight to avoid timezone issues
+  
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(0, 0, 0, 0);
-
+  
       if (!availabilityMap[roomId]) {
         availabilityMap[roomId] = [];
       }
-
+  
       availabilityMap[roomId].push({
         start: startDate,
         end: endDate,
-        width: this.calculateWidth(startDate, endDate), // Correct width calculation
-        positionLeft: this.calculateLeftPosition(startDate) // Correct position calculation
+        width: this.calculateWidth(startDate, endDate),
+        positionLeft: this.calculateLeftPosition(startDate)
       });
+  
+      // Update minStay and maxStay
+      if (minStayMap[roomId] === undefined || stay.minStay < minStayMap[roomId]) {
+        minStayMap[roomId] = stay.minStay;
+      }
+      if (maxStayMap[roomId] === undefined || stay.maxStay > maxStayMap[roomId]) {
+        maxStayMap[roomId] = stay.maxStay;
+      }
     });
-
+  
     this.reservations.forEach(reservation => {
       const roomId = reservation.roomId;
       const startDate = new Date(reservation.arrivalDate);
       const endDate = new Date(reservation.departureDate);
-
-      // Normalize dates to start at midnight to avoid timezone issues
+  
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(0, 0, 0, 0);
-
+  
       if (!reservationMap[roomId]) {
         reservationMap[roomId] = [];
       }
-
+  
       reservationMap[roomId].push({
         start: startDate,
         end: endDate
       });
     });
-
+  
     this.availabilityTable = this.rooms.map(room => ({
       roomId: room.roomId,
       availability: availabilityMap[room.roomId] || [],
-      reservations: reservationMap[room.roomId] || []
+      reservations: reservationMap[room.roomId] || [],
+      minStay: minStayMap[room.roomId] || 0, // Set minStay
+      maxStay: maxStayMap[room.roomId] || 0  // Set maxStay
     }));
   }
+  
+  
 
   generateChart(month: number): void {
     const daysInMonth = new Date(this.year, month, 0).getDate();
@@ -183,7 +196,11 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
   onMouseUp(event: MouseEvent) {
     this.isMouseDown = false;
+    if (this.selectedRoomId !== null) {
+      this.validateSelection(this.selectedRoomId);
+    }
   }
+  
 
   onCellClick(roomId: number, day: number): void {
     // Prevent new single-cell selections if there's an existing selection
@@ -206,28 +223,24 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       this.selectedCells.add(cellKey);
     }
   }
-  updateSelection(roomId: number) {
+  updateSelection(roomId: number): void {
     if (this.startDay === undefined || this.endDay === undefined) return;
-
+  
     const start = Math.min(this.startDay, this.endDay);
     const end = Math.max(this.startDay, this.endDay);
-
-    // Clear previous selection and prepare new selection
+  
     this.clearSelectionInRoom(roomId);
-
+  
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
-
     if (!roomData) return;
-
+  
     let currentStart = start;
     let currentEnd = end;
-
-    // Ensure selection doesn't overlap with reservations
+  
     roomData.reservations.forEach(reservation => {
       const reservationStart = reservation.start.getDate();
       const reservationEnd = reservation.end.getDate();
-
-      // Adjust selection to end before the reservation starts
+  
       if (currentStart <= reservationEnd && currentEnd >= reservationStart) {
         if (currentStart < reservationStart) {
           this.addSelection(currentStart, reservationStart - 1, roomId);
@@ -235,13 +248,50 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         currentStart = Math.max(currentEnd + 1, reservationEnd + 1);
       }
     });
-
-    // Add any remaining selection after the last reservation
+  
     if (currentStart <= currentEnd) {
       this.addSelection(currentStart, currentEnd, roomId);
     }
+  
+    this.validateSelection(roomId);
   }
-
+  
+  //helper for yhe update selection to avoid edgecase
+  checkOverlap(start: number, end: number, roomData: RoomData): boolean {
+    return roomData.reservations.some(reservation => {
+      const reservStart = reservation.start.getDate();
+      const reservEnd = reservation.end.getDate();
+      return (start <= reservEnd && end >= reservStart);
+    });
+  }
+  //helper 2
+  validateSelection(roomId: number): void {
+    const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+    if (!roomData) return;
+  
+    const minStay = roomData.minStay;
+    const maxStay = roomData.maxStay;
+  
+    const selectedDays = Array.from(this.selectedCells)
+      .filter(cell => cell.startsWith(`${roomId}-`))
+      .map(cell => parseInt(cell.split('-')[1], 10))
+      .sort((a, b) => a - b);
+  
+    if (selectedDays.length < minStay || selectedDays.length > maxStay) {
+      this.clearAllSelections();
+      return;
+    }
+  
+    const start = selectedDays[0];
+    const end = selectedDays[selectedDays.length - 1];
+    if (this.checkOverlap(start, end, roomData)) {
+      this.clearAllSelections();
+      return;
+    }
+  }
+  
+  
+  
   addSelection(start: number, end: number, roomId: number) {
     for (let day = start; day <= end; day++) {
       this.toggleSelection(roomId, day);
