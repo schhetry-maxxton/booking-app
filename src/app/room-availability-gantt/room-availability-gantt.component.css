@@ -81,10 +81,10 @@ body {
   border: 1px solid white; /* Updated border for readability */
 }
 
-.cell.selected {
+/* .cell.selected {
   background-color: #007bff;
   border: 2px solid #007bff;
-}
+} */
 
 .selected {
   border: 2px solid #007bff; /* Blue border for selected cells */
@@ -96,4 +96,17 @@ body {
 
 .cell.selected-end {
   border-right: 2px solid #007bff;
+}
+
+.cell.available.arrival-day {
+  background-color: #c3e6cb; /* Slightly greener color for arrival days */
+}
+
+.cell.selected {
+  background-color: #007bff !important; /* Blue background for selected cells */
+  border: 2px solid #007bff !important; /* Blue border for selected cells */
+}
+
+.cell.available {
+  background-color: #d4edda; /* Default green color for available days */
 }

@@ -12,6 +12,7 @@ interface Availability {
 }
 
 interface RoomData {
+  arrivalDays: Set<number>; 
   roomId: number;
   availability: Availability[];
   reservations: Availability[];
@@ -62,6 +63,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const reservationMap: { [roomId: number]: Availability[] } = {};
     const minStayMap: { [roomId: number]: number } = {};
     const maxStayMap: { [roomId: number]: number } = {};
+    const arrivalDaysMap: { [roomId: number]: Set<number> } = {};
   
     this.stays.forEach(stay => {
       const roomId = stay.roomId;
@@ -81,7 +83,23 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         width: this.calculateWidth(startDate, endDate),
         positionLeft: this.calculateLeftPosition(startDate)
       });
- 
+  
+      if (!arrivalDaysMap[roomId]) {
+        arrivalDaysMap[roomId] = new Set<number>();
+      }
+  
+      // Populate arrivalDaysMap with only the days of the week
+      const arrivalDays = stay.arrivalDays; // This should be an array of days like ["MON", "SUN"]
+      const arrivalDayNumbers = arrivalDays.map(day => this.getDayNumber(day)); // Convert days to day numbers
+  
+      arrivalDayNumbers.forEach(day => {
+        for (let d = startDate.getDate(); d <= endDate.getDate(); d++) {
+          if (new Date(this.year, this.selectedMonth - 1, d).getDay() === day) {
+            arrivalDaysMap[roomId].add(d);
+          }
+        }
+      });
+  
       if (minStayMap[roomId] === undefined || stay.minStay < minStayMap[roomId]) {
         minStayMap[roomId] = stay.minStay;
       }
@@ -113,9 +131,24 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       availability: availabilityMap[room.roomId] || [],
       reservations: reservationMap[room.roomId] || [],
       minStay: minStayMap[room.roomId] || 0, 
-      maxStay: maxStayMap[room.roomId] || 0 
+      maxStay: maxStayMap[room.roomId] || 0,
+      arrivalDays: arrivalDaysMap[room.roomId] || new Set() // Include arrival days
     }));
   }
+  
+  getDayNumber(day: string): number {
+    const daysMap: { [key: string]: number } = {
+      'SUN': 0,
+      'MON': 1,
+      'TUE': 2,
+      'WED': 3,
+      'THU': 4,
+      'FRI': 5,
+      'SAT': 6
+    };
+    return daysMap[day.toUpperCase()];
+  }
+
   
   generateChart(month: number): void {
     const daysInMonth = new Date(this.year, month, 0).getDate();
@@ -125,28 +158,29 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   getCellClass(roomId: number, day: number): string {
     const date = new Date(this.year, this.selectedMonth - 1, day);
     date.setHours(0, 0, 0, 0); 
-
+  
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
-
+  
     if (!roomData) return '';
-
+  
     const isAvailable = roomData.availability.some(
-      (avail) => {
-        return date >= avail.start && date <= avail.end;
-      });
-
+      (avail) => date >= avail.start && date <= avail.end
+    );
+    const isArrivalDay = roomData.arrivalDays.has(day);
     const isReserved = roomData.reservations.some(
-      (reserv) => {
-        return date >= reserv.start && date <= reserv.end;
-      });
-
+      (reserv) => date >= reserv.start && date <= reserv.end
+    );
+  
     const isSelected = this.selectedCells.has(`${roomId}-${day}`);
-    if (isReserved) return 'reserved'; // red color for reservations
-    if (isAvailable) return isSelected ? 'selected available' : 'available'; // green color for available rooms
-    if (isSelected) return 'selected'; // blue colour for selected cells
-    return 'not-available'; // default color
+    if (isSelected) return 'selected'; // Blue color for selected cells
+    if (isReserved) return 'reserved'; // Red color for reservations
+    if (isAvailable && isArrivalDay) return 'available arrival-day'; // Slightly greener color for arrival days
+    if (isAvailable) return 'available'; // Default green color for available days
+    return 'not-available'; // Default color for unavailable days
   }
-
+  
+  
+  
   calculateWidth(startDate: Date, endDate: Date): number {
     const timeDiff = endDate.getTime() - startDate.getTime();
     const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // Add 1 to include both start and end dates
@@ -232,24 +266,24 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     if (this.startDay === undefined || this.endDay === undefined) {
       return;
     }
-
+  
     const start = Math.min(this.startDay, this.endDay);
     const end = Math.max(this.startDay, this.endDay);
-  
+    
     this.clearSelectionInRoom(roomId);
-  
+    
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
     if (!roomData) {
       return;
     }
-
+  
     let currentStart = start;
     let currentEnd = end;
-  
+    
     roomData.reservations.forEach(reservation => {
       const reservationStart = reservation.start.getDate();
       const reservationEnd = reservation.end.getDate();
-  
+    
       if (currentStart <= reservationEnd && currentEnd >= reservationStart) {
         if (currentStart < reservationStart) {
           this.addSelection(currentStart, reservationStart - 1, roomId);
@@ -257,12 +291,13 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         currentStart = Math.max(currentEnd + 1, reservationEnd + 1);
       }
     });
-  
+    
     if (currentStart <= currentEnd) {
       this.addSelection(currentStart, currentEnd, roomId);
     }
     this.validateSelection(roomId);
   }
+  
   
   //helper for yhe update selection to avoid edgecase
   checkOverlap(start: number, end: number, roomData: RoomData): boolean {
@@ -327,22 +362,23 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   isCellClickable(roomId: number, day: number): boolean {
     const date = new Date(this.year, this.selectedMonth - 1, day);
     date.setHours(0, 0, 0, 0);
-
+  
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
-
+  
     if (!roomData) return false;
-
+  
     const isAvailable = roomData.availability.some(
       avail => date >= avail.start && date <= avail.end
     );
-
     const isBooked = roomData.reservations.some(
       reserv => date >= reserv.start && date <= reserv.end
     );
-
-    return isAvailable && !isBooked; 
+  
+    const isArrivalDay = roomData.arrivalDays.has(day);
+  
+    return (isAvailable && !isBooked) || (this.isSelected(roomId, day)); // Allow selection on arrival days and extend selection
   }
-
+  
   logSelectedRange(): void {
     const selectedDates: { roomId: number; start: Date; end: Date }[] = [];
 
