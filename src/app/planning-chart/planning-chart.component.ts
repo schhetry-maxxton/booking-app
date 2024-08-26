@@ -3,7 +3,16 @@ import { IRoom } from '../Interface/iroom';
 import { IRoomAvailability } from '../Interface/iroom-availability';
 import { ReservationService } from '../Services/Reservation/reservation.service';
 import { IReservation } from '../Interface/ireservation';
-declare var google: any;
+
+interface Availability {
+  start: number;
+  end: number;
+}
+
+interface RoomData {
+  room: number;
+  availability: Availability[];
+}
 
 @Component({
   selector: 'app-planning-chart',
@@ -11,77 +20,82 @@ declare var google: any;
   styleUrls: ['./planning-chart.component.css']
 })
 export class PlanningChartComponent implements OnInit {
-  rooms: IRoom[] = [];
+  months = [
+    { name: 'January', value: 1 },
+    { name: 'February', value: 2 },
+    { name: 'March', value: 3 },
+    { name: 'April', value: 4 },
+    { name: 'May', value: 5 },
+    { name: 'June', value: 6 },
+    { name: 'July', value: 7 },
+    { name: 'August', value: 8 },
+    { name: 'September', value: 9 },
+    { name: 'October', value: 10 },
+    { name: 'November', value: 11 },
+    { name: 'December', value: 12 }
+  ];
+
+  room: IRoom[] = [];
   stays: IRoomAvailability[] = [];
   availabilityTable: any[] = [];
-  reservations: IReservation[] = [];
-  roomNameMap: Map<number, string> = new Map(); // Map to hold roomId to roomName mapping
+  rooms: number[] = [];
+  days: number[] = [];
+  data: RoomData[] = [];
+  selectedMonth: number = 1;
 
-  constructor(private reservationService: ReservationService) { }
+  constructor(private reservationService: ReservationService) {}
 
   ngOnInit(): void {
+    this.generateChart(this.selectedMonth);
     this.reservationService.getRoomsAndStays().subscribe(({ rooms, stays }) => {
-      this.rooms = rooms;
+      this.room = rooms;
       this.stays = stays;
+      this.rooms = this.room.map(r => r.roomId);
       this.getRoomAvailability();
-      this.reservations = this.reservationService.getReservations();
-      this.createRoomNameMap(); // Create map after fetching rooms
-      this.drawChart(); // Call drawChart after both data are available
     });
   }
 
   getRoomAvailability(): void {
     this.availabilityTable = this.stays.map(stay => {
-      const room = this.rooms.find(room => room.roomId === stay.roomId);
+      const room = this.room.find(room => room.roomId === stay.roomId);
       return { ...room, ...stay };
     });
+    console.log(this.availabilityTable);
   }
 
-  createRoomNameMap(): void {
-    this.roomNameMap = new Map(this.rooms.map(room => [room.roomId, room.roomName]));
+  onMonthChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.selectedMonth = Number(target.value);
+    this.generateChart(this.selectedMonth);
   }
 
-  drawChart(): void {
-    google.charts.load('current', { packages: ['timeline'] });
-    google.charts.setOnLoadCallback(() => {
-      const dataTable = new google.visualization.DataTable();
-      dataTable.addColumn({ type: 'string', id: 'Room Name' });
-      dataTable.addColumn({ type: 'string', id: 'Task' });
-      dataTable.addColumn({ type: 'date', id: 'Start Date' });
-      dataTable.addColumn({ type: 'date', id: 'End Date' });
+  generateChart(month: number): void {
+    const year = 2024; 
+    const daysInMonth = new Date(year, month, 0).getDate();
+    this.days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  }
 
-      const availabilityData = this.availabilityTable.map(item => [
-        item.roomName,
-        'Available',
-        new Date(item.stayDateFrom),
-        new Date(item.stayDateTo)
-      ]);
+  getCellClass(room: number, day: number): string {
+    const roomData = this.data.find(r => r.room === room);
+    const isAvailable = roomData && roomData.availability.some(
+      (avail) => { 
+        return day >= avail.start && day <= avail.end;
+      });
+    const dayOfWeek = new Date(2024, this.selectedMonth - 1, day).getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
+    return `${isAvailable ? 'available' : 'not-available'} ${isWeekend ? 'weekend' : ''}`;
+  }
 
-      const reservationData = this.reservations.map(reservation => [
-        this.roomNameMap.get(reservation.roomId) || `Room ${reservation.roomId}`, // Use roomName from the map
-        'Booked',
-        new Date(reservation.arrivalDate),
-        new Date(reservation.departureDate)
-      ]);
+  getDayName(day: number): string {
+    const year = 2024;
+    const date = new Date(year, this.selectedMonth - 1, day);
+    return date.toLocaleDateString('en-US', { weekday: 'short' }); // e.g., "Sun", "Mon"
+  }
 
-      const combinedData = [...availabilityData, ...reservationData];
-      dataTable.addRows(combinedData);
-
-      const options = {
-        timeline: {
-          showRowLabels: true,
-          showBarLabels: true,
-        },
-        avoidOverlappingGridLines: false,
-        height: this.availabilityTable.length * 50,
-        hAxis: {
-          format: 'MMM dd, yyyy',
-        },
-        colors: ['#008000', '#FF0000'] // Green and Red
-      };
-
-      const chart = new google.visualization.Timeline(document.getElementById('ganttChart'));
-      chart.draw(dataTable, options);
-    });
+  isWeekend(day: number): boolean {
+    const year = 2024;
+    const date = new Date(year, this.selectedMonth - 1, day);
+    const dayOfWeek = date.getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
   }
 }

@@ -9,7 +9,6 @@ import { PlanningChartComponent } from './planning-chart/planning-chart.componen
 import { FilterComponent } from './filter/filter.component';
 import { HeaderComponent } from './header/header.component';
 import { provideHttpClient } from '@angular/common/http';
-import { CustomerComponent } from './customer/customer.component';
 import { HomeComponent } from './home/home.component';
 import { CharttComponent } from './chartt/chartt.component';
 import { AngularResizeEventModule } from 'angular-resize-event';
@@ -17,6 +16,7 @@ import {OverlayModule} from '@angular/cdk/overlay';
 import { RoomAvailabilityGanttComponent } from './room-availability-gantt/room-availability-gantt.component';
 import { EventResizerComponent } from './event-resizer/event-resizer.component';
 import {CdkDrag} from '@angular/cdk/drag-drop';
+import { ModalComponent } from './modal/modal.component';
 
 
 @NgModule({
@@ -25,12 +25,12 @@ import {CdkDrag} from '@angular/cdk/drag-drop';
     BookingReservationComponent,
     FilterComponent,
     HeaderComponent,
-    CustomerComponent,
     PlanningChartComponent,
     HomeComponent,
     CharttComponent,
     RoomAvailabilityGanttComponent,
     EventResizerComponent,
+    ModalComponent,
   ],
   imports: [
     BrowserModule,

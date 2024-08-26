@@ -1,37 +1,30 @@
-<!-- <div class="result-section p-3 border">
-  <h3 style="color: darkcyan;">Room Availability Details</h3>
-<table class="table table-light table-striped table-hover mt-4">
-  <thead>
-    <tr>
-      <th>Room ID</th>
-      <th>Room Name</th>
-      <th>Stay Date From</th>
-      <th>Stay Date To</th>
-      <th>Arrival Days</th>
-      <th>Departure Days</th>
-      <th>Min Stay</th>
-      <th>Max Stay</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let room of availabilityTable">
-      <td>{{ room.roomId }}</td>
-      <td>{{ room.roomName }}</td>
-      <td>{{ room.stayDateFrom }}</td>
-      <td>{{ room.stayDateTo }}</td>
-      <td>{{ room.arrivalDays.join(', ') }}</td>
-      <td>{{ room.departureDays.join(', ') }}</td>
-      <td>{{ room.minStay }}</td>
-      <td>{{ room.maxStay }}</td>
-    </tr>
-  </tbody>
-</table>
-</div> -->
-<div class="container mt-4 mb-4">
-  <h2 class="text-center mb-4">Room Availability Gantt Chart</h2>
-  <div class="chart-container mb-4">
-    <div id="ganttChart" style="width: 100%; height: 500px;"></div>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="row">
+        <div class="form-group col-md-3">
+          <label for="monthSelect">Select Month</label>
+          <select class="form-control" id="monthSelect" (change)="onMonthChange($event)">
+            <option *ngFor="let month of months" [value]="month.value">
+              {{ month.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart">
+          <div class="day-header">Room</div>
+          <div *ngFor="let day of days" class="day-header">
+            {{ day }}<br>
+            <span>{{ getDayName(day) }}</span>
+          </div>
+          <ng-container *ngFor="let room of rooms">
+            <div class="room-name">Room {{ room }}</div>
+            <div *ngFor="let day of days" [ngClass]="getCellClass(room, day)" class="cell"></div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
-
-<!-- <app-room-availability-gantt></app-room-availability-gantt> -->
