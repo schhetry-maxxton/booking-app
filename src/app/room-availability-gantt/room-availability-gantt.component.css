@@ -10,7 +10,7 @@ body {
 
 .chart {
   display: grid;
-  grid-template-columns: repeat(32, 1fr); /* 1 for room names + 30 days */
+  /* grid-template-columns: repeat(32, 1fr);  */
   background-color: #dee2e6;
 }
 

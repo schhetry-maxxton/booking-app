@@ -13,7 +13,8 @@
       </div>
       
       <div class="chart-container">
-        <div class="chart">
+        <!-- Dynamically set grid-template-columns based on days.length -->
+        <div class="chart" [style.grid-template-columns]="'repeat(' + (days.length + 1) + ', 1fr)'">
           <div class="day-header">Room</div>
           <div *ngFor="let day of days" [ngClass]="{ 'day-header': true, 'weekend': isWeekend(day) }">
             {{ day }}<br>
@@ -22,7 +23,7 @@
           <ng-container *ngFor="let room of rooms">
             <div class="room-name">Room {{ room.roomId }}</div>
             <div *ngFor="let day of days" 
-              [ngClass]="getCellClass(room.roomId,day)"
+              [ngClass]="getCellClass(room.roomId, day)"
               (mousedown)="onMouseDown(room.roomId, day, $event)"
               (mouseover)="onMouseOver(room.roomId, day, $event)"
               (mouseup)="onMouseUp($event)"
