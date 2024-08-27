@@ -1,14 +1,17 @@
+
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-12">
-      <div class="row">
-        <div class="form-group col-md-3">
-          <label for="monthSelect">Select Month</label>
-          <select class="form-control" id="monthSelect" (change)="onMonthChange($event)">
-            <option *ngFor="let month of months" [value]="month.value">
-              {{ month.name }}
-            </option>
-          </select>
+      <!-- Navigation Buttons and Current Month Display -->
+      <div class="current-month row align-items-center justify-content-center" >
+        <div class="col-md-3 text-center">
+          <button (click)="changeMonth(-1)" class="btn btn-primary">‹</button>
+        </div>
+        <div class="col-md-6 text-center">
+          <h4>{{ getMonthName() }} {{ year }}</h4>
+        </div>
+        <div class="col-md-3 text-center">
+          <button (click)="changeMonth(1)" class="btn btn-primary">›</button>
         </div>
       </div>
       
@@ -29,6 +32,7 @@
               (mouseup)="onMouseUp($event)"
               (click)="onCellClick(room.roomId, day)"
               class="cell" 
+              [attr.title]="getTooltipContent(room.roomId, day)"
               [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, day) ? 'auto' : 'none' }"
             >
             </div>

@@ -29,7 +29,6 @@ import { ModalComponent } from './modal/modal.component';
     HomeComponent,
     CharttComponent,
     RoomAvailabilityGanttComponent,
-    EventResizerComponent,
     ModalComponent,
   ],
   imports: [
