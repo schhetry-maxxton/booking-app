@@ -60,7 +60,7 @@ export class PlanningChartComponent implements OnInit {
       const room = this.room.find(room => room.roomId === stay.roomId);
       return { ...room, ...stay };
     });
-    console.log(this.availabilityTable);
+    // console.log(this.availabilityTable);
   }
 
   onMonthChange(event: Event): void {

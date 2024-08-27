@@ -7,8 +7,8 @@ import { IReservation } from '../Interface/ireservation';
 interface Availability {
   start: Date;
   end: Date;
-  width?: number; 
-  positionLeft?: number;
+  // width?: number; 
+  // positionLeft?: number;
 }
 
 interface RoomData {
@@ -80,10 +80,10 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       availabilityMap[roomId].push({
         start: startDate,
         end: endDate,
-        width: this.calculateWidth(startDate, endDate),
-        positionLeft: this.calculateLeftPosition(startDate)
       });
   
+      // console.log(arrivalDaysMap);
+      
       if (!arrivalDaysMap[roomId]) {
         arrivalDaysMap[roomId] = new Set<number>();
       }
@@ -179,8 +179,6 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return 'not-available'; // Default color for unavailable days
   }
   
-  
-  
   calculateWidth(startDate: Date, endDate: Date): number {
     const timeDiff = endDate.getTime() - startDate.getTime();
     const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // Add 1 to include both start and end dates
@@ -214,11 +212,11 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   onMouseDown(roomId: number, day: number, event: MouseEvent) {
     event.preventDefault();
     this.isMouseDown = true;
-
+  
     if (this.selectedRoomId !== null) {
       this.clearSelectionInRoom(this.selectedRoomId);
     }
-
+  
     this.selectedRoomId = roomId;
     this.startDay = day; // mark the start day
     this.toggleSelection(roomId, day);
@@ -226,8 +224,11 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
   onMouseOver(roomId: number, day: number, event: MouseEvent) {
     if (this.isMouseDown && roomId === this.selectedRoomId) {
-      this.endDay = day; // mark the end day
-      this.updateSelection(roomId);
+      // Only update the endDay if dragging forward
+      if (day >= (this.startDay || 0)) {
+        this.endDay = day; // mark the end day
+        this.updateSelection(roomId);
+      }
     }
   }
 
@@ -269,9 +270,9 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   
     const start = Math.min(this.startDay, this.endDay);
     const end = Math.max(this.startDay, this.endDay);
-    
+  
     this.clearSelectionInRoom(roomId);
-    
+  
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
     if (!roomData) {
       return;
@@ -279,11 +280,11 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   
     let currentStart = start;
     let currentEnd = end;
-    
+  
     roomData.reservations.forEach(reservation => {
       const reservationStart = reservation.start.getDate();
       const reservationEnd = reservation.end.getDate();
-    
+  
       if (currentStart <= reservationEnd && currentEnd >= reservationStart) {
         if (currentStart < reservationStart) {
           this.addSelection(currentStart, reservationStart - 1, roomId);
@@ -291,7 +292,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         currentStart = Math.max(currentEnd + 1, reservationEnd + 1);
       }
     });
-    
+  
     if (currentStart <= currentEnd) {
       this.addSelection(currentStart, currentEnd, roomId);
     }
@@ -376,7 +377,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   
     const isArrivalDay = roomData.arrivalDays.has(day);
   
-    return (isAvailable && !isBooked) || (this.isSelected(roomId, day)); // Allow selection on arrival days and extend selection
+    return (isArrivalDay && isAvailable && !isBooked) || (this.isSelected(roomId, day)); // Allow selection on arrival days and extend selection
   }
   
   logSelectedRange(): void {

@@ -20,11 +20,12 @@ body {
   align-items: center;
   justify-content: center;
   background-color: #f8f9fa;
-  border: 0.1rem solid #ddd;
+  border: 0.5px  rgb(90, 85, 85); 
   height: 30px;
   padding: 0 5px;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-weight: bold;
 }
 
 .day-header {
@@ -33,27 +34,27 @@ body {
   align-items: center;
   justify-content: center;
   background-color: #f1f1f1;
-  border-bottom: 1px solid #dee2e6;
-  border-right: 1px solid #dee2e6;
+  /* border-bottom: 1px solid black;
+  border-right: 1px solid black; */
+  border: 0.5px  rgb(90, 85, 85); 
   height: 50px;
   padding: 5px;  
   font-weight: bold;
 }
 
-.available {
+/* .available {
   background-color: #d4edda;
-}
+} */
 
 .cell.available {
   display: inline-flex;
   justify-content: center;
   align-items: center;
   text-align: center;
- 
 }
 
 .not-available {
-  background-color: #ffffff;
+  background-color: #F7F7F7;
 }
 
 .weekend {
@@ -78,7 +79,7 @@ body {
   height: 30px;
   text-align: center;
   vertical-align: middle;
-  border: 1px solid white; /* Updated border for readability */
+  border:1px solid #EAEAEA;
 }
 
 /* .cell.selected {
@@ -100,13 +101,10 @@ body {
 
 .cell.available.arrival-day {
   background-color: #c3e6cb; /* Slightly greener color for arrival days */
+  cursor: pointer;
 }
 
 .cell.selected {
   background-color: #007bff !important; /* Blue background for selected cells */
   border: 2px solid #007bff !important; /* Blue border for selected cells */
-}
-
-.cell.available {
-  background-color: #d4edda; /* Default green color for available days */
 }
