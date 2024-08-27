@@ -14,10 +14,9 @@ import { CharttComponent } from './chartt/chartt.component';
 import { AngularResizeEventModule } from 'angular-resize-event';
 import {OverlayModule} from '@angular/cdk/overlay';
 import { RoomAvailabilityGanttComponent } from './room-availability-gantt/room-availability-gantt.component';
-import { EventResizerComponent } from './event-resizer/event-resizer.component';
 import {CdkDrag} from '@angular/cdk/drag-drop';
 import { ModalComponent } from './modal/modal.component';
-
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @NgModule({
   declarations: [
@@ -29,7 +28,6 @@ import { ModalComponent } from './modal/modal.component';
     HomeComponent,
     CharttComponent,
     RoomAvailabilityGanttComponent,
-    EventResizerComponent,
     ModalComponent,
   ],
   imports: [
@@ -41,6 +39,7 @@ import { ModalComponent } from './modal/modal.component';
     AngularResizeEventModule,
     OverlayModule,
     CdkDrag,
+    MatTooltipModule,
   ],
   providers: [
     provideClientHydration(), 

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IRoom } from '../Interface/iroom';
 import { IRoomAvailability } from '../Interface/iroom-availability';
@@ -7,6 +7,7 @@ import { RandomNumberService } from '../Services/RandomNumber/random-number.serv
 import { IReservation } from '../Interface/ireservation';
 import { ICustomer } from '../Interface/icustomer';
 import { CustomersService } from '../Services/Customers/customers.service';
+import { EventEmitter } from 'stream';
 
 @Component({
   selector: 'app-filter',
@@ -14,7 +15,9 @@ import { CustomersService } from '../Services/Customers/customers.service';
   styleUrls: ['./filter.component.css']
 })
 export class FilterComponent implements OnInit {
-  
+  // @Input() locations: string[] = [];
+  // @Output() filtersApplied = new EventEmitter<any>();
+
   rooms: IRoom[] = [];
   filteredRooms: Array<IRoom & IRoomAvailability> = [];
   availability: IRoomAvailability[] = [];
@@ -151,9 +154,10 @@ export class FilterComponent implements OnInit {
     const filteredAvailability = this.availability.filter(avail => {
       const room = this.rooms.find(room => room.roomId === avail.roomId);
   
-      // if (!room) return false;
       if (!room || unavailableRoomIds.includes(room.roomId)) return false;
   
+      // this.filtersApplied.emit(this.filterForm.value);
+
       return (
         (!filters.location || room.locationName === filters.location) &&
         this.isAvailable(avail, filters) &&
@@ -239,7 +243,6 @@ export class FilterComponent implements OnInit {
 
   openBookingModal(room: IRoom): void {
     this.selectedRoom = room;
-
     const stayDateFrom = this.filterForm.get('dateFrom')?.value;
     const stayDateTo = this.filterForm.get('dateTo')?.value;
     const numberOfPerson = this.filterForm.get('numberOfPersons')?.value;
