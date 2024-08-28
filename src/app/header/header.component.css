@@ -18,6 +18,8 @@
     color: #333; 
     font-weight: 500;
     transition: color 0.3s, background-color 0.3s, transform 0.3s;
+    font-size: large;
+    color: #007bff;
   }
   
   

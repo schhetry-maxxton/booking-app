@@ -32,14 +32,34 @@
               (mouseup)="onMouseUp($event)"
               (click)="onCellClick(room.roomId, day)"
               class="cell" 
-              [attr.title]="getTooltipContent(room.roomId, day)"
+              [attr.data-tooltip]="getTooltipText(room.roomId, day)"
               [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, day) ? 'auto' : 'none' }"
             >
             </div>
           </ng-container>
         </div>
       </div>
+      <div class="legends container">
+        <div class="row legend">
+          <div class="legend-item">
+            <div class="legend-box" style="background-color: rgb(199, 97, 97);"></div>
+            <span class="legend-box-span">Booked periods</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-box" style="background-color: #c3e6cb;"></div>
+            <span class="legend-box-span">Available booking periods</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-box" style="background-color: #EAEAEA;"></div>
+            <span class="legend-box-span">Blocked periods</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-box" style="background-color: #58a5be;"></div>
+            <span class="legend-box-span">Selected periods</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-<button (click)="logSelectedRange()">Log Selected Range</button>
+<!-- <button (click)="logSelectedRange()">Log Selected Range</button> -->

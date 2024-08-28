@@ -22,7 +22,7 @@ body {
   background-color: #f8f9fa;
   /* border: 0.5px  rgb(90, 85, 85);  */
   border:1px solid #EAEAEA;
-  height: 30px;
+  height: 40px;
   padding: 0 5px;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -71,10 +71,10 @@ h4{
   background-color: #fff3cd;
 }
 
-.reserved {
-  background-color: red;
+/* .reserved {
+  background-color: rgb(199, 97, 97);
  
-}
+} */
 
 .available.weekend {
   background-color: #d4edda;
@@ -82,10 +82,17 @@ h4{
 
 .cell {
   position: relative;
-  height: 30px;
+  height: 40px;
   text-align: center;
   vertical-align: middle;
   border:1px solid #EAEAEA;
+}
+
+.cell.reserved {
+  position: relative;
+  background-color: rgb(199, 97, 97);
+  color: white;
+  border: none;
 }
 
 /* .cell.selected {
@@ -94,53 +101,63 @@ h4{
 } */
 
 .selected {
-  border: 2px solid #007bff; /* Blue border for selected cells */
+  border: 2px solid #58a5be; /* Blue border for selected cells */
 }
 
 .cell.selected-start {
-  border-left: 2px solid #007bff;
+  border-left: 2px solid #58a5be;
 }
 
 .cell.selected-end {
-  border-right: 2px solid #007bff;
+  border-right: 2px solid #58a5be;
 }
 
 .cell.available.arrival-day {
   background-color: #c3e6cb; /* Slightly greener color for arrival days */
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
 .cell.selected {
-  background-color: #007bff !important; /* Blue background for selected cells */
-  border: 2px solid #007bff !important; /* Blue border for selected cells */
+  background-color: #58a5be !important; /* Blue background for selected cells */
+  /* border: 2px solid #007bff !important;  */
+  border-style: dashed;
 }
 
-.cell.reserved {
+/* .cell.reserved {
   position: relative;
   display: inline-block;
   border: none;
+} */
+
+.legends {
+  width: 20%;
+  padding-bottom: 20px;
 }
 
-.cell.reserved::after {
-  content: attr(title);
-  position: absolute;
-  bottom: 100%; /* Position above the cell */
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #333;
-  color: #fff;
-  padding: 5px;
-  border-radius: 4px;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s;
-  font-size: 12px;
-  z-index: 1000;
+.row.legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
 }
 
-/* Show tooltip on hover */
-.cell.reserved:hover::after {
-  opacity: 1;
-  visibility: visible;
+.legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 15px; /* Space between items */
+  font-size: 24px;
 }
+
+.legend-box {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%; /* Rounded corners for a cleaner look */
+  margin-right: 10px; /* Space between box and text */
+}
+
+.legend-box-span{
+  font-size: 20px;
+  color: #333; /* Dark text for readability */
+}
+
