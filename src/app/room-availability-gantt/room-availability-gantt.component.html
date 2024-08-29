@@ -2,7 +2,6 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-12">
-      <!-- Navigation Buttons and Current Month Display -->
       <div class="current-month row align-items-center justify-content-center" >
         <div class="col-md-3 text-center">
           <button (click)="changeMonth(-1)" class="btn btn-primary">‹</button>
@@ -16,7 +15,6 @@
       </div>
       
       <div class="chart-container">
-        <!-- Dynamically set grid-template-columns based on days.length -->
         <div class="chart" [style.grid-template-columns]="'repeat(' + (days.length + 1) + ', 1fr)'">
           <div class="day-header">Room</div>
           <div *ngFor="let day of days" [ngClass]="{ 'day-header': true, 'weekend': isWeekend(day) }">
@@ -30,7 +28,7 @@
               (mousedown)="onMouseDown(room.roomId, day, $event)"
               (mouseover)="onMouseOver(room.roomId, day, $event)"
               (mouseup)="onMouseUp($event)"
-              (click)="onCellClick(room.roomId, day)"
+              
               class="cell" 
               [attr.data-tooltip]="getTooltipText(room.roomId, day)"
               [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, day) ? 'auto' : 'none' }"
