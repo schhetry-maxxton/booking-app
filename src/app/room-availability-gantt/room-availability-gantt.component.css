@@ -132,6 +132,7 @@ h4{
 .legends {
   width: 20%;
   padding-bottom: 20px;
+  padding-top: 20px;
 }
 
 .row.legend {
@@ -150,8 +151,8 @@ h4{
 }
 
 .legend-box {
-  width: 30px;
-  height: 30px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%; /* Rounded corners for a cleaner look */
   margin-right: 10px; /* Space between box and text */
 }

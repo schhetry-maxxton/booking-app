@@ -1,26 +1,250 @@
 <div class="modal-header">
-    <h5 class="modal-title">Booking Details</h5>
-    <button type="button" class="close" (click)="close()">&times;</button>
+    <!-- <h4 class="modal-title">Booking Details</h4> -->
+    <h5 class="modal-title" id="bookingModalLabel" style="color: darkcyan; font-size: 1.5rem;">Booking Details</h5>
+    <button type="button" class="close" aria-label="Close" (click)="activeModal.close()">
+      <span aria-hidden="true">&times;</span>
+    </button>
   </div>
   <div class="modal-body">
-    <form [formGroup]="bookingForm">
-      <div class="form-group">
-        <label for="arrivalDate">Arrival Date</label>
-        <input id="arrivalDate" formControlName="arrivalDate" class="form-control" readonly>
+    <ng-container [ngSwitch]="currentStep">
+      <div *ngSwitchCase="1">
+        <!-- Booking Form Content -->
+        <form [formGroup]="bookingForm">
+          <!-- Booking Form Fields -->
+          <div class="modal-step-content">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Reservation ID</label>
+              <p class="form-text">{{ bookingForm.get('reservationId')?.value }}</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Room no.</label>
+              <p class="form-text">{{ bookingForm.get('roomNo')?.value }}</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Arrival date</label>
+              <p class="form-text">{{ bookingForm.get('stayDateFrom')?.value | date }}</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Departure date</label>
+              <p class="form-text">{{ bookingForm.get('stayDateTo')?.value | date }}</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Number of days</label>
+              <p class="form-text">{{ bookingForm.get('numberOfDays')?.value }}</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Reservation date</label>
+              <p class="form-text">{{ bookingForm.get('reservationDate')?.value | date }}</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Guests</label>
+              <input type="text" id="totalNumberOfGuests" class="form-control" formControlName="totalNumberOfGuests">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Price per person</label>
+              <p class="form-text">{{ bookingForm.get('pricePerDayPerPerson')?.value | currency }}</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total price</label>
+              <p class="form-text">{{ bookingForm.get('totalPrice')?.value | currency }}</p>
+            </div>
+          </div>
+          </div>
+          <button type="button" class="btn btn-success" (click)="nextStep()">Next</button>
+        </form>
       </div>
-      <div class="form-group">
-        <label for="departureDate">Departure Date</label>
-        <input id="departureDate" formControlName="departureDate" class="form-control" readonly>
+      <div *ngSwitchCase="2">
+        <!-- Customer Form Content -->
+        <form [formGroup]="customerForm">
+          <!-- Customer Form Fields -->
+          <div class="row mb-3">
+            <div class="col-12">
+              <label for="customerId" class="form-label">Customer ID</label>
+              <p class="form-text">{{ customerForm.get('customerId')?.value }}</p>
+              <!-- <input type="text" id="customerId" class="form-control" formControlName="customerId" readonly> -->
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="firstName" class="form-label">First Name</label>
+              <input type="text" id="firstName" class="form-control" formControlName="firstName">
+              
+            </div>
+            <div class="col-md-4">
+              <label for="middleName" class="form-label">Middle Name</label>
+              <input type="text" id="middleName" class="form-control" formControlName="middleName">
+            </div>
+            <div class="col-md-4">
+              <label for="lastName" class="form-label">Last Name</label>
+              <input type="text" id="lastName" class="form-control" formControlName="lastName">
+            </div>
+            <div *ngIf="customerForm.get('firstName')?.touched || customerForm.get('firstName')?.dirty">
+              <small *ngIf="customerForm.get('firstName')?.hasError('required')" class="text-danger">First name is required.</small>
+              <small *ngIf="customerForm.get('firstName')?.hasError('minlength')" class="text-danger">First name must be at least 2 characters long.</small>
+            </div>
+            <div *ngIf="customerForm.get('middleName')?.invalid">
+              <small *ngIf="customerForm.get('middleName')?.errors" class="text-danger">Middle name must have alhpabets only.</small>
+            </div>
+            <div *ngIf="customerForm.get('lastName')?.invalid">
+              <small *ngIf="customerForm.get('lastName')?.errors" class="text-danger">Last name must have alhpabets only.</small>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-5">
+              <label for="birthDate" class="form-label">Birth Date</label>
+              <input type="date" id="birthDate" class="form-control" formControlName="birthDate" (change)="onBirthDateChange()">
+              <div *ngIf="customerForm.get('birthDate')?.invalid && customerForm.get('birthDate')?.touched">
+                <small *ngIf="customerForm.get('birthDate')?.errors" class="text-danger">Birth Date is required.</small>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <label for="age" class="form-label">Age</label>
+              <input type="number" id="age" class="form-control" formControlName="age" readonly>
+              <div *ngIf="customerForm.get('age')?.invalid">
+                <small *ngIf="customerForm.get('age')?.errors?.['min']" class="text-danger">Age must be greater than 0.</small>
+              </div>
+            </div>
+            
+            <div class="col-md-5">
+              <label for="mobileNumber" class="form-label">Mobile Number</label>
+              <input 
+                type="text" 
+                id="mobileNumber" 
+                class="form-control" 
+                formControlName="mobileNumber"
+              >
+              <div *ngIf="customerForm.get('mobileNumber')?.touched">
+                <div *ngIf="customerForm.get('mobileNumber')?.hasError('required')">
+                  <small class="text-danger">Mobile Number is required.</small>
+                </div>
+                <div *ngIf="customerForm.get('mobileNumber')?.hasError('pattern')">
+                  <small class="text-danger">Invalid Mobile Number format.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="address" class="form-label">Address</label>
+              <input type="text" id="address" class="form-control" formControlName="address">
+              <div *ngIf="customerForm.get('address')?.invalid && customerForm.get('address')?.touched">
+                <small *ngIf="customerForm.get('address')?.errors" class="text-danger">Address is required.</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="district" class="form-label">District</label>
+              <input type="text" id="district" class="form-control" formControlName="district">
+              <div *ngIf="customerForm.get('district')?.invalid && customerForm.get('district')?.touched">
+                <small *ngIf="customerForm.get('district')?.errors" class="text-danger">District is required.</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="pincode" class="form-label">Pincode</label>
+              <input type="text" id="pincode" class="form-control" formControlName="pincode" maxlength="6" >
+              <div *ngIf="customerForm.get('pincode')?.touched">
+                <div *ngIf="customerForm.get('pincode')?.hasError('required')">
+                  <small class="text-danger">Pincode is required.</small>
+                </div>
+                <div *ngIf="customerForm.get('pincode')?.hasError('pattern')">
+                  <small class="text-danger">Pincode must be 6 digits.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="city" class="form-label">City</label>
+              <input type="text" id="city" class="form-control" formControlName="city">
+              <div *ngIf="customerForm.get('city')?.invalid && customerForm.get('city')?.touched">
+                <small *ngIf="customerForm.get('city')?.errors" class="text-danger">City is required.</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="state" class="form-label">State</label>
+              <input type="text" id="state" class="form-control" formControlName="state">
+              <div *ngIf="customerForm.get('state')?.invalid && customerForm.get('state')?.touched">
+                <small *ngIf="customerForm.get('state')?.errors" class="text-danger">State is required.</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="country" class="form-label">Country</label>
+              <input type="text" id="country" class="form-control" formControlName="country">
+              <div *ngIf="customerForm.get('country')?.invalid && customerForm.get('country')?.touched">
+                <small *ngIf="customerForm.get('country')?.errors" class="text-danger">Country is required.</small>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" (click)="previousStep()">Previous</button>
+          <button type="button" class="btn btn-success" (click)="nextStep()">Next</button>
+        </form>
       </div>
-      <div class="form-group">
-        <label for="roomId">Room ID</label>
-        <input id="roomId" formControlName="roomId" class="form-control" readonly>
+      <div *ngSwitchCase="3">
+        <!-- Payment Form Content -->
+        <form [formGroup]="paymentForm">
+          <!-- Payment Form Fields -->
+          <div class="mb-3">
+            <label for="paymentId" class="form-label">Payment ID</label>
+            <input type="text" id="paymentId" class="form-control" formControlName="paymentId" readonly>
+          </div>
+          <div class="mb-3">
+            <label for="paymentMode" class="form-label">Payment Mode</label>
+            <select id="paymentMode" class="form-select" formControlName="paymentMode">
+              <option value="creditCard">Credit Card</option>
+              <option value="debitCard">Debit Card</option>
+              <option value="netBanking">Net Banking</option>
+              <option value="upi">UPI</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="totalAmount" class="form-label">Total Amount</label>
+            <input type="text" id="totalAmount" class="form-control" formControlName="totalAmount" readonly>
+          </div>
+          <div class="mb-3">
+            <label for="paidAmount" class="form-label">Paid Amount</label>
+            <input type="number" id="paidAmount" class="form-control" formControlName="paidAmount" (input)="updateDueAmount()">
+          </div>
+          <div class="mb-3">
+            <label for="dueAmount" class="form-label">Due Amount</label>
+            <input type="text" id="dueAmount" class="form-control" formControlName="dueAmount" readonly>
+          </div>
+          <button type="button" class="btn btn-secondary" (click)="previousStep()">Previous</button>
+          <button type="button" class="btn btn-primary" (click)="nextStep()">Submit</button>
+        </form>
       </div>
-      <!-- Add other fields as needed -->
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="close()">Close</button>
-    <button type="button" class="btn btn-primary" (click)="save()">Save</button>
+      <div *ngSwitchCase="4">
+        <!-- Confirmation Message -->
+        <div class="text-center">
+            <h1>Your booking details have been successfully submitted.</h1>
+            <div class="invoice-header">
+              <p>Reservation ID: {{ bookingForm.value.reservationId }}</p>
+              <p>Room No: {{ bookingForm.value.roomNo }}</p>
+              <p>Stay From: {{ bookingForm.value.stayDateFrom | date}} </p>
+              <p>Stay To: {{ bookingForm.value.stayDateTo | date}}</p>
+              <p>Number of Days: {{ bookingForm.value.numberOfDays }}</p>
+              <p>Total Guests: {{ bookingForm.value.totalNumberOfGuests }}</p>
+              <!-- <p>Total Price: {{ bookingForm.value.totalPrice }}</p> -->
+            </div>
+            <div class="invoice-section">
+              <h2>Customer Information</h2>
+              <p>Customer ID: {{ customerForm.value.customerId }}</p>
+              <p>Name: {{ customerForm.value.firstName }} {{ customerForm.value.middleName }} {{ customerForm.value.lastName }}</p>
+              <p>Address: {{ customerForm.value.address }}</p>
+            </div>
+            <div class="invoice-section">
+              <h2>Payment Information</h2>
+              <p>Total Amount: {{ paymentForm.value.totalAmount }}</p>
+              <p>Paid Amount: {{ paymentForm.value.paidAmount }}</p>
+              <p>Due Amount: {{ paymentForm.value.dueAmount }}</p>
+            </div>
+            <div class="invoice-footer">
+              Thank you for your booking!
+            </div>
+          </div>
+        <button type="button" class="btn btn-secondary" (click)="resetForms()">Close</button>
+      </div>
+    </ng-container>
   </div>
   

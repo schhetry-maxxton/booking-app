@@ -78,7 +78,6 @@ export class FilterComponent implements OnInit {
       totalAmount: [''],
       paidAmount: ['', [Validators.required]],
       dueAmount: ['']
-      
     });
 
     this.bookingForm.get('totalNumberOfGuests')?.valueChanges.subscribe(() => {
@@ -91,6 +90,10 @@ export class FilterComponent implements OnInit {
 
     this.filterForm.get('maxPrice')?.valueChanges.subscribe(() => {
       this.applyFilters();
+    });
+
+    this.paymentForm.get('totalAmount')?.valueChanges.subscribe(() => {
+      this.updateDueAmount();
     });
   }
 
@@ -338,9 +341,19 @@ export class FilterComponent implements OnInit {
   updateDueAmount(): void {
     const totalAmount = this.paymentForm.get('totalAmount')?.value;
     const paidAmount = this.paymentForm.get('paidAmount')?.value;
-    const dueAmount = totalAmount - paidAmount;
+  
+    // Convert values to numbers if they are strings
+    const totalAmountNumber = Number(totalAmount);
+    const paidAmountNumber = Number(paidAmount);
+  
+    const dueAmount = totalAmountNumber - paidAmountNumber;
+  
+    // Update the due amount in the form
     this.paymentForm.get('dueAmount')?.setValue(dueAmount);
   }
+  
+
+  
 
   submitBooking(): void {
     if (this.paymentForm.valid) {
@@ -352,6 +365,7 @@ export class FilterComponent implements OnInit {
 
       const newReservation: IReservation = {
         reservationId: bookingData.booking.reservationId,
+        firstName:bookingData.customer.firstName,
         locationId: this.selectedRoom?.locationId || 0,
         roomId: this.selectedRoom?.roomId || 0,
         roomName: this.selectedRoom?.roomName,
@@ -360,6 +374,7 @@ export class FilterComponent implements OnInit {
         departureDate: new Date(bookingData.booking.stayDateTo),
         reservationDate: new Date(bookingData.booking.reservationDate),
         totalPrice: bookingData.booking.totalPrice,
+        dueAmount: bookingData.payment.dueAmount,
         status: 'CONFIRM',
         paidAmount: bookingData.payment.paidAmount,
         numberOfGuest: bookingData.booking.totalNumberOfGuests
@@ -389,7 +404,9 @@ export class FilterComponent implements OnInit {
       this.customerForm.markAllAsTouched();
       this.paymentForm.markAllAsTouched();
     }
+    
   }
+  
 
   resetForms(): void {
     this.closeBookingModal();
