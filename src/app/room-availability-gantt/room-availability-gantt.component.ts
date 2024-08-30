@@ -49,6 +49,18 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const today = new Date();
     this.selectedMonth = today.getMonth(); // Index of the current month
     this.year = today.getFullYear();
+    
+  }
+
+  ngOnInit(): void {
+    this.reservationService.getRoomsAndStays().subscribe(({ rooms, stays }) => {
+      this.rooms = rooms;
+      this.stays = stays;
+      this.reservations = this.reservationService.getReservations();
+      this.updateRoomAvailability();
+      this.generateChart(this.selectedMonth);
+      // console.log(this.reservations);
+    });
   }
 
   getMonthName(): string {
@@ -68,26 +80,42 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     this.clearAllSelections();
   }
 
-  ngOnInit(): void {
-    this.reservationService.getRoomsAndStays().subscribe(({ rooms, stays }) => {
-      this.rooms = rooms;
-      this.stays = stays;
-      this.reservations = this.reservationService.getReservations();
-      this.updateRoomAvailability();
-      this.generateChart(this.selectedMonth);
-      console.log(this.reservations);
-    });
-  }
-
   generateChart(month: number): void {
     const daysInMonth = new Date(this.year, month + 1, 0).getDate(); 
     this.days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   }
 
-  getTooltipText(roomId: number, day: number): string {
-    const cellClass = this.getCellClass(roomId, day);
-    if (cellClass === 'reserved') {
-      return `Details for Room ${roomId} on ${day}`;
+  // getTooltipText(roomId: number, day: number): string {
+  //   const cellClass = this.getCellClass(roomId, day);
+  //   // const reservd = this.reservations
+  //   if (cellClass === 'reserved') {
+  //     return `Details for Room ${roomId} on ${day}`;
+  //   }
+  //   return '';
+  // }
+
+
+  hasReservation(roomId:number,day: number):boolean {
+    const date= new Date(this.year,this.selectedMonth,day);
+
+    return this.reservations.some((reservation)=>
+      reservation.roomId === roomId && new Date(reservation.arrivalDate).getDate() === date.getDate()
+    && new Date(reservation.arrivalDate).getMonth() === date.getMonth() && new Date(reservation.arrivalDate).getFullYear() === date.getFullYear() 
+    )
+  }
+
+  getCustomerName(roomId:number,day: number):string {
+    const date= new Date(this.year,this.selectedMonth,day);
+
+    const reservation = this.reservations.find((reservation)=>{
+      const arrivalDate= new Date(reservation.arrivalDate);
+      // console.log(arrivalDate);
+      
+      return reservation.roomId === roomId && arrivalDate.getDate() === date.getDate()
+    && arrivalDate.getMonth() === date.getMonth() && arrivalDate.getFullYear() === date.getFullYear()
+    })
+    if(reservation){
+      return reservation.firstName;
     }
     return '';
   }
@@ -185,7 +213,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const isReserved = roomData.reservations.some(
       (reserv) => date >= reserv.start && date <= reserv.end
     );
-  
+
     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(); // Get day name
     const isArrivalDay = roomData.arrivalDays.has(dayName); 
     
@@ -413,7 +441,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
     modalRef.result.then((result) => {
         console.log('Modal closed with result:', result);
-        this.generateChart(this.selectedMonth);
+        this.ngOnInit();
         this.clearAllSelections();
     }, (reason) => {
         console.log('Modal dismissed with reason:', reason);

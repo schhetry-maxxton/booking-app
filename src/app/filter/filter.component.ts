@@ -27,6 +27,7 @@ export class FilterComponent implements OnInit {
   currentStep: number = 1;  // to track the current step in the form
   reservations: IReservation[] = [];
   filteredRoomsCount: number | null = null;
+  isFilterApplied: boolean = false;
 
   constructor(
     private reservationService: ReservationService,
@@ -40,8 +41,8 @@ export class FilterComponent implements OnInit {
       dateTo: [''],
       numberOfPersons: [1, [Validators.min(1)]],
       maxPrice: [4000],
-      minStay: [0, [Validators.min(0)]],
-      maxStay: [0, [Validators.min(0)]]
+      minStay: ['', [Validators.min(1)]],
+      maxStay: ['',[Validators.max(10)]]
     });
 
     this.bookingForm = this.fb.group({
@@ -85,10 +86,12 @@ export class FilterComponent implements OnInit {
     });
 
     this.filterForm.get('location')?.valueChanges.subscribe(() => {
+      // this.checkIfFilterApplied();
       this.applyFilters();
     });
 
     this.filterForm.get('maxPrice')?.valueChanges.subscribe(() => {
+      // this.checkIfFilterApplied();
       this.applyFilters();
     });
 
@@ -129,6 +132,12 @@ export class FilterComponent implements OnInit {
     return `Assets/images/Room${imageIndex}.jpg`;
   }
 
+  checkIfFilterApplied(): void {
+    const dateFrom = this.filterForm.get('dateFrom')?.value;
+    const dateTo = this.filterForm.get('dateTo')?.value;
+    this.isFilterApplied = (dateFrom !== null && dateFrom !== '') || (dateTo !== null && dateTo !== '');
+  }
+
   applyFilters(): void {
     const filters = this.filterForm.value;
   
@@ -136,8 +145,8 @@ export class FilterComponent implements OnInit {
       alert("Invalid input");
       this.filterForm.patchValue({
         numberOfPersons: [1],
-        minStay: [0],
-        maxStay: [0]
+        minStay: [''],
+        maxStay: ['']
       });
       return;
     }

@@ -51,7 +51,10 @@
             </div>
           </div>
           </div>
-          <button type="button" class="btn btn-success" (click)="nextStep()">Next</button>
+          <div>
+            <button type="button" class="btn btn-success" (click)="nextStep()">Next</button>
+          </div>
+          
         </form>
       </div>
       <div *ngSwitchCase="2">
@@ -177,8 +180,10 @@
               </div>
             </div>
           </div>
-          <button type="button" class="btn btn-primary" (click)="previousStep()">Previous</button>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" (click)="previousStep()">Previous</button>
           <button type="button" class="btn btn-success" (click)="nextStep()">Next</button>
+          </div>
         </form>
       </div>
       <div *ngSwitchCase="3">
@@ -192,9 +197,9 @@
           <div class="mb-3">
             <label for="paymentMode" class="form-label">Payment Mode</label>
             <select id="paymentMode" class="form-select" formControlName="paymentMode">
+              <option value="netBanking">Cash</option>
               <option value="creditCard">Credit Card</option>
               <option value="debitCard">Debit Card</option>
-              <option value="netBanking">Net Banking</option>
               <option value="upi">UPI</option>
             </select>
           </div>
@@ -210,8 +215,11 @@
             <label for="dueAmount" class="form-label">Due Amount</label>
             <input type="text" id="dueAmount" class="form-control" formControlName="dueAmount" readonly>
           </div>
-          <button type="button" class="btn btn-secondary" (click)="previousStep()">Previous</button>
-          <button type="button" class="btn btn-primary" (click)="nextStep()">Submit</button>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="previousStep()">Previous</button>
+            <button type="button" class="btn btn-primary" (click)="nextStep()">Submit</button>
+          </div>
+          
         </form>
       </div>
       <div *ngSwitchCase="4">

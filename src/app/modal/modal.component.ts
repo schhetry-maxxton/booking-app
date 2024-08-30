@@ -7,6 +7,7 @@ import { IReservation } from '../Interface/ireservation';
 import { IRoom } from '../Interface/iroom';
 import { ICustomer } from '../Interface/icustomer';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { router } from '../app.router';
 
 @Component({
   selector: 'app-modal',
@@ -24,6 +25,8 @@ export class ModalComponent {
   paymentForm: FormGroup;
   currentStep: number = 1;
   guests: number[] = [];
+  
+ 
 
   constructor(public activeModal: NgbActiveModal,
     private fb: FormBuilder,
@@ -250,6 +253,7 @@ export class ModalComponent {
     this.customerForm.reset();
     this.paymentForm.reset();
     this.currentStep = 1;
+    
   }
 
   // Add more methods if needed for form submission

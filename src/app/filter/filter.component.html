@@ -32,19 +32,19 @@
               <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
             </div>
             <div class="form-group col-md-2 mb-3">
-              <label for="maxPrice" class="form-label">Price</label>
+              <label for="maxPrice" class="form-label">Price per day per person</label>
               <input type="range" class="form-range" min="0" max="4000" id="maxPrice" formControlName="maxPrice">
               <output id="priceOutput">{{ filterForm.get('maxPrice')?.value }}</output>
             </div>
           
             <div class="form-group col-md-1 mb-3">
               <label for="minStay" class="form-label">Min Stay</label>
-              <input id="minStay" type="number" formControlName="minStay" class="form-control">
+              <input id="minStay" type="number" formControlName="minStay" class="form-control" placeholder="Enter a value">
             </div>
 
             <div class="form-group col-md-1 mb-3">
               <label for="maxStay" class="form-label">Max Stay</label>
-              <input id="maxStay" type="number" formControlName="maxStay" class="form-control">
+              <input id="maxStay" type="number" formControlName="maxStay" class="form-control" placeholder="Enter a value">
             </div>
           </div>
 
@@ -65,7 +65,7 @@
 
     <div class="container my-2" *ngIf="filteredRooms.length > 0">
       <!-- <h2 class="text-center mb-4" style="color: slategrey;">Filtered Rooms</h2> -->
-      <table class="table table-striped table-bordered table-hover">
+      <!-- <table class="table table-striped table-bordered table-hover">
         <thead class="thead-dark">
           <tr>
             <th>Room ID</th>
@@ -92,11 +92,11 @@
             <td>{{ room.minStay }}</td>
             <td>{{ room.maxStay }}</td>
             <td>
-              <button class="btn btn-outline-primary" (click)="openBookingModal(room)">Book Now</button>
+              <button class="btn btn-outline-primary" (click)="openBookingModal(room)" [disabled]="!isFilterApplied">Book Now</button>
             </td>
           </tr>
         </tbody>
-      </table>
+      </table> -->
     </div>
     
     <!-- Room Cards Column -->
@@ -111,11 +111,13 @@
               <p class="card-text">
                 <strong>Location:</strong> {{ room.locationName }}<br>
                 <strong>Price per day:</strong> {{ room.pricePerDayPerPerson | currency }}<br>
-                <strong>Guest Capacity:</strong> {{ room.guestCapacity }}
+                <strong>Guest Capacity:</strong> {{ room.guestCapacity }}<br>
+                <strong>Min stay:</strong> {{ room.minStay }}<br>
+                <strong>Max stay:</strong> {{ room.maxStay }}
               </p>
             </div>
             <div class="card-footer text-center bg-transparent border-0">
-              <button class="btn btn-outline-primary" (click)="openBookingModal(room)">Book Now</button>
+              <button class="btn btn-outline-primary" (click)="openBookingModal(room)" [disabled]="!isFilterApplied">Book Now</button>
             </div>
           </div>
         </div>

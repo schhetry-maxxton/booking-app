@@ -15,6 +15,8 @@ import { AngularResizeEventModule } from 'angular-resize-event';
 import {OverlayModule} from '@angular/cdk/overlay';
 import { RoomAvailabilityGanttComponent } from './room-availability-gantt/room-availability-gantt.component';
 import {CdkDrag} from '@angular/cdk/drag-drop';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ModalComponent } from './modal/modal.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -39,6 +41,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     AngularResizeEventModule,
     OverlayModule,
     CdkDrag,
+    MatSnackBarModule,
+    MatTooltipModule,
     NgbModule
   ],
   providers: [
