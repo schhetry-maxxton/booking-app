@@ -132,11 +132,12 @@ export class FilterComponent implements OnInit {
     return `Assets/images/Room${imageIndex}.jpg`;
   }
 
-  checkIfFilterApplied(): void {
-    const dateFrom = this.filterForm.get('dateFrom')?.value;
-    const dateTo = this.filterForm.get('dateTo')?.value;
-    this.isFilterApplied = (dateFrom !== null && dateFrom !== '') || (dateTo !== null && dateTo !== '');
-  }
+  // checkIfFilterApplied(): void {
+  //   const formValue = this.filterForm.value;
+  //   const dayFrom= this.filterForm.get('dayFrom')?value
+  //   // this.isFilterApplied = Object.values(formValue).some(value => value !== null && value !== '');
+  //   const areDaysSelected = dayFrom !== null && dayFrom !== '' && dayTo !== null && dayTo !== '';
+  // }
 
   applyFilters(): void {
     const filters = this.filterForm.value;

@@ -17,13 +17,19 @@ export class BookingReservationComponent {
     return this.reservations;
     }
 
-    // onStatusChange(reservation: IReservation): void {
-    //   try {
-    //     this.reservationService.updateReservationStatus(reservation);
-    //     console.log('Reservation status updated successfully', reservation.status);
-    //   } catch (error) {
-    //     console.error('Error updating reservation status', error);
-    //   }
-    // }
+    onStatusChange(reservation: IReservation): void {
+      try {
+        this.reservationService.updateReservationStatus(reservation);
+        console.log('Reservation status updated successfully', reservation.status);
+      } catch (error) {
+        console.error('Error updating reservation status', error);
+      }
+    }
+    
+    removeReservation(reservationId: number): void{
+      this.reservationService.clearReservationById(reservationId);
+      this.ngOnInit();
+    }
+
     
 }

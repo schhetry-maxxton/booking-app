@@ -16,6 +16,7 @@
       <th>Paid Amount</th>
       <th>Due Amount</th>
       <th>Number of Guests</th>
+      <th>Action</th>
     </tr>
   </thead>
   <tbody>
@@ -28,12 +29,19 @@
       <td>{{ reservation.arrivalDate | date:'yyyy-MM-dd' }}</td>
       <td>{{ reservation.departureDate | date:'yyyy-MM-dd' }}</td>
       <td>{{ reservation.reservationDate | date:'yyyy-MM-dd HH:mm:ss' }}</td>
-      <td>{{ reservation.status }}</td>
+      <td>
+        <select [(ngModel)]="reservation.status" (change)="onStatusChange(reservation)">
+          <option value="CONFIRM">Confirm</option>
+          <option value="CHECKED-IN">Checked-In</option>
+          <option value="CHECKED-OUT">Checked-Out</option>
+      </select>
+      </td>
       <td>{{ reservation.totalPrice }}</td>
       
       <td>{{ reservation.paidAmount }}</td>
       <td>{{ reservation.dueAmount }}</td>
       <td>{{ reservation.numberOfGuest }}</td>
+      <td><button class="btn btn-secondary" (click)="removeReservation(reservation.reservationId)">Remove</button></td>
     </tr>
   </tbody>
 </table>

@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { IReservation } from '../../Interface/ireservation';
-import axios from 'axios';
 import { IRoomAvailability } from '../../Interface/iroom-availability';
 import { IRoom } from '../../Interface/iroom';
 import { forkJoin, Observable } from 'rxjs';
@@ -32,13 +31,38 @@ export class ReservationService {
     localStorage.setItem('reservations', JSON.stringify(existingReservations));
   }
 
-  // updateReservationStatus(reservation: IReservation): void {
-  //   const foundReservation = this.getReservations().find(r => r.reservationId === reservation.reservationId);
-  //   if (foundReservation) {
-  //     foundReservation.status = reservation.status;
-  //     this.saveReservation(foundReservation);
-  //   }
-  // }
+  updateReservationStatus(reservation: IReservation): void {
+    const allReservations = this.getReservations(); // Get all reservations
+
+    const index = allReservations.findIndex(r => r.reservationId === reservation.reservationId);
+    if (index !== -1) {
+        allReservations[index].status = reservation.status;
+        this.saveReservations(allReservations);
+    }
+  } 
+
+  saveReservations(reservations: IReservation[]): void {
+  localStorage.setItem('reservations', JSON.stringify(reservations));
+  }
+
+
+
+  clearReservationById(reservationId: number) : void {
+    const reservations=this.getReservations();
+    const currentReservations= reservations.filter(r => 
+      r.reservationId !== reservationId
+    );
+
+    localStorage.setItem(this.storageKey,JSON.stringify(currentReservations));
+  }
+
+  getReservationById(reservation: IReservation): void{
+    const reservations=this.getReservations();
+    const currentReservation= reservations.find(r => 
+      r.reservationId === reservation.reservationId
+    )
+    console.log(currentReservation);
+  }
 
   getReservations(): IReservation[] {
     const reservations = localStorage.getItem(this.storageKey);

@@ -59,6 +59,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       this.reservations = this.reservationService.getReservations();
       this.updateRoomAvailability();
       this.generateChart(this.selectedMonth);
+      
       // console.log(this.reservations);
     });
   }
@@ -97,7 +98,6 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
   hasReservation(roomId:number,day: number):boolean {
     const date= new Date(this.year,this.selectedMonth,day);
-
     return this.reservations.some((reservation)=>
       reservation.roomId === roomId && new Date(reservation.arrivalDate).getDate() === date.getDate()
     && new Date(reservation.arrivalDate).getMonth() === date.getMonth() && new Date(reservation.arrivalDate).getFullYear() === date.getFullYear() 
@@ -333,6 +333,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   }
 
   validateSelection(roomId: number): void {
+    // debugger;
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
     if (!roomData) return;
     
@@ -360,7 +361,11 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     // Using the first selected day to determine minStay
     const date = new Date(this.year, this.selectedMonth, startDay);
     const startDayString = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-    // const endDayString = endDay.toString();
+
+    // const endDate = new Date(this.year, this.selectedMonth, endDay);
+    // const endDayString = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+
+    
 
     const minStay = roomData.minStayMap[startDayString];
     const maxStay = roomData.maxStayMap[startDayString];
@@ -377,15 +382,12 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
     // Check for overlap or if the selection is within the allowed range
     const isOverlapping = this.checkOverlap(startDay, endDay, roomData);
-    if (isOverlapping || selectedDays.length < minStay || selectedDays.length > maxStay) {
+    
+    if (isOverlapping || selectedDays.length < minStay || selectedDays.length > maxStay ) {
         console.log("Selection is invalid, clearing selection");
         this.clearAllSelections();
         return;
     }
-
-    const arrivalDay=new Date(this.year,this.selectedMonth,startDay);
-    const departureDay=new Date(this.year,this.selectedMonth,endDay)
-
       // this.openBookingModal(startDay, endDay, roomId);
 }
   
@@ -433,7 +435,12 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return (isAvailable && !isBooked);
   }
 
-  openBookingModal(bookingDetails: any): void {
+  removeReservation(reservations : IReservation){
+    
+    // this.reservationService.getReservationById(currentReservation);
+  }
+
+    openBookingModal(bookingDetails: any): void {
     console.log('Booking Details:', bookingDetails);
     
     const modalRef = this.modalService.open(ModalComponent);
@@ -448,4 +455,6 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         this.clearAllSelections();
     });
   }
+
+  
 }

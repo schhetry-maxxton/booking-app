@@ -253,8 +253,34 @@ export class ModalComponent {
     this.customerForm.reset();
     this.paymentForm.reset();
     this.currentStep = 1;
-    
   }
 
-  // Add more methods if needed for form submission
+  onPaymentModeChange(event: Event): void {
+    const paymentMode = (event.target as HTMLSelectElement).value;
+    this.updateFormControls(paymentMode);
+  }
+
+  updateFormControls(paymentMode: string): void {
+    this.paymentForm.get('cardNumber')?.reset();
+    this.paymentForm.get('cardHolderName')?.reset();
+    this.paymentForm.get('expiryDate')?.reset();
+    this.paymentForm.get('cvv')?.reset();
+    this.paymentForm.get('bankName')?.reset();
+    this.paymentForm.get('accountNumber')?.reset();
+  }
+
+  isCardPayment(): boolean {
+    const paymentMode = this.paymentForm.get('paymentMode')?.value;
+    return paymentMode === 'creditCard' || paymentMode === 'debitCard';
+  }
+
+  isNetBanking(): boolean {
+    const paymentMode = this.paymentForm.get('paymentMode')?.value;
+    return paymentMode === 'netBanking';
+  }
+
+  isUPI(): boolean {
+    const paymentMode = this.paymentForm.get('paymentMode')?.value;
+    return paymentMode === 'upi';
+  }
 }

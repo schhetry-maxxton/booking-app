@@ -117,7 +117,7 @@
               </p>
             </div>
             <div class="card-footer text-center bg-transparent border-0">
-              <button class="btn btn-outline-primary" (click)="openBookingModal(room)" [disabled]="!isFilterApplied">Book Now</button>
+              <button class="btn btn-outline-primary" (click)="openBookingModal(room)" >Book Now</button>
             </div>
           </div>
         </div>
@@ -319,6 +319,7 @@
             <div class="mb-3">
               <label for="paymentMode" class="form-label">Payment Mode</label>
               <select id="paymentMode" class="form-select" formControlName="paymentMode">
+                <option value="creditCard">Cash</option>
                 <option value="creditCard">Credit Card</option>
                 <option value="debitCard">Debit Card</option>
                 <option value="netBanking">Net Banking</option>
@@ -340,7 +341,7 @@
           </form>
         </div>
         
-        <!-- Step 4: Download PDF -->
+        <!-- Step 4: Acknowledgement/ Invoice section -->
         <div *ngIf="currentStep === 4">
           <div class="text-center">
             <h1>Your booking details have been successfully submitted.</h1>
