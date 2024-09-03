@@ -23,7 +23,11 @@ export class CustomersService {
     return customers ? JSON.parse(customers) : [];
   }
 
-  // clearReservations(): void {
-  //   localStorage.removeItem(this.localStorageKey);
-  // }
+  getCustomerById(id: number): ICustomer | undefined {
+    const customers = this.getCustomers();
+    return customers.find(customer => customer.customerId === id);
+  }
+
+  
+
 }

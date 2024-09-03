@@ -121,11 +121,11 @@ export class FilterComponent implements OnInit {
     this.locations = uniqueLocations;
   }
 
-  onLocationChange(event: Event): void {
-    const selectedLocation = (event.target as HTMLSelectElement).value;
-    this.filterForm.patchValue({ location: selectedLocation });
-    this.applyFilters();
-  }
+  // onLocationChange(event: Event): void {
+  //   const selectedLocation = (event.target as HTMLSelectElement).value;
+  //   this.filterForm.patchValue({ location: selectedLocation });
+  //   this.applyFilters();
+  // }
 
   getImageUrl(index: number): string {
     const imageIndex = index + 1;  
@@ -149,6 +149,14 @@ export class FilterComponent implements OnInit {
         minStay: [''],
         maxStay: ['']
       });
+      return;
+    }
+
+    const stayDateFrom = new Date(filters.dateFrom);
+    const stayDateTo = new Date(filters.dateTo);
+  
+    if (stayDateFrom > stayDateTo) {
+      alert("Invalid dates: 'Check-in Date' must be before the 'Check-out date'");
       return;
     }
 
@@ -190,7 +198,7 @@ export class FilterComponent implements OnInit {
     const availFrom = new Date(avail.stayDateFrom);
     const availTo = new Date(avail.stayDateTo);
   
-    return (!filters.dateFrom || !filters.dateTo || (stayDateFrom >= availFrom && stayDateTo <= availTo));
+    return ((!filters.dateFrom && !filters.dateTo) || (stayDateFrom >= availFrom && stayDateTo <= availTo));
   }
   
   private isCapacityMatch(room: IRoom, filters: any): boolean {
@@ -376,6 +384,8 @@ export class FilterComponent implements OnInit {
       const newReservation: IReservation = {
         reservationId: bookingData.booking.reservationId,
         firstName:bookingData.customer.firstName,
+        middleName:bookingData.customer.middleName,
+        lastName:bookingData.customer.lastName,
         locationId: this.selectedRoom?.locationId || 0,
         roomId: this.selectedRoom?.roomId || 0,
         roomName: this.selectedRoom?.roomName,
@@ -400,7 +410,10 @@ export class FilterComponent implements OnInit {
         country: bookingData.customer.country,
         state: bookingData.customer.state,
         city: bookingData.customer.city,
-        pinCode: bookingData.customer.pincode
+        pincode: bookingData.customer.pincode,
+        mobileNumber: bookingData.customer.mobileNumber,
+        district: bookingData.customer.district,
+        address: bookingData.customer.address,
       };
 
       const reservationData = newReservation;

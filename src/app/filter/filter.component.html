@@ -10,7 +10,7 @@
           <div class="row">
             <div class="form-group col-md-2 mb-3">
               <label for="location" class="form-label">Location</label>
-              <select id="location" formControlName="location" class="form-control" (change)="onLocationChange($event)">
+              <select id="location" formControlName="location" class="form-control" >
                 <option value="">Select Location</option>
                 <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
               </select>

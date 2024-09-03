@@ -40,8 +40,8 @@
   
   .form-row {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 columns, equal width */
-    gap: 20px; /* Gap between form groups */
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 20px;
   }
   
   .form-group {
@@ -63,6 +63,15 @@
     /* border: 1px solid #ced4da; */
     border-radius: 0.25rem;
     color: #495057;
+  }
+
+  .search{
+    display: flex;
+    align-content: space-around;
+  }
+
+  .search-btn{
+    justify-items: center;
   }
   
   /* CSS for Invoice */

@@ -25,8 +25,12 @@ export class ModalComponent {
   paymentForm: FormGroup;
   currentStep: number = 1;
   guests: number[] = [];
+  showCustomerIdInput: boolean = false; // To control visibility of customer ID input
+  showCustomerForm: boolean = false; // To control visibility of the customer form
+  isExistingCustomer: boolean = false;
+  showButtons: boolean = true;
+  errorMessage: string | null = null;
   
- 
 
   constructor(public activeModal: NgbActiveModal,
     private fb: FormBuilder,
@@ -102,6 +106,97 @@ export class ModalComponent {
     
   }
 
+  newCustomer(): void {
+    this.customerForm.reset();
+    const newCustomerId = this.randomNumberService.generateRandomNumber();
+    this.customerForm.patchValue({
+      customerId: newCustomerId
+    });
+    this.showCustomerIdInput = false; // Hide customer ID input field
+    this.showCustomerForm = true; // Show the entire customer form
+    this.isExistingCustomer = false;
+    this.showButtons = false; 
+    this.currentStep = 2;
+  }
+
+  // existingCustomer(customerIdInput: HTMLInputElement): void {
+  //   const customerId = Number(customerIdInput.value);
+  //   const existingCustomer = this.customerService.getCustomerById(customerId);
+  //   if (existingCustomer) {
+  //     this.customerForm.patchValue(existingCustomer);
+  //     this.showCustomerForm = true;
+  //     this.currentStep = 2;
+  //   } else {
+  //     alert('Customer not found.');
+  //   }
+  // }
+
+  // selectCustomerType(type: string) {
+  //   if (type === 'existing') {
+  //     this.isExistingCustomer = true;
+  //     this.showCustomerIdInput = true; // Show search field
+  //   } else {
+  //     this.isExistingCustomer = false;
+  //     this.showCustomerIdInput = false; // Hide search field
+  //   }
+  // }
+
+  existingCustomer(): void {
+    this.showCustomerIdInput = true; // Show customer ID input field
+    this.showCustomerForm = false; // Hide the customer form
+    this.isExistingCustomer = true;
+    this.showButtons = false;
+    // this.currentStep = 2;
+  }
+
+  searchCustomer(customerIdInput: HTMLInputElement): void {
+    const customerId = Number(customerIdInput.value);
+    const existingCustomer = this.customerService.getCustomerById(customerId);
+    if (existingCustomer) {
+      console.log(existingCustomer);
+      this.customerForm.patchValue(existingCustomer);
+      this.showCustomerIdInput = false; // Hide customer ID input field
+      this.showCustomerForm = true; // Show the customer form
+      this.errorMessage = null;
+    } else {
+      this.errorMessage = 'Customer not found.'; 
+    }
+  }
+
+  // searchCustomer(customerIdInput: HTMLInputElement) {
+  //   const customerId =  Number(customerIdInput.value);
+  //   const existingCustomer = this.customerService.getCustomerById(customerId);
+  //   if (!customerId) {
+  //     this.errorMessage = 'Customer ID cannot be empty.';
+  //     this.showCustomerForm = false;
+  //     return;
+  //   }
+
+  //   console.log(existingCustomer);
+  //   this.customerForm.patchValue(existingCustomer);
+  //   this.errorMessage = null; // Clear error message if customer is found
+  //         this.showCustomerForm = true;
+
+  //   this.customerService.getCustomerById(customerId).subscribe(
+  //     customer => {
+  //       if (customer) {
+  //         this.customerForm.patchValue(customer);
+  //         this.errorMessage = null; // Clear error message if customer is found
+  //         this.showCustomerForm = true;
+  //       } else {
+  //         this.errorMessage = 'Customer not found.';
+  //         this.showCustomerForm = false;
+  //       }
+  //     },
+  //     error => {
+  //       this.errorMessage = 'An error occurred while searching for the customer.';
+  //       this.showCustomerForm = false;
+  //     }
+  //   );
+  // }
+
+
+
   onBirthDateChange(): void {
     const birthDate = this.customerForm.get('birthDate')?.value;
     if (birthDate) {
@@ -159,9 +254,11 @@ export class ModalComponent {
   nextStep(): void {
     if (this.currentStep === 1 && this.bookingForm.valid) {
       this.updateCustomerForm();
+      this.showCustomerIdInput=false;
       this.currentStep = 2;
-    } else if (this.currentStep === 2 && this.customerForm.valid) {
+    } else if (this.currentStep === 2 && this.customerForm.valid &&  this.isExistingCustomer) {
       this.currentStep = 3;
+      this.showCustomerIdInput=true;
     } else if (this.currentStep === 3 && this.paymentForm.valid) {
       this.submitBooking();
       this.currentStep = 4;
@@ -175,6 +272,9 @@ export class ModalComponent {
   previousStep(): void {
     if (this.currentStep > 1) {
       this.currentStep--;
+      this.showCustomerForm = false; 
+      this.showCustomerIdInput = false;
+      this.showButtons = true;
     }
   }
 
@@ -203,12 +303,12 @@ export class ModalComponent {
         customer: this.customerForm.value,
         payment: this.paymentForm.value,
       };
-
-      
       
       const newReservation: IReservation = {
         reservationId: bookingData.booking.reservationId,
         firstName: bookingData.customer.firstName,
+        middleName: bookingData.customer.middleName,
+        lastName: bookingData.customer.lastName,
         locationId: bookingData.booking.locationId, // Update this as needed
         roomId: bookingData.booking.roomNo,
         roomName: bookingData.booking.roomName, 
@@ -231,10 +331,13 @@ export class ModalComponent {
         firstName: bookingData.customer.firstName,
         middleName: bookingData.customer.middleName,
         lastName: bookingData.customer.lastName,
+        mobileNumber: bookingData.customer.mobileNumber,
+        address: bookingData.customer.address,
         country: bookingData.customer.country,
         state: bookingData.customer.state,
         city: bookingData.customer.city,
-        pinCode: bookingData.customer.pincode
+        pincode: bookingData.customer.pincode,
+        district: bookingData.customer.district,
       };
 
       this.reservationService.saveReservation(newReservation);
@@ -253,6 +356,9 @@ export class ModalComponent {
     this.customerForm.reset();
     this.paymentForm.reset();
     this.currentStep = 1;
+    this.showCustomerIdInput = false;
+    this.showCustomerForm = false;
+    this.showButtons = true;
   }
 
   onPaymentModeChange(event: Event): void {

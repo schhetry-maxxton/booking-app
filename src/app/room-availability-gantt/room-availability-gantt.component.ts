@@ -16,6 +16,7 @@ interface RoomData {
   availability: Availability[];
   reservations: Availability[];
   arrivalDays: Set<string>;
+  departureDays: Set<string>;
   minStayMap: { [day: string]: number }; 
   maxStayMap: { [day: string]: number }; 
 }
@@ -86,16 +87,6 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     this.days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   }
 
-  // getTooltipText(roomId: number, day: number): string {
-  //   const cellClass = this.getCellClass(roomId, day);
-  //   // const reservd = this.reservations
-  //   if (cellClass === 'reserved') {
-  //     return `Details for Room ${roomId} on ${day}`;
-  //   }
-  //   return '';
-  // }
-
-
   hasReservation(roomId:number,day: number):boolean {
     const date= new Date(this.year,this.selectedMonth,day);
     return this.reservations.some((reservation)=>
@@ -115,7 +106,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     && arrivalDate.getMonth() === date.getMonth() && arrivalDate.getFullYear() === date.getFullYear()
     })
     if(reservation){
-      return reservation.firstName;
+      return `${reservation.firstName} ${reservation.middleName} ${reservation.lastName}`;
     }
     return '';
   }
@@ -126,6 +117,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const minStayMap: { [roomId: number]: { [day: string]: number } } = {};
     const maxStayMap: { [roomId: number]: { [day: string]: number } } = {};
     const arrivalDaysMap: { [roomId: number]: Set<string> } = {};
+    const departureDaysMap: { [roomId: number]: Set<string> } = {};
   
     this.stays.forEach(stay => {
       const roomId = stay.roomId;
@@ -149,7 +141,8 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       }
   
       const arrivalDays = stay.arrivalDays; // array of day names like ["Mon", "Sun"]
-      
+      const departureDays = stay.departureDays;
+
       arrivalDays.forEach(day => {
         const dayUpper = day.toUpperCase();
         arrivalDaysMap[roomId].add(dayUpper);
@@ -165,6 +158,13 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         minStayMap[roomId][dayUpper] = Math.min(stay.minStay, minStayMap[roomId][dayUpper] || Number.MAX_SAFE_INTEGER);
         maxStayMap[roomId][dayUpper] = Math.max(stay.maxStay, maxStayMap[roomId][dayUpper] || 0);
       });
+
+      departureDays.forEach(day => {
+        const dayUpper = day.toUpperCase();
+        departureDaysMap[roomId] = departureDaysMap[roomId] || new Set<string>();
+        departureDaysMap[roomId].add(dayUpper);
+      });
+
     });
     
   
@@ -191,6 +191,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       availability: availabilityMap[room.roomId] || [],
       reservations: reservationMap[room.roomId] || [],
       arrivalDays: arrivalDaysMap[room.roomId] || new Set<string>(),
+      departureDays: departureDaysMap[room.roomId] || new Set<string>(),
       minStayMap: minStayMap[room.roomId] || {}, 
       maxStayMap: maxStayMap[room.roomId] || {}  
     }));
@@ -359,14 +360,17 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     console.log("End day:", endDay);
 
     // Using the first selected day to determine minStay
-    const date = new Date(this.year, this.selectedMonth, startDay);
-    const startDayString = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+    const startDate = new Date(this.year, this.selectedMonth, startDay);
+    const endDate = new Date(this.year, this.selectedMonth, endDay);
+    const startDayString = startDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+    const endDayString = endDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
 
-    // const endDate = new Date(this.year, this.selectedMonth, endDay);
-    // const endDayString = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
 
-    
-
+    if (!roomData.arrivalDays.has(startDayString) || !roomData.departureDays.has(endDayString)) {
+      this.clearAllSelections();
+      return;
+    }
+  
     const minStay = roomData.minStayMap[startDayString];
     const maxStay = roomData.maxStayMap[startDayString];
 
@@ -379,6 +383,12 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         this.clearAllSelections();
         return;
     }
+
+    // const stayLength = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) + 1;
+    // if (stayLength < minStay || stayLength > maxStay) {
+    //   this.clearAllSelections();
+    //   return;
+    // }
 
     // Check for overlap or if the selection is within the allowed range
     const isOverlapping = this.checkOverlap(startDay, endDay, roomData);
