@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, Output } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IRoom } from '../Interface/iroom';
 import { IRoomAvailability } from '../Interface/iroom-availability';
@@ -7,7 +7,6 @@ import { RandomNumberService } from '../Services/RandomNumber/random-number.serv
 import { IReservation } from '../Interface/ireservation';
 import { ICustomer } from '../Interface/icustomer';
 import { CustomersService } from '../Services/Customers/customers.service';
-import { EventEmitter } from 'stream';
 
 @Component({
   selector: 'app-filter',
@@ -15,9 +14,7 @@ import { EventEmitter } from 'stream';
   styleUrls: ['./filter.component.css']
 })
 export class FilterComponent implements OnInit {
-  // @Input() locations: string[] = [];
-  // @Output() filtersApplied = new EventEmitter<any>();
-
+  
   rooms: IRoom[] = [];
   filteredRooms: Array<IRoom & IRoomAvailability> = [];
   availability: IRoomAvailability[] = [];
@@ -30,6 +27,7 @@ export class FilterComponent implements OnInit {
   currentStep: number = 1;  // to track the current step in the form
   reservations: IReservation[] = [];
   filteredRoomsCount: number | null = null;
+  isFilterApplied: boolean = false;
 
   constructor(
     private reservationService: ReservationService,
@@ -43,8 +41,8 @@ export class FilterComponent implements OnInit {
       dateTo: [''],
       numberOfPersons: [1, [Validators.min(1)]],
       maxPrice: [4000],
-      minStay: [0, [Validators.min(0)]],
-      maxStay: [0, [Validators.min(0)]]
+      minStay: ['', [Validators.min(1)]],
+      maxStay: ['',[Validators.max(10)]]
     });
 
     this.bookingForm = this.fb.group({
@@ -81,7 +79,6 @@ export class FilterComponent implements OnInit {
       totalAmount: [''],
       paidAmount: ['', [Validators.required]],
       dueAmount: ['']
-      
     });
 
     this.bookingForm.get('totalNumberOfGuests')?.valueChanges.subscribe(() => {
@@ -89,11 +86,17 @@ export class FilterComponent implements OnInit {
     });
 
     this.filterForm.get('location')?.valueChanges.subscribe(() => {
+      // this.checkIfFilterApplied();
       this.applyFilters();
     });
 
     this.filterForm.get('maxPrice')?.valueChanges.subscribe(() => {
+      // this.checkIfFilterApplied();
       this.applyFilters();
+    });
+
+    this.paymentForm.get('totalAmount')?.valueChanges.subscribe(() => {
+      this.updateDueAmount();
     });
   }
 
@@ -118,16 +121,23 @@ export class FilterComponent implements OnInit {
     this.locations = uniqueLocations;
   }
 
-  onLocationChange(event: Event): void {
-    const selectedLocation = (event.target as HTMLSelectElement).value;
-    this.filterForm.patchValue({ location: selectedLocation });
-    this.applyFilters();
-  }
+  // onLocationChange(event: Event): void {
+  //   const selectedLocation = (event.target as HTMLSelectElement).value;
+  //   this.filterForm.patchValue({ location: selectedLocation });
+  //   this.applyFilters();
+  // }
 
   getImageUrl(index: number): string {
     const imageIndex = index + 1;  
     return `Assets/images/Room${imageIndex}.jpg`;
   }
+
+  // checkIfFilterApplied(): void {
+  //   const formValue = this.filterForm.value;
+  //   const dayFrom= this.filterForm.get('dayFrom')?value
+  //   // this.isFilterApplied = Object.values(formValue).some(value => value !== null && value !== '');
+  //   const areDaysSelected = dayFrom !== null && dayFrom !== '' && dayTo !== null && dayTo !== '';
+  // }
 
   applyFilters(): void {
     const filters = this.filterForm.value;
@@ -136,9 +146,17 @@ export class FilterComponent implements OnInit {
       alert("Invalid input");
       this.filterForm.patchValue({
         numberOfPersons: [1],
-        minStay: [0],
-        maxStay: [0]
+        minStay: [''],
+        maxStay: ['']
       });
+      return;
+    }
+
+    const stayDateFrom = new Date(filters.dateFrom);
+    const stayDateTo = new Date(filters.dateTo);
+  
+    if (stayDateFrom > stayDateTo) {
+      alert("Invalid dates: 'Check-in Date' must be before the 'Check-out date'");
       return;
     }
 
@@ -154,10 +172,9 @@ export class FilterComponent implements OnInit {
     const filteredAvailability = this.availability.filter(avail => {
       const room = this.rooms.find(room => room.roomId === avail.roomId);
   
+      // if (!room) return false;
       if (!room || unavailableRoomIds.includes(room.roomId)) return false;
   
-      // this.filtersApplied.emit(this.filterForm.value);
-
       return (
         (!filters.location || room.locationName === filters.location) &&
         this.isAvailable(avail, filters) &&
@@ -181,7 +198,7 @@ export class FilterComponent implements OnInit {
     const availFrom = new Date(avail.stayDateFrom);
     const availTo = new Date(avail.stayDateTo);
   
-    return (!filters.dateFrom || !filters.dateTo || (stayDateFrom >= availFrom && stayDateTo <= availTo));
+    return ((!filters.dateFrom && !filters.dateTo) || (stayDateFrom >= availFrom && stayDateTo <= availTo));
   }
   
   private isCapacityMatch(room: IRoom, filters: any): boolean {
@@ -243,6 +260,7 @@ export class FilterComponent implements OnInit {
 
   openBookingModal(room: IRoom): void {
     this.selectedRoom = room;
+
     const stayDateFrom = this.filterForm.get('dateFrom')?.value;
     const stayDateTo = this.filterForm.get('dateTo')?.value;
     const numberOfPerson = this.filterForm.get('numberOfPersons')?.value;
@@ -341,9 +359,19 @@ export class FilterComponent implements OnInit {
   updateDueAmount(): void {
     const totalAmount = this.paymentForm.get('totalAmount')?.value;
     const paidAmount = this.paymentForm.get('paidAmount')?.value;
-    const dueAmount = totalAmount - paidAmount;
+  
+    // Convert values to numbers if they are strings
+    const totalAmountNumber = Number(totalAmount);
+    const paidAmountNumber = Number(paidAmount);
+  
+    const dueAmount = totalAmountNumber - paidAmountNumber;
+  
+    // Update the due amount in the form
     this.paymentForm.get('dueAmount')?.setValue(dueAmount);
   }
+  
+
+  
 
   submitBooking(): void {
     if (this.paymentForm.valid) {
@@ -355,6 +383,9 @@ export class FilterComponent implements OnInit {
 
       const newReservation: IReservation = {
         reservationId: bookingData.booking.reservationId,
+        firstName:bookingData.customer.firstName,
+        middleName:bookingData.customer.middleName,
+        lastName:bookingData.customer.lastName,
         locationId: this.selectedRoom?.locationId || 0,
         roomId: this.selectedRoom?.roomId || 0,
         roomName: this.selectedRoom?.roomName,
@@ -363,6 +394,7 @@ export class FilterComponent implements OnInit {
         departureDate: new Date(bookingData.booking.stayDateTo),
         reservationDate: new Date(bookingData.booking.reservationDate),
         totalPrice: bookingData.booking.totalPrice,
+        dueAmount: bookingData.payment.dueAmount,
         status: 'CONFIRM',
         paidAmount: bookingData.payment.paidAmount,
         numberOfGuest: bookingData.booking.totalNumberOfGuests
@@ -378,7 +410,10 @@ export class FilterComponent implements OnInit {
         country: bookingData.customer.country,
         state: bookingData.customer.state,
         city: bookingData.customer.city,
-        pinCode: bookingData.customer.pincode
+        pincode: bookingData.customer.pincode,
+        mobileNumber: bookingData.customer.mobileNumber,
+        district: bookingData.customer.district,
+        address: bookingData.customer.address,
       };
 
       const reservationData = newReservation;
@@ -392,7 +427,9 @@ export class FilterComponent implements OnInit {
       this.customerForm.markAllAsTouched();
       this.paymentForm.markAllAsTouched();
     }
+    
   }
+  
 
   resetForms(): void {
     this.closeBookingModal();

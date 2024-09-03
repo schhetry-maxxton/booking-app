@@ -1,4 +1,7 @@
 export interface IReservation {
+    firstName: string,
+    middleName : string,
+    lastName : string,
     reservationId : number,
     locationId: number,
     roomId : number,
@@ -10,5 +13,6 @@ export interface IReservation {
     totalPrice: number,
     status: 'CONFIRM' | 'CHECKED-IN' | 'CHECKED-OUT',
     paidAmount : number,
+    dueAmount : number,
     numberOfGuest : number,
 }
