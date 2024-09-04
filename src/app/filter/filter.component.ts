@@ -75,7 +75,7 @@ export class FilterComponent implements OnInit {
 
     this.paymentForm = this.fb.group({
       paymentId: this.randomNumberService.generateRandomNumber(),
-      paymentMode: ['creditCard'],
+      paymentMode: ['Cash'],
       totalAmount: [''],
       paidAmount: ['', [Validators.required]],
       dueAmount: ['']
@@ -85,13 +85,11 @@ export class FilterComponent implements OnInit {
       this.updateTotalPrice();
     });
 
-    this.filterForm.get('location')?.valueChanges.subscribe(() => {
-      // this.checkIfFilterApplied();
-      this.applyFilters();
-    });
+    // this.filterForm.get('location')?.valueChanges.subscribe(() => {
+    //   this.applyFilters();
+    // });
 
     this.filterForm.get('maxPrice')?.valueChanges.subscribe(() => {
-      // this.checkIfFilterApplied();
       this.applyFilters();
     });
 
@@ -121,23 +119,10 @@ export class FilterComponent implements OnInit {
     this.locations = uniqueLocations;
   }
 
-  // onLocationChange(event: Event): void {
-  //   const selectedLocation = (event.target as HTMLSelectElement).value;
-  //   this.filterForm.patchValue({ location: selectedLocation });
-  //   this.applyFilters();
-  // }
-
   getImageUrl(index: number): string {
     const imageIndex = index + 1;  
     return `Assets/images/Room${imageIndex}.jpg`;
   }
-
-  // checkIfFilterApplied(): void {
-  //   const formValue = this.filterForm.value;
-  //   const dayFrom= this.filterForm.get('dayFrom')?value
-  //   // this.isFilterApplied = Object.values(formValue).some(value => value !== null && value !== '');
-  //   const areDaysSelected = dayFrom !== null && dayFrom !== '' && dayTo !== null && dayTo !== '';
-  // }
 
   applyFilters(): void {
     const filters = this.filterForm.value;
@@ -172,7 +157,6 @@ export class FilterComponent implements OnInit {
     const filteredAvailability = this.availability.filter(avail => {
       const room = this.rooms.find(room => room.roomId === avail.roomId);
   
-      // if (!room) return false;
       if (!room || unavailableRoomIds.includes(room.roomId)) return false;
   
       return (
@@ -231,7 +215,6 @@ export class FilterComponent implements OnInit {
   private getISTDateTime(): string {
     const now = new Date();
     const istDate = new Date(now.getTime());
-    // Format as 'YYYY-MM-DDTHH:MM'
     const year = istDate.getFullYear();
     const month = String(istDate.getMonth() + 1).padStart(2, '0');
     const day = String(istDate.getDate()).padStart(2, '0');
@@ -260,43 +243,47 @@ export class FilterComponent implements OnInit {
 
   openBookingModal(room: IRoom): void {
     this.selectedRoom = room;
-
-    const stayDateFrom = this.filterForm.get('dateFrom')?.value;
-    const stayDateTo = this.filterForm.get('dateTo')?.value;
+    const stayDateFrom = new Date(this.filterForm.get('dateFrom')?.value);
+    const stayDateTo = new Date(this.filterForm.get('dateTo')?.value);
     const numberOfPerson = this.filterForm.get('numberOfPersons')?.value;
     const pricePerDays = room.pricePerDayPerPerson;
 
-    // Calculate number of days
-    const startDate = new Date(stayDateFrom);
-    const endDate = new Date(stayDateTo);
-    const numberOfDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
-
-    const formattedDateTime= this.getISTDateTime();
-
+    stayDateFrom.setHours(12, 0, 0, 0);
+    stayDateTo.setHours(11, 0, 0, 0);
+  
+    if (stayDateTo.getHours() > 11) {
+      stayDateTo.setDate(stayDateTo.getDate() + 1);
+    }
+  
+    const numberOfDays = Math.ceil((stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24));
+  
+    const formattedDateTime = this.getISTDateTime();
+  
     this.bookingForm.patchValue({
-      reservationId : this.randomNumberService.generateRandomNumber(),
+      reservationId: this.randomNumberService.generateRandomNumber(),
       roomNo: room.roomId,
       stayDateFrom,
       stayDateTo,
-      numberOfDays,
-      reservationDate:formattedDateTime,
-      totalNumberOfGuests:numberOfPerson,
+      numberOfDays, // Set the calculated number of days here
+      reservationDate: formattedDateTime,
+      totalNumberOfGuests: numberOfPerson,
       pricePerDayPerPerson: pricePerDays,
     });
-
+  
     this.bookingForm.get('totalNumberOfGuests')?.setValidators([
       Validators.required,
       Validators.min(1),
       Validators.max(room.guestCapacity)
     ]);
-
+  
     this.bookingForm.get('totalNumberOfGuests')?.updateValueAndValidity();
-
+  
     this.currentStep = 1; 
-
+  
     const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal')!);
     bookingModal.show();
   }
+  
 
   closeBookingModal(): void {
     const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal')!);
@@ -360,17 +347,40 @@ export class FilterComponent implements OnInit {
     const totalAmount = this.paymentForm.get('totalAmount')?.value;
     const paidAmount = this.paymentForm.get('paidAmount')?.value;
   
-    // Convert values to numbers if they are strings
     const totalAmountNumber = Number(totalAmount);
     const paidAmountNumber = Number(paidAmount);
   
     const dueAmount = totalAmountNumber - paidAmountNumber;
   
-    // Update the due amount in the form
     this.paymentForm.get('dueAmount')?.setValue(dueAmount);
   }
   
+  updateNumberOfDays(): void {
+    const stayDateFrom = this.bookingForm.get('stayDateFrom')?.value;
+    const stayDateTo = this.bookingForm.get('stayDateTo')?.value;
+  
+    if (stayDateFrom && stayDateTo) {
+      const numberOfDays = this.calculateNumberOfDays();
+      this.bookingForm.get('numberOfDays')?.setValue(numberOfDays, { emitEvent: false });
+      this.updateTotalPrice();
+    }
+  }
 
+  calculateNumberOfDays(): number {
+    const stayDateFrom = new Date(this.bookingForm.get('stayDateFrom')?.value);
+    const stayDateTo = new Date(this.bookingForm.get('stayDateTo')?.value);
+    
+    stayDateFrom.setHours(12, 0, 0, 0);
+    stayDateTo.setHours(11, 0, 0, 0);
+  
+    if (stayDateTo.getHours() > 11) {
+      stayDateTo.setDate(stayDateTo.getDate() + 1);
+    }
+  
+    const numberOfDays = Math.ceil((stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24));
+  
+    return numberOfDays <= 0 ? 1 : numberOfDays;
+  }
   
 
   submitBooking(): void {
@@ -383,9 +393,9 @@ export class FilterComponent implements OnInit {
 
       const newReservation: IReservation = {
         reservationId: bookingData.booking.reservationId,
-        firstName:bookingData.customer.firstName,
-        middleName:bookingData.customer.middleName,
-        lastName:bookingData.customer.lastName,
+        firstName: bookingData.customer.firstName,
+        middleName: bookingData.customer.middleName,
+        lastName: bookingData.customer.lastName,
         locationId: this.selectedRoom?.locationId || 0,
         roomId: this.selectedRoom?.roomId || 0,
         roomName: this.selectedRoom?.roomName,
@@ -418,7 +428,7 @@ export class FilterComponent implements OnInit {
 
       const reservationData = newReservation;
       const customerData = newCustomer;
-   
+
       // Save to local storage
       this.reservationService.saveReservation(reservationData);
       this.customerService.saveCustomer(customerData);
@@ -427,10 +437,8 @@ export class FilterComponent implements OnInit {
       this.customerForm.markAllAsTouched();
       this.paymentForm.markAllAsTouched();
     }
-    
   }
   
-
   resetForms(): void {
     this.closeBookingModal();
     this.bookingForm.reset();

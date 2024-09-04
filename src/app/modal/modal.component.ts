@@ -20,6 +20,7 @@ export class ModalComponent {
   // @Input() roomId!: number;
   // @Input() pricePerDayPerPerson!: number;
   @Input() bookingDetails: any;
+  @Input() roomData: IRoom | null = null;
   bookingForm: FormGroup;
   customerForm: FormGroup;
   paymentForm: FormGroup;
@@ -75,37 +76,93 @@ export class ModalComponent {
       dueAmount: ['']
     });
 
+    // this.bookingForm.get('totalNumberOfGuests')?.valueChanges.subscribe(() => {
+    //   this.updateTotalPrice();
+    // });
+
+    // this.paymentForm.get('totalAmount')?.valueChanges.subscribe(() => {
+    //   this.updateDueAmount();
+    // });
+
+    this.bookingForm.get('stayDateFrom')?.valueChanges.subscribe(() => {
+      this.updateNumberOfDays();
+    });
+  
+    this.bookingForm.get('stayDateTo')?.valueChanges.subscribe(() => {
+      this.updateNumberOfDays();
+    });
+  
     this.bookingForm.get('totalNumberOfGuests')?.valueChanges.subscribe(() => {
       this.updateTotalPrice();
     });
-
+  
     this.paymentForm.get('totalAmount')?.valueChanges.subscribe(() => {
       this.updateDueAmount();
     });
   }
 
-  ngOnInit(): void {
-    this.setupInitialFormValues();
-    this.updateTotalPrice();  
+  updateNumberOfDays(): void {
+    const stayDateFrom = this.bookingForm.get('stayDateFrom')?.value;
+    const stayDateTo = this.bookingForm.get('stayDateTo')?.value;
+  
+    if (stayDateFrom && stayDateTo) {
+      const numberOfDays = this.calculateNumberOfDays();
+      this.bookingForm.get('numberOfDays')?.setValue(numberOfDays, { emitEvent: false });
+      this.updateTotalPrice();
+    }
   }
 
-  
+  ngOnInit(): void {
+    this.setupInitialFormValues();
+    this.updateNumberOfDays();
+    this.updateTotalPrice();  
+    
+  }
+
+  // setupInitialFormValues(): void {
+  //   if(this.bookingDetails){
+  //     this.bookingForm.patchValue({
+  //       reservationId: this.randomNumberService.generateRandomNumber(),
+  //       roomNo: this.bookingDetails.roomId,
+  //       stayDateFrom: this.bookingDetails.arrivalDate,
+  //       stayDateTo: this.bookingDetails.departureDate,
+  //       numberOfDays: this.calculateNumberOfDays(),
+  //       reservationDate: this.getISTDateTime(),
+  //       totalNumberOfGuests: 1,
+  //       pricePerDayPerPerson: this.bookingDetails.pricePerDayPerPerson,
+  //     });
+  //   }
+    
+  // }
+
   setupInitialFormValues(): void {
-    if(this.bookingDetails){
+    if (this.bookingDetails) {
+      const stayDateFrom = new Date(this.bookingDetails.arrivalDate);
+      const stayDateTo = new Date(this.bookingDetails.departureDate);
+  
+      // Adjust times for check-in and check-out
+      stayDateFrom.setHours(11, 0, 0, 0);
+      stayDateTo.setHours(10, 0, 0, 0);
+  
+      // Adjust departure date for edge case
+      if (stayDateTo.getHours() > 10) {
+        stayDateTo.setDate(stayDateTo.getDate() + 1);
+      }
+  
       this.bookingForm.patchValue({
         reservationId: this.randomNumberService.generateRandomNumber(),
         roomNo: this.bookingDetails.roomId,
-        stayDateFrom: this.bookingDetails.arrivalDate,
-        stayDateTo: this.bookingDetails.departureDate,
+        stayDateFrom: stayDateFrom.toISOString().split('T')[0], // Format date for input
+        stayDateTo: stayDateTo.toISOString().split('T')[0],     // Format date for input
         numberOfDays: this.calculateNumberOfDays(),
         reservationDate: this.getISTDateTime(),
         totalNumberOfGuests: 1,
         pricePerDayPerPerson: this.bookingDetails.pricePerDayPerPerson,
       });
     }
-    
   }
 
+  
   newCustomer(): void {
     this.customerForm.reset();
     const newCustomerId = this.randomNumberService.generateRandomNumber();
@@ -215,9 +272,22 @@ export class ModalComponent {
   }
 
   calculateNumberOfDays(): number {
-    const startDate = new Date(this.bookingDetails.arrivalDate);
-    const endDate = new Date(this.bookingDetails.departureDate);
-    return Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+    const stayDateFrom = new Date(this.bookingForm.get('stayDateFrom')?.value);
+    const stayDateTo = new Date(this.bookingForm.get('stayDateTo')?.value);
+    
+    // Set times for calculation
+    stayDateFrom.setHours(12, 0, 0, 0);
+    stayDateTo.setHours(11, 0, 0, 0);
+  
+    // Adjust endDate to the next day if it is after the check-out time
+    if (stayDateTo.getHours() > 11) {
+      stayDateTo.setDate(stayDateTo.getDate() + 1);
+    }
+  
+    const numberOfDays = Math.ceil((stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24));
+    
+    // Handle the edge case where the number of days might be zero but it's a single-day stay
+    return numberOfDays <= 0 ? 1 : numberOfDays;
   }
 
   getISTDateTime(): string {
@@ -256,7 +326,7 @@ export class ModalComponent {
       this.updateCustomerForm();
       this.showCustomerIdInput=false;
       this.currentStep = 2;
-    } else if (this.currentStep === 2 && this.customerForm.valid &&  this.isExistingCustomer) {
+    } else if (this.currentStep === 2 && this.customerForm.valid ) {
       this.currentStep = 3;
       this.showCustomerIdInput=true;
     } else if (this.currentStep === 3 && this.paymentForm.valid) {
@@ -327,7 +397,7 @@ export class ModalComponent {
       const newCustomer: ICustomer = {
         customerId: bookingData.customer.customerId,
         age: bookingData.customer.age,
-        birthDate: new Date(bookingData.customer.birthDate).getTime(),
+        birthDate: bookingData.customer.birthDate,
         firstName: bookingData.customer.firstName,
         middleName: bookingData.customer.middleName,
         lastName: bookingData.customer.lastName,

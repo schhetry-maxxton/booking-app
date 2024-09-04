@@ -136,7 +136,7 @@
         <button type="button" class="btn-close" (click)="closeBookingModal()"></button>
       </div>
       <div class="modal-body">
-        <!-- Step 1: Booking Information -->
+        
         <div *ngIf="currentStep === 1">
           <div class="modal-step-content">
             <div class="form-row">
@@ -180,7 +180,7 @@
           </div>
         </div>
         
-        <!-- Step 2: Customer Information -->
+        
         <div *ngIf="currentStep === 2">
           <form [formGroup]="customerForm" class="container">
          
@@ -188,7 +188,7 @@
               <div class="col-12">
                 <label for="customerId" class="form-label">Customer ID</label>
                 <p class="form-text">{{ customerForm.get('customerId')?.value }}</p>
-                <!-- <input type="text" id="customerId" class="form-control" formControlName="customerId" readonly> -->
+               
               </div>
             </div>
             
@@ -309,7 +309,6 @@
           </form>
         </div>
         
-        <!-- Step 3: Payment Information -->
         <div *ngIf="currentStep === 3">
           <form [formGroup]="paymentForm">
             <div class="mb-3">
@@ -341,7 +340,7 @@
           </form>
         </div>
         
-        <!-- Step 4: Acknowledgement/ Invoice section -->
+        
         <div *ngIf="currentStep === 4">
           <div class="text-center">
             <h1>Your booking details have been successfully submitted.</h1>
@@ -352,15 +351,13 @@
               <p>Stay To: {{ bookingForm.value.stayDateTo }}</p>
               <p>Number of Days: {{ bookingForm.value.numberOfDays }}</p>
               <p>Total Guests: {{ bookingForm.value.totalNumberOfGuests }}</p>
-              <!-- <p>Total Price: {{ bookingForm.value.totalPrice }}</p> -->
+              
             </div>
             <div class="invoice-section">
               <h2>Customer Information</h2>
               <p>Customer ID: {{ customerForm.value.customerId }}</p>
               <p>Name: {{ customerForm.value.firstName }} {{ customerForm.value.middleName }} {{ customerForm.value.lastName }}</p>
-              <!-- <p>Age: {{ customerForm.value.age }}</p>
-              <p>Birth Date: {{ customerForm.value.birthDate }}</p>
-              <p>Mobile Number: {{ customerForm.value.mobileNumber }}</p> -->
+              
               <p>Address: {{ customerForm.value.address }}</p>
               <!-- <p>Pincode: {{ customerForm.value.pincode }}</p>
               <p>City: {{ customerForm.value.city }}</p>
