@@ -15,7 +15,7 @@ interface RoomData {
   roomId: number;
   availability: Availability[];
   reservations: Availability[];
-  arrivalDays: Set<string>;
+  arrivalDays: { [day: string]: string[] }; 
   departureDays: Set<string>;
   minStayMap: { [day: string]: number }; 
   maxStayMap: { [day: string]: number }; 
@@ -84,7 +84,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     this.days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   }
 
-  hasReservation(roomId:number,day: number):boolean {
+  hasReservation(roomId: number, day: number): boolean {
     const date = new Date(this.year, this.selectedMonth, day);
     return this.reservations.some(reservation =>
       reservation.roomId === roomId &&
@@ -92,7 +92,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     );
   }
 
-  getCustomerName(roomId:number,day: number):string {
+  getCustomerName(roomId: number, day: number): string {
     const date = new Date(this.year, this.selectedMonth, day);
     const reservation = this.reservations.find(reservation =>
       reservation.roomId === roomId &&
@@ -104,71 +104,71 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   updateRoomAvailability(): void {
     const availabilityMap: { [roomId: number]: Availability[] } = {};
     const reservationMap: { [roomId: number]: Availability[] } = {};
+    const arrivalDaysMap: { [roomId: number]: { [day: string]: string[] } } = {}; 
+    const departureDaysMap: { [roomId: number]: Set<string> } = {};
     const minStayMap: { [roomId: number]: { [day: string]: number } } = {};
     const maxStayMap: { [roomId: number]: { [day: string]: number } } = {};
-    const arrivalDaysMap: { [roomId: number]: Set<string> } = {};
-    const departureDaysMap: { [roomId: number]: Set<string> } = {};
-  
+
     this.stays.forEach(stay => {
       const roomId = stay.roomId;
       const startDate = new Date(stay.stayDateFrom);
       const endDate = new Date(stay.stayDateTo);
-  
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(0, 0, 0, 0);
-  
+    
+      startDate.setHours(12, 0, 0, 0);  // Arrival time 12:00pm
+      endDate.setHours(11, 0, 0, 0); 
+    
       if (!availabilityMap[roomId]) {
         availabilityMap[roomId] = [];
       }
-  
+    
       availabilityMap[roomId].push({
         start: startDate,
         end: endDate
       });
-  
+    
       if (!arrivalDaysMap[roomId]) {
-        arrivalDaysMap[roomId] = new Set<string>();
+        arrivalDaysMap[roomId] = {};
       }
-  
-      const arrivalDays = stay.arrivalDays; // array of day names like ["Mon", "Sun"]
-      const departureDays = stay.departureDays;
-
-      arrivalDays.forEach(day => {
-        const dayUpper = day.toUpperCase();
-        arrivalDaysMap[roomId].add(dayUpper);
-  
+    
+      stay.arrivalDays.forEach(arrivalDay => {
+        const arrivalDayUpper = arrivalDay.toUpperCase();
+        if (!arrivalDaysMap[roomId][arrivalDayUpper]) {
+          arrivalDaysMap[roomId][arrivalDayUpper] = [];
+        }
+        stay.departureDays.forEach(departureDay => {
+          arrivalDaysMap[roomId][arrivalDayUpper].push(departureDay.toUpperCase());
+        });
+    
         if (!minStayMap[roomId]) {
           minStayMap[roomId] = {};
         }
         if (!maxStayMap[roomId]) {
           maxStayMap[roomId] = {};
         }
-  
-        // Set minStay and maxStay for each arrival day
-        minStayMap[roomId][dayUpper] = Math.min(stay.minStay, minStayMap[roomId][dayUpper] || Number.MAX_SAFE_INTEGER);
-        maxStayMap[roomId][dayUpper] = Math.max(stay.maxStay, maxStayMap[roomId][dayUpper] || 0);
+    
+        minStayMap[roomId][arrivalDayUpper] = Math.min(stay.minStay, minStayMap[roomId][arrivalDayUpper] || Number.MAX_SAFE_INTEGER);
+        maxStayMap[roomId][arrivalDayUpper] = Math.max(stay.maxStay, maxStayMap[roomId][arrivalDayUpper] || 0);
       });
-
-      departureDays.forEach(day => {
-        const dayUpper = day.toUpperCase();
+    
+      stay.departureDays.forEach(departureDay => {
+        const departureDayUpper = departureDay.toUpperCase();
         departureDaysMap[roomId] = departureDaysMap[roomId] || new Set<string>();
-        departureDaysMap[roomId].add(dayUpper);
+        departureDaysMap[roomId].add(departureDayUpper);
       });
-
     });
     
     this.reservations.forEach(reservation => {
       const roomId = reservation.roomId;
       const startDate = new Date(reservation.arrivalDate);
       const endDate = new Date(reservation.departureDate);
-  
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(0, 0, 0, 0);
-  
+
+      startDate.setHours(12, 0, 0, 0); // Arrival time: 12 PM
+      endDate.setHours(11, 0, 0, 0);   // Departure time: 11 AM
+
       if (!reservationMap[roomId]) {
         reservationMap[roomId] = [];
       }
-  
+
       reservationMap[roomId].push({
         start: startDate,
         end: endDate
@@ -179,7 +179,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       roomId: room.roomId,
       availability: availabilityMap[room.roomId] || [],
       reservations: reservationMap[room.roomId] || [],
-      arrivalDays: arrivalDaysMap[room.roomId] || new Set<string>(),
+      arrivalDays: arrivalDaysMap[room.roomId] || {}, 
       departureDays: departureDaysMap[room.roomId] || new Set<string>(),
       minStayMap: minStayMap[room.roomId] || {}, 
       maxStayMap: maxStayMap[room.roomId] || {}  
@@ -187,9 +187,34 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     console.log(this.availabilityTable);
   }
   
+  // getCellClass(roomId: number, day: number): string {
+  //   const date = new Date(this.year, this.selectedMonth, day);
+  //   const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+  
+  //   if (!roomData) return '';
+  
+  //   const isAvailable = roomData.availability.some(
+  //     (avail) => date >= avail.start && date <= avail.end
+  //   );
+  
+  //   const isReserved = roomData.reservations.some(
+  //     (reserv) => date >= reserv.start && date <= reserv.end
+  //   );
+
+  //   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  //   const isArrivalDay = roomData.arrivalDays[dayName] ? true : false;
+
+  //   const cellClass = isReserved
+  //     ? 'reserved'
+  //     : isAvailable && isArrivalDay
+  //     ? 'available'
+  //     : 'not-available';
+  
+  //   return cellClass;
+  // }
+
   getCellClass(roomId: number, day: number): string {
     const date = new Date(this.year, this.selectedMonth, day);
-    date.setHours(0, 0, 0, 0);
   
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
   
@@ -203,9 +228,9 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       (reserv) => date >= reserv.start && date <= reserv.end
     );
 
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(); // Get day name
-    const isArrivalDay = roomData.arrivalDays.has(dayName); 
-    
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+    const isArrivalDay = roomData.arrivalDays[dayName] ? true : false;
+
     const isSelected = this.selectedCells.has(`${roomId}-${day}`);
     if (isSelected) return 'selected';
     if (isReserved) return 'reserved';
@@ -242,15 +267,12 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     if (this.isMouseDown && roomId === this.selectedRoomId) {
       if (day >= (this.startDay || 0)) {
         this.endDay = day; // Update endDay as the mouse moves
-        console.log("Inside mouse over Start day : ", this.startDay);
-        console.log("Inside mouse over end day : ", this.endDay);
         this.updateSelection(roomId); // Update selection based on the new endDay
       }
     }
   }
 
   onMouseUp(event: MouseEvent) {
-    console.log("on mouse up");
     this.isMouseDown = false;
     if (this.selectedRoomId !== null) {
       this.validateSelection(this.selectedRoomId);
@@ -259,23 +281,28 @@ export class RoomAvailabilityGanttComponent implements OnInit {
           .filter(cell => cell.startsWith(`${this.selectedRoomId}-`))
           .map(cell => parseInt(cell.split('-')[1], 10))
           .sort((a, b) => a - b);
-
+  
         if (selectedDays.length > 0) {
           const startDay = selectedDays[0];
           const endDay = selectedDays[selectedDays.length - 1];
-
+  
           const arrivalDate = new Date(this.year, this.selectedMonth, startDay);
-          const departureDate = new Date(this.year, this.selectedMonth, endDay);
+          const departureDate = new Date(this.year, this.selectedMonth, endDay + 1); // Adjusted for full day
+  
+          // Adjust times according to the specified logic
+          arrivalDate.setHours(12, 0, 0, 0);
+          departureDate.setHours(11, 0, 0, 0);
+  
           const roomDetails = this.rooms.find(room => room.roomId === this.selectedRoomId);
           if (roomDetails) {
             const bookingDetails = {
               roomId: roomDetails.roomId,
-              locationId: roomDetails.locationId, // Assuming you have a location ID
-              roomName: roomDetails.roomName, // Assuming you have a room name
+              locationId: roomDetails.locationId,
+              roomName: roomDetails.roomName,
               pricePerDayPerPerson: roomDetails.pricePerDayPerPerson,
               arrivalDate: arrivalDate,
               departureDate: departureDate,
-              locationName: roomDetails.locationName // Add any other details you have
+              locationName: roomDetails.locationName
             };
             this.openBookingModal(bookingDetails);
           }
@@ -283,6 +310,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       }
     }
   }
+  
 
   updateSelection(roomId: number): void {
     if (this.startDay === undefined || this.endDay === undefined) return;
@@ -290,14 +318,10 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
     if (!roomData) return;
   
-    console.log("In update selection");
-    console.log("Start day : ", this.startDay, " || End day: ", this.endDay);
-  
     let currentStart = this.startDay;
     let currentEnd = this.endDay;
   
     if (this.checkOverlap(currentStart, currentEnd, roomData)) {
-      console.log("Selection overlaps with a reservation, clearing selection.");
       this.clearAllSelections();
     } else {
       this.addSelection(currentStart, currentEnd, roomId);
@@ -334,12 +358,18 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const endDay = selectedDays[selectedDays.length - 1];
   
     const startDate = new Date(this.year, this.selectedMonth, startDay);
-    const endDate = new Date(this.year, this.selectedMonth, endDay);
+    const endDate = new Date(this.year, this.selectedMonth, endDay + 1); // To include the last night
+  
+    // Adjust times according to the specified logic
+    startDate.setHours(12, 0, 0, 0);
+    endDate.setHours(11, 0, 0, 0);
+  
+    const stayLength = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+  
     const startDayString = startDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
     const endDayString = endDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
   
-    // Identify the active availability window
-    const availabilityWindow = roomData.availability.find(avail => 
+    const availabilityWindow = roomData.availability.find(avail =>
       avail.start <= startDate && avail.end >= endDate
     );
   
@@ -347,37 +377,28 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       this.clearAllSelections();
       return;
     }
-
-    // Validate the selection
+  
+    const validDepartureDays = roomData.departureDays;
+    const validArrivalDays = roomData.arrivalDays[startDayString] || [];
+  
+    if (!validArrivalDays.includes(endDayString) || !validDepartureDays.has(endDayString)) {
+      this.clearAllSelections();
+      return;
+    }
+  
     const minStay = roomData.minStayMap[startDayString] || 1;
     const maxStay = roomData.maxStayMap[startDayString] || Number.MAX_SAFE_INTEGER;
   
-    const stayLength = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) + 1;
-    if (stayLength < minStay || stayLength > maxStay) {
+    if (stayLength < minStay || stayLength > maxStay || !validDepartureDays.has(endDayString) || this.checkOverlap(startDay, endDay, roomData)) {
       this.clearAllSelections();
-      return;
-    }
-  
-    // Ensure end day is one of the valid departure days
-    if (!roomData.departureDays.has(endDayString)) {
-      this.clearAllSelections();
-      return;
-    }
-  
-    // Check for overlap with existing reservations
-    const isOverlapping = this.checkOverlap(startDay, endDay, roomData);
-    if (isOverlapping) {
-      this.clearAllSelections();
-      return;
     }
   }
+  
   
   addSelection(start: number, end: number, roomId: number) {
     for (let day = start; day <= end; day++) {
       const cellKey = `${roomId}-${day}`;
       this.selectedCells.add(cellKey);
-      console.log(this.selectedCells, "In add selection");
-      console.log("RoomID - Day ", cellKey, "Cell key added"); 
     }
   }
 
@@ -388,8 +409,6 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       const cellKey = `${roomId}-${day}`;
       if (this.selectedCells.has(cellKey)) {
         this.selectedCells.delete(cellKey);
-        console.log(this.selectedCells, "In clearSelection");
-        console.log(cellKey, "Cell key deleted");
       }
     });
   }
@@ -416,23 +435,14 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return (isAvailable && !isBooked);
   }
 
-  removeReservation(reservations: IReservation) {
-    // Implement the logic to remove reservation
-    // this.reservationService.removeReservation(reservations);
-  }
-
   openBookingModal(bookingDetails: any): void {
-    console.log('Booking Details:', bookingDetails);
-    
     const modalRef = this.modalService.open(ModalComponent);
     modalRef.componentInstance.bookingDetails = bookingDetails;
 
     modalRef.result.then((result) => {
-        console.log('Modal closed with result:', result);
         this.ngOnInit();
         this.clearAllSelections();
     }, (reason) => {
-        console.log('Modal dismissed with reason:', reason);
         this.clearAllSelections();
     });
   }
