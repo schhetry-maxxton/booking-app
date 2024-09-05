@@ -23,7 +23,12 @@
   <tbody>
     <tr *ngFor="let reservation of reservations">
       <td>{{ reservation.reservationId }}</td>
-      <td>{{ reservation.firstName }}</td>
+      <!-- <td>{{ reservation.firstName }}</td> -->
+      <td>
+        {{ reservation.firstName }} 
+        {{ reservation.middleName ? reservation.middleName + ' ' : '' }} 
+        {{ reservation.lastName }}
+      </td>
       <!-- <td>{{ reservation.locationId }}</td> -->
       <td>{{ reservation.roomId }}</td>
       <td>{{ reservation.customerId }}</td>

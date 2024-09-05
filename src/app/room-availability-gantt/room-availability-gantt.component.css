@@ -80,24 +80,46 @@ h4{
   background-color: #d4edda;
 }
 
-.cell {
+/* .cell {
   position: relative;
   height: 40px;
   text-align: center;
   vertical-align: middle;
   border:1px solid #EAEAEA;
-  /* overflow: hidden; */
+  overflow: visible;
 }
 
 .cell span {
   position: absolute;
-  top: 50%; /* Vertically center the text */
-  left: 50%; /* Horizontally center the text */
-  transform: translate(-50%, -50%); /* Adjust positioning to center */
-  white-space: nowrap; /* Prevent text from wrapping */
-  overflow: hidden; /* Hide overflowed text */
-  text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+  top: 50%; 
+  left: 50%;
+  transform: translate(-50%, -50%); 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis;
+} */
+
+.cell {
+  position: relative;
+  height: 40px;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #EAEAEA;
+  overflow: hidden; /* Hide overflow */
 }
+
+.cell span {
+  position: absolute;
+  top: 0; /* Align to the top of the cell */
+  left: 0; /* Start from the left of the cell */
+  width: 100%; /* Span the full width of the reservation cells */
+  height: 100%; /* Span the full height of the reservation cells */
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Show ellipsis for overflow */
+  display: block; /* Ensure it behaves like a block element within the cell */
+}
+
 
 .cell.reserved {
   position: relative;
@@ -108,13 +130,37 @@ h4{
 }
 
 
-/* .cell.selected {
-  background-color: #007bff;
-  border: 2px solid #007bff;
+/* .middle-of-reservation::before,
+.start-of-reservation::before,
+.end-of-reservation::before
+{
+  position: relative;
+  top: 2rem;
+  bottom: 2rem;
+  color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(90, 90, 207);
+    border: none;
+} */
+
+/* .start-of-reservation {
+  background-color: rgb(90, 90, 207);
+  border-radius: 5px 0 0 5px;
+}
+
+.middle-of-reservation {
+  background-color: rgb(90, 90, 207);
+}
+
+.end-of-reservation {
+  background-color: rgb(90, 90, 207);
+  border-radius: 0 5px 5px 0;
 } */
 
 .selected {
-  border: 2px solid #7aec1c; /* Blue border for selected cells */
+  border: 2px solid #7aec1c; 
 }
 
 .cell.selected-start {
@@ -168,3 +214,24 @@ h4{
   font-size: 20px;
   color: #333; /* Dark text for readability */
 }
+
+
+/* ------- INFINITE SCROLL -------- */
+
+/* .cdk-virtual-scroll-data-source-example .example-viewport {
+  height: 200px;
+  width: 200px;
+  border: 1px solid black;
+}
+
+.cdk-virtual-scroll-data-source-example .example-viewport .cdk-virtual-scroll-content-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+.cdk-virtual-scroll-data-source-example .cell {
+  width: 50px;
+  height: 100%;
+  writing-mode: vertical-lr;
+} */
+

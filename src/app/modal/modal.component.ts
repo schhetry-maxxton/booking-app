@@ -20,7 +20,6 @@ export class ModalComponent {
   // @Input() roomId!: number;
   // @Input() pricePerDayPerPerson!: number;
   @Input() bookingDetails: any;
-  @Input() roomData: IRoom | null = null;
   bookingForm: FormGroup;
   customerForm: FormGroup;
   paymentForm: FormGroup;
@@ -70,7 +69,7 @@ export class ModalComponent {
 
     this.paymentForm = this.fb.group({
       paymentId: this.randomNumberService.generateRandomNumber(),
-      paymentMode: ['creditCard'],
+      paymentMode: ['Cash'],
       totalAmount: [''],
       paidAmount: ['', [Validators.required]],
       dueAmount: ['']
@@ -119,33 +118,17 @@ export class ModalComponent {
     
   }
 
-  // setupInitialFormValues(): void {
-  //   if(this.bookingDetails){
-  //     this.bookingForm.patchValue({
-  //       reservationId: this.randomNumberService.generateRandomNumber(),
-  //       roomNo: this.bookingDetails.roomId,
-  //       stayDateFrom: this.bookingDetails.arrivalDate,
-  //       stayDateTo: this.bookingDetails.departureDate,
-  //       numberOfDays: this.calculateNumberOfDays(),
-  //       reservationDate: this.getISTDateTime(),
-  //       totalNumberOfGuests: 1,
-  //       pricePerDayPerPerson: this.bookingDetails.pricePerDayPerPerson,
-  //     });
-  //   }
-    
-  // }
-
   setupInitialFormValues(): void {
     if (this.bookingDetails) {
       const stayDateFrom = new Date(this.bookingDetails.arrivalDate);
       const stayDateTo = new Date(this.bookingDetails.departureDate);
   
       // Adjust times for check-in and check-out
-      stayDateFrom.setHours(11, 0, 0, 0);
-      stayDateTo.setHours(10, 0, 0, 0);
+      stayDateFrom.setHours(12, 0, 0, 0);
+      stayDateTo.setHours(11, 0, 0, 0);
   
       // Adjust departure date for edge case
-      if (stayDateTo.getHours() > 10) {
+      if (stayDateTo.getHours() > 11) {
         stayDateTo.setDate(stayDateTo.getDate() + 1);
       }
   
@@ -162,7 +145,6 @@ export class ModalComponent {
     }
   }
 
-  
   newCustomer(): void {
     this.customerForm.reset();
     const newCustomerId = this.randomNumberService.generateRandomNumber();
@@ -176,34 +158,11 @@ export class ModalComponent {
     this.currentStep = 2;
   }
 
-  // existingCustomer(customerIdInput: HTMLInputElement): void {
-  //   const customerId = Number(customerIdInput.value);
-  //   const existingCustomer = this.customerService.getCustomerById(customerId);
-  //   if (existingCustomer) {
-  //     this.customerForm.patchValue(existingCustomer);
-  //     this.showCustomerForm = true;
-  //     this.currentStep = 2;
-  //   } else {
-  //     alert('Customer not found.');
-  //   }
-  // }
-
-  // selectCustomerType(type: string) {
-  //   if (type === 'existing') {
-  //     this.isExistingCustomer = true;
-  //     this.showCustomerIdInput = true; // Show search field
-  //   } else {
-  //     this.isExistingCustomer = false;
-  //     this.showCustomerIdInput = false; // Hide search field
-  //   }
-  // }
-
   existingCustomer(): void {
     this.showCustomerIdInput = true; // Show customer ID input field
     this.showCustomerForm = false; // Hide the customer form
     this.isExistingCustomer = true;
     this.showButtons = false;
-    // this.currentStep = 2;
   }
 
   searchCustomer(customerIdInput: HTMLInputElement): void {
@@ -219,40 +178,6 @@ export class ModalComponent {
       this.errorMessage = 'Customer not found.'; 
     }
   }
-
-  // searchCustomer(customerIdInput: HTMLInputElement) {
-  //   const customerId =  Number(customerIdInput.value);
-  //   const existingCustomer = this.customerService.getCustomerById(customerId);
-  //   if (!customerId) {
-  //     this.errorMessage = 'Customer ID cannot be empty.';
-  //     this.showCustomerForm = false;
-  //     return;
-  //   }
-
-  //   console.log(existingCustomer);
-  //   this.customerForm.patchValue(existingCustomer);
-  //   this.errorMessage = null; // Clear error message if customer is found
-  //         this.showCustomerForm = true;
-
-  //   this.customerService.getCustomerById(customerId).subscribe(
-  //     customer => {
-  //       if (customer) {
-  //         this.customerForm.patchValue(customer);
-  //         this.errorMessage = null; // Clear error message if customer is found
-  //         this.showCustomerForm = true;
-  //       } else {
-  //         this.errorMessage = 'Customer not found.';
-  //         this.showCustomerForm = false;
-  //       }
-  //     },
-  //     error => {
-  //       this.errorMessage = 'An error occurred while searching for the customer.';
-  //       this.showCustomerForm = false;
-  //     }
-  //   );
-  // }
-
-
 
   onBirthDateChange(): void {
     const birthDate = this.customerForm.get('birthDate')?.value;
@@ -345,6 +270,7 @@ export class ModalComponent {
       this.showCustomerForm = false; 
       this.showCustomerIdInput = false;
       this.showButtons = true;
+      this.errorMessage=null;
     }
   }
 
@@ -393,7 +319,7 @@ export class ModalComponent {
         numberOfGuest: bookingData.booking.totalNumberOfGuests
       };
 
-      console.log(newReservation);
+      // console.log(newReservation);
       const newCustomer: ICustomer = {
         customerId: bookingData.customer.customerId,
         age: bookingData.customer.age,

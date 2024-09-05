@@ -28,6 +28,11 @@ export class FilterComponent implements OnInit {
   reservations: IReservation[] = [];
   filteredRoomsCount: number | null = null;
   isFilterApplied: boolean = false;
+  showCustomerIdInput: boolean = false; // To control visibility of customer ID input
+  showCustomerForm: boolean = false; // To control visibility of the customer form
+  isExistingCustomer: boolean = false;
+  showButtons: boolean = true;
+  errorMessage: string | null = null;
 
   constructor(
     private reservationService: ReservationService,
@@ -224,6 +229,41 @@ export class FilterComponent implements OnInit {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
+  newCustomer(): void {
+    this.customerForm.reset();
+    const newCustomerId = this.randomNumberService.generateRandomNumber();
+    this.customerForm.patchValue({
+      customerId: newCustomerId
+    });
+    this.showCustomerIdInput = false; // Hide customer ID input field
+    this.showCustomerForm = true; // Show the entire customer form
+    this.isExistingCustomer = false;
+    this.showButtons = false; 
+    this.currentStep = 2;
+  }
+
+  existingCustomer(): void {
+    this.showCustomerIdInput = true; // Show customer ID input field
+    this.showCustomerForm = false; // Hide the customer form
+    this.isExistingCustomer = true;
+    this.showButtons = false;
+  }
+
+  searchCustomer(customerIdInput: HTMLInputElement): void {
+    const customerId = Number(customerIdInput.value);
+    const existingCustomer = this.customerService.getCustomerById(customerId);
+    if (existingCustomer) {
+      console.log(existingCustomer);
+      this.customerForm.patchValue(existingCustomer);
+      this.showCustomerIdInput = false; // Hide customer ID input field
+      this.showCustomerForm = true; // Show the customer form
+      this.errorMessage = null;
+    } else {
+      this.errorMessage = 'Customer not found.'; 
+    }
+  }
+
+
   onBirthDateChange(): void {
     const birthDate = this.customerForm.get('birthDate')?.value;
     if (birthDate) {
@@ -262,9 +302,9 @@ export class FilterComponent implements OnInit {
     this.bookingForm.patchValue({
       reservationId: this.randomNumberService.generateRandomNumber(),
       roomNo: room.roomId,
-      stayDateFrom,
-      stayDateTo,
-      numberOfDays, // Set the calculated number of days here
+      stayDateFrom : stayDateFrom.toISOString().split('T')[0],
+      stayDateTo: stayDateTo.toISOString().split('T')[0],
+      numberOfDays, 
       reservationDate: formattedDateTime,
       totalNumberOfGuests: numberOfPerson,
       pricePerDayPerPerson: pricePerDays,
@@ -293,9 +333,11 @@ export class FilterComponent implements OnInit {
   nextStep(): void {
     if (this.currentStep === 1 && this.bookingForm.valid) {
       this.updateCustomerForm();
+      this.showCustomerIdInput=false;
       this.currentStep = 2;
     } else if (this.currentStep === 2 && this.customerForm.valid) {
       this.currentStep = 3;
+      this.showCustomerIdInput=true;
     } else if (this.currentStep === 3 && this.paymentForm.valid) {
       this.submitBooking();
       this.currentStep = 4; 
@@ -309,6 +351,10 @@ export class FilterComponent implements OnInit {
   previousStep(): void {
     if (this.currentStep > 1) {
       this.currentStep--;
+      this.showCustomerForm = false; 
+      this.showCustomerIdInput = false;
+      this.showButtons = true;
+      this.errorMessage=null;
     }
   }
 
@@ -446,5 +492,37 @@ export class FilterComponent implements OnInit {
     this.paymentForm.reset();
     this.selectedRoom = null;
     this.currentStep = 1; 
+    this.showCustomerIdInput = false;
+    this.showCustomerForm = false;
+    this.showButtons = true;
+  }
+
+  onPaymentModeChange(event: Event): void {
+    const paymentMode = (event.target as HTMLSelectElement).value;
+    this.updateFormControls(paymentMode);
+  }
+
+  updateFormControls(paymentMode: string): void {
+    this.paymentForm.get('cardNumber')?.reset();
+    this.paymentForm.get('cardHolderName')?.reset();
+    this.paymentForm.get('expiryDate')?.reset();
+    this.paymentForm.get('cvv')?.reset();
+    this.paymentForm.get('bankName')?.reset();
+    this.paymentForm.get('accountNumber')?.reset();
+  }
+
+  isCardPayment(): boolean {
+    const paymentMode = this.paymentForm.get('paymentMode')?.value;
+    return paymentMode === 'creditCard' || paymentMode === 'debitCard';
+  }
+
+  isNetBanking(): boolean {
+    const paymentMode = this.paymentForm.get('paymentMode')?.value;
+    return paymentMode === 'netBanking';
+  }
+
+  isUPI(): boolean {
+    const paymentMode = this.paymentForm.get('paymentMode')?.value;
+    return paymentMode === 'upi';
   }
 }

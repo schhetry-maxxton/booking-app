@@ -228,3 +228,17 @@ thead.thead-dark th {
   text-align: right;
   font-weight: bold;
 }
+
+.search{
+  display: flex;
+  align-content: space-around;
+}
+
+.search-btn{
+  justify-items: center;
+}
+
+.customer{
+  display: flex;
+  justify-content: space-around;
+}
