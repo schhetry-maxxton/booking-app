@@ -268,13 +268,37 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     event.preventDefault();
     if (this.isMouseDown && roomId === this.selectedRoomId) {
       if (day >= (this.startDay || 0)) {
-        this.endDay = day; // Update endDay as the mouse moves
+        this.endDay = day; 
         console.log("Inside mouse over Start day : ", this.startDay);
         console.log("Inside mouse over end day : ", this.endDay);
-        this.updateSelection(roomId); // Update selection based on the new endDay
+        this.updateSelection(roomId); 
       }
     }
   }
+
+//   onMouseOver(roomId: number, day: number, event: MouseEvent) {
+//     event.preventDefault();
+//     if (this.isMouseDown && roomId === this.selectedRoomId) {
+//         if (day >= (this.startDay || 0)) {
+//             this.endDay = day; // Update endDay as the mouse moves
+            
+//             // Find the room data for validation
+//             const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+//             if (!roomData) return;
+
+//             // Check if the selection overlaps with a reservation
+//             const currentStart = this.startDay || 0;
+//             const currentEnd = this.endDay;
+
+//             if (this.checkOverlap(currentStart, currentEnd, roomData)) {
+//                 console.log("Selection overlaps with a reservation, clearing selection.");
+//                 this.clearAllSelections(); // Clear selection as soon as overlap is detected
+//             } else {
+//                 this.addSelection(currentStart, currentEnd, roomId); // Update selection only if no overlap
+//             }
+//         }
+//     }
+// }
 
   onMouseUp(event: MouseEvent) {
     console.log("on mouse up");
@@ -332,25 +356,24 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     this.validateSelection(roomId);
   }
 
+
   checkOverlap(start: number, end: number, roomData: RoomData): boolean {
     const startDate = new Date(this.year, this.selectedMonth, start);
     const endDate = new Date(this.year, this.selectedMonth, end);
-  
+
     // Check if the start date and end date overlap with any reservation period
     const overlaps = roomData.reservations.some(reservation => {
-      const reservationStart = new Date(reservation.start);
-      const reservationEnd = new Date(reservation.end);
-      reservationEnd.setHours(11, 0, 0, 0); 
-  
-      // Check if the selection period overlaps with the reservation period
-      return startDate <= reservationEnd && endDate >= reservationStart;
+        const reservationStart = new Date(reservation.start);
+        const reservationEnd = new Date(reservation.end);
+        reservationEnd.setHours(11, 0, 0, 0); // Ensure correct checkout time
+
+        // Check if the selection period overlaps with the reservation period
+        return startDate <= reservationEnd && endDate >= reservationStart;
     });
-  
-    // Check if the selection is on an arrival day where the overlap is allowed
-    const isStartDayArrivalDay = roomData.arrivalDays[startDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()]?.includes(endDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase());
-    
-    return overlaps && !isStartDayArrivalDay;
-  }
+
+    return overlaps;
+}
+
   
   validateSelection(roomId: number): void {
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
