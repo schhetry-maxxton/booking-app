@@ -12,10 +12,30 @@ export class CustomersService {
 
   constructor() { }
 
+  // saveCustomer(customer: ICustomer): void {
+  //   const existingCustomers = this.getCustomers();
+  //   existingCustomers.push(customer);
+  //   localStorage.setItem(this.localStorageKey, JSON.stringify(existingCustomers));
+  // }
+
   saveCustomer(customer: ICustomer): void {
-    const existingCustomers = this.getCustomers();
-    existingCustomers.push(customer);
-    localStorage.setItem(this.localStorageKey, JSON.stringify(existingCustomers));
+    let customers = this.getCustomers(); // Assuming you have a method to get all customers
+    const index = customers.findIndex(c => c.customerId === customer.customerId);
+  
+    if (index !== -1) {
+      // Update existing customer
+      customers[index] = customer;
+    } else {
+      // Add new customer
+      customers.push(customer);
+    }
+  
+    this.storeCustomers(customers); // Assuming you have a method to store customers
+  }
+
+  storeCustomers(customers: ICustomer[]): void {
+    // Save customers to local storage or database
+    localStorage.setItem(this.localStorageKey, JSON.stringify(customers));
   }
 
   getCustomers(): ICustomer[] {

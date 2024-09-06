@@ -188,6 +188,16 @@ thead.thead-dark th {
   color: #495057;
 }
 
+input.ng-invalid.ng-touched, select.ng-invalid.ng-touched {
+  border-color: red;
+}
+
+small.text-danger {
+  color: red;
+  font-weight: bold;
+}
+
+
 /* CSS for Invoice */
 /* styles.css */
 #invoice-content {
@@ -225,7 +235,7 @@ thead.thead-dark th {
 }
 
 .invoice-footer {
-  text-align: right;
+  text-align: center;
   font-weight: bold;
 }
 

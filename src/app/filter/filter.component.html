@@ -116,8 +116,16 @@
                 <strong>Max stay:</strong> {{ room.maxStay }}
               </p>
             </div>
-            <div class="card-footer text-center bg-transparent border-0">
+            <!-- <div class="card-footer text-center bg-transparent border-0">
               <button class="btn btn-outline-primary" (click)="openBookingModal(room)" >Book Now</button>
+            </div> -->
+            <div class="card-footer text-center bg-transparent border-0">
+
+              <button class="btn btn-outline-primary" 
+                      *ngIf="isBookingAllowed()"
+                      (click)="openBookingModal(room)">
+                Book Now
+              </button>
             </div>
           </div>
         </div>
@@ -384,7 +392,7 @@
               </div>
              
             </div>
-            
+
             <div class="mb-3">
               <label for="totalAmount" class="form-label">Total Amount</label>
               <input type="text" id="totalAmount" class="form-control" formControlName="totalAmount" readonly>
@@ -434,13 +442,14 @@
             <div class="invoice-footer">
               Thank you for your booking!
             </div>
+            <button class="btn btn-success mt-3" (click)="downloadInvoicePDF()">Download Invoice</button>
           </div>
         </div>
         
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeBookingModal()">Close</button>
-        <button type="button" class="btn btn-primary" (click)="previousStep()" [hidden]="currentStep === 1">Previous</button>
+        <button type="button" class="btn btn-primary" (click)="previousStep()" [hidden]="currentStep === 1"  [hidden]="currentStep === 4">Previous</button>
         <button type="button" class="btn btn-success" (click)="nextStep()">
           {{ currentStep === 4 ? 'Finish' : 'Next' }}
         </button>

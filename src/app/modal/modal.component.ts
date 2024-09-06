@@ -7,7 +7,7 @@ import { IReservation } from '../Interface/ireservation';
 import { IRoom } from '../Interface/iroom';
 import { ICustomer } from '../Interface/icustomer';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { router } from '../app.router';
+import { jsPDF } from 'jspdf'; 
 
 @Component({
   selector: 'app-modal',
@@ -196,24 +196,49 @@ export class ModalComponent {
     return age;
   }
 
+  // calculateNumberOfDays(): number {
+  //   const stayDateFrom = new Date(this.bookingForm.get('stayDateFrom')?.value);
+  //   const stayDateTo = new Date(this.bookingForm.get('stayDateTo')?.value);
+    
+  //   // Set times for calculation
+  //   stayDateFrom.setHours(12, 0, 0, 0);
+  //   stayDateTo.setHours(11, 0, 0, 0);
+  
+  //   // Adjust endDate to the next day if it is after the check-out time
+  //   if (stayDateTo.getHours() > 11) {
+  //     stayDateTo.setDate(stayDateTo.getDate() + 1);
+  //   }
+  
+  //   const numberOfDays = Math.ceil((stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24));
+    
+  //   // Handle the edge case where the number of days might be zero but it's a single-day stay
+  //   return numberOfDays <= 0 ? 1 : numberOfDays;
+  // }
+
   calculateNumberOfDays(): number {
     const stayDateFrom = new Date(this.bookingForm.get('stayDateFrom')?.value);
-    const stayDateTo = new Date(this.bookingForm.get('stayDateTo')?.value);
-    
-    // Set times for calculation
+    let stayDateTo = new Date(this.bookingForm.get('stayDateTo')?.value);
+  
+    // Ensure stayDateTo is always at least one day after stayDateFrom
+    if (stayDateFrom && stayDateTo) {
+      // If stayDateTo is less than or equal to stayDateFrom, set it to the next day
+      if (stayDateTo <= stayDateFrom) {
+        stayDateTo = new Date(stayDateFrom);
+        stayDateTo.setDate(stayDateTo.getDate() + 1);
+        this.bookingForm.get('stayDateTo')?.setValue(stayDateTo.toISOString().split('T')[0], { emitEvent: false });
+      }
+    }
+  
+    // Set check-in and check-out hours
     stayDateFrom.setHours(12, 0, 0, 0);
     stayDateTo.setHours(11, 0, 0, 0);
   
-    // Adjust endDate to the next day if it is after the check-out time
-    if (stayDateTo.getHours() > 11) {
-      stayDateTo.setDate(stayDateTo.getDate() + 1);
-    }
-  
     const numberOfDays = Math.ceil((stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24));
-    
-    // Handle the edge case where the number of days might be zero but it's a single-day stay
+  
+    // Return at least one day for single-day stays
     return numberOfDays <= 0 ? 1 : numberOfDays;
   }
+  
 
   getISTDateTime(): string {
     const now = new Date();
@@ -270,7 +295,7 @@ export class ModalComponent {
       this.showCustomerForm = false; 
       this.showCustomerIdInput = false;
       this.showButtons = true;
-      this.errorMessage=null;
+      
     }
   }
 
@@ -385,4 +410,66 @@ export class ModalComponent {
     const paymentMode = this.paymentForm.get('paymentMode')?.value;
     return paymentMode === 'upi';
   }
+
+  downloadInvoicePDF(): void {
+    const doc = new jsPDF();
+
+    console.log('Booking Form:', this.bookingForm.value);
+  console.log('Customer Form:', this.customerForm.value);
+  console.log('Payment Form:', this.paymentForm.value);
+    
+    const imgWidth = 50; 
+    const imgHeight = 20;
+    doc.addImage('Assets/plugin.png', 'PNG', 10, 10, imgWidth, imgHeight);
+
+  // doc.setFont('helvetica', 'bold');
+  // doc.setFontSize(16);
+  // doc.text('Discover The Comfortable', 70, 20);  
+
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(12);
+  doc.text('www.luxstays.com', 90, 20);  
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.text('Invoice', 170, 20);  
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.text('Booking Information', 10, 50);  // Section title
+    doc.setFontSize(10);
+    doc.text(`Reservation ID: ${this.bookingForm.get('reservationId')?.value}`, 10, 60);
+    doc.text(`Room No: ${this.bookingForm.get('roomNo')?.value}`, 10, 70);
+    doc.text(`Stay From: ${this.bookingForm.get('stayDateFrom')?.value}`, 10, 80);
+    doc.text(`Stay To: ${this.bookingForm.get('stayDateTo')?.value}`, 10, 90);
+    doc.text(`Number of Days: ${this.bookingForm.get('numberOfDays')?.value}`, 10, 100);
+    doc.text(`Total Guests: ${this.bookingForm.get('totalNumberOfGuests')?.value}`, 10, 110);
+  
+    // Customer Information
+    doc.setFontSize(14);
+    doc.text('Customer Information', 10, 130);
+    doc.setFontSize(10);
+    doc.text(`Customer ID: ${this.customerForm.get('customerId')?.value}`, 10, 140);
+    doc.text(`Name: ${this.customerForm.get('firstName')?.value} ${this.customerForm.get('middleName')?.value} ${this.customerForm.get('lastName')?.value}`, 10, 150);
+    doc.text(`Address: ${this.customerForm.get('address')?.value}`, 10, 160);
+    doc.text(`Mobile: ${this.customerForm.get('mobileNumber')?.value}`, 10, 170);
+  
+    // Payment Information
+    doc.setFontSize(14);
+    doc.text('Payment Information', 10, 190);
+    doc.setFontSize(10);
+    doc.text(`Total Amount: ${this.paymentForm.get('totalAmount')?.value}`, 10, 200);
+    doc.text(`Paid Amount: ${this.paymentForm.get('paidAmount')?.value}`, 10, 210);
+    doc.text(`Due Amount: ${this.paymentForm.get('dueAmount')?.value}`, 10, 220);
+
+  // Footer
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text('Thank you for booking with us!', 10, 260);
+  doc.text('For inquiries, contact us at support@companywebsite.com | Phone: +123-456-7890', 10, 270);
+
+  // Save the generated PDF
+  doc.save(`Invoice_${this.bookingForm.get('reservationId')?.value}.pdf`);
+  }
+
 }

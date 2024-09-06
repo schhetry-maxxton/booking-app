@@ -103,7 +103,6 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   
     return reservation ? new Date(reservation.departureDate).getDate() : -1;
   }
-  
 
   hasReservation(roomId: number, day: number): boolean {
     const date = new Date(this.year, this.selectedMonth, day);
@@ -341,7 +340,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const overlaps = roomData.reservations.some(reservation => {
       const reservationStart = new Date(reservation.start);
       const reservationEnd = new Date(reservation.end);
-      reservationEnd.setHours(11, 0, 0, 0); // Adjust end time to 11 AM on checkout day
+      reservationEnd.setHours(11, 0, 0, 0); 
   
       // Check if the selection period overlaps with the reservation period
       return startDate <= reservationEnd && endDate >= reservationStart;
