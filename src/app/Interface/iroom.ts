@@ -7,5 +7,4 @@ export interface IRoom {
     roomName : string,
     pricePerDayPerPerson : number,
     guestCapacity : number,
-    imageFileName: string,
 }

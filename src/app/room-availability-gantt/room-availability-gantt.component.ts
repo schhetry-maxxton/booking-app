@@ -45,6 +45,12 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   endDay: number | undefined;
   isMouseDown = false;
   selectedCells: Set<string> = new Set();
+  locations: string[] = [];
+  filteredRooms: IRoom[] = [];
+  guestCapacities: number[] = [];      // List of guest capacity filter options
+  selectedGuestCapacity: number | null = null;
+  selectedLocation: string | null = null;
+  maxGuestCapacity = 8;
 
   constructor(private reservationService: ReservationService, private modalService: NgbModal) {
     const today = new Date();
@@ -56,11 +62,57 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     this.reservationService.getRoomsAndStays().subscribe(({ rooms, stays }) => {
       this.rooms = rooms;
       this.stays = stays;
+      this.filteredRooms = rooms;
       this.reservations = this.reservationService.getReservations();
       this.updateRoomAvailability();
       this.generateChart(this.selectedMonth);
+      this.extractLocations();
+      this.extractGuestCapacities();
     });
   }
+
+
+  extractLocations(): void {
+    // Extract unique locations from rooms
+    this.locations = [...new Set(this.rooms.map(room => room.locationName))];
+  }
+
+  extractGuestCapacities(): void {
+    this.guestCapacities = [...new Set(this.rooms.map(room => room.guestCapacity))].sort((a, b) => a - b);
+  }
+
+  
+  onLocationFilterChange(event: any): void {
+    const selectedLocation = event.target.value;
+    this.selectedLocation = selectedLocation || null; // Store the selected location
+    this.filterRooms(this.selectedLocation, this.selectedGuestCapacity);  // Apply both filters
+  }
+
+  onGuestCapacityFilterChange(event: any): void {
+    const selectedCapacity = event.target.value === '' ? null : Number(event.target.value); // Handle "all capacities"
+    this.selectedGuestCapacity = selectedCapacity; // Store the selected guest capacity
+    this.filterRooms(this.selectedLocation, this.selectedGuestCapacity);  // Apply both filters
+  }
+
+  filterRooms(selectedLocation: string | null, selectedGuestCapacity: number | null): void {
+    // Start by applying the location filter (if selected)
+    this.filteredRooms = this.rooms;
+  
+    if (selectedLocation) {
+      // Filter by location if a location is selected
+      this.filteredRooms = this.filteredRooms.filter(room => room.locationName === selectedLocation);
+    }
+  
+    if (selectedGuestCapacity !== null) {
+      // Filter by guest capacity if it is selected (i.e., not null)
+      this.filteredRooms = this.filteredRooms.filter(room => room.guestCapacity >= selectedGuestCapacity);
+    }
+  
+    // Update room availability based on the filtered rooms
+    this.updateRoomAvailability();
+  }
+  
+  
 
   getMonthName(): string {
     return this.months[this.selectedMonth];
@@ -195,7 +247,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       });
     });
   
-    this.availabilityTable = this.rooms.map(room => ({
+    this.availabilityTable = this.filteredRooms.map(room => ({
       roomId: room.roomId,
       availability: availabilityMap[room.roomId] || [],
       reservations: reservationMap[room.roomId] || [],
@@ -252,6 +304,8 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   }
   
   onMouseDown(roomId: number, day: number, event: MouseEvent) {
+    console.log(" On mouse down triggered ");
+    
     event.preventDefault();
     this.isMouseDown = true;
   
@@ -265,8 +319,11 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   }
 
   onMouseOver(roomId: number, day: number, event: MouseEvent) {
+    // console.log(" On mouse Over triggered ");
     event.preventDefault();
     if (this.isMouseDown && roomId === this.selectedRoomId) {
+      console.log("Selected roomId : ", this.selectedRoomId);
+      
       if (day >= (this.startDay || 0)) {
         this.endDay = day; 
         console.log("Inside mouse over Start day : ", this.startDay);
@@ -304,6 +361,8 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     console.log("on mouse up");
     this.isMouseDown = false;
     if (this.selectedRoomId !== null) {
+      console.log("Validate selection called inside mouse Up");
+      
       this.validateSelection(this.selectedRoomId);
       if (this.selectedCells.size > 0) {
         const selectedDays = Array.from(this.selectedCells)
@@ -376,6 +435,8 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
   
   validateSelection(roomId: number): void {
+    console.log(" Validate Selection triggered and inside it ");
+    
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
     if (!roomData) return;
 
@@ -408,6 +469,12 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const validDepartureDays = roomData.departureDays;
     const validArrivalDays = roomData.arrivalDays[startDayString] || [];
 
+    console.log(" validArrivalDays : ", validArrivalDays);
+    console.log(" validDepartureDays : ", validDepartureDays);
+
+      console.log("startDayString :  ", startDayString);
+    console.log("endDayString :  ", endDayString);
+    
     // Ensure the departure day is valid for the selected arrival day and satisfies min and max stay
     if (!validArrivalDays.includes(endDayString) || !validDepartureDays.has(endDayString)) {
       this.clearAllSelections();
