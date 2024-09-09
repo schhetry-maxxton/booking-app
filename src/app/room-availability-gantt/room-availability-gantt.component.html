@@ -36,7 +36,7 @@
           </div>
         </div>
       </div>
-      <div class="current-month row align-items-center justify-content-center">
+      <!-- <div class="current-month row align-items-center justify-content-center">
         <div class="col-md-3 text-center">
           <button (click)="changeMonth(-1)" class="btn btn-primary">‹</button>
         </div>
@@ -46,32 +46,29 @@
         <div class="col-md-3 text-center">
           <button (click)="changeMonth(1)" class="btn btn-primary">›</button>
         </div>
-      </div>
+      </div> -->
 
       <div class="chart-container">
         <div class="chart" [style.grid-template-columns]="'repeat(' + (days.length + 1) + ', 1fr)'">
           <div class="day-header">Room</div>
-          <div *ngFor="let day of days" [ngClass]="{ 'day-header': true, 'weekend': isWeekend(day) }">
-            {{ day }}<br>
-            <span>{{ getDayName(day) }}</span>
+          <div *ngFor="let dayObj of days" [ngClass]="{ 'day-header': true, 'weekend': isWeekend(dayObj) }">
+            {{ dayObj.day }}<br>
+            <span>{{ getDayName(dayObj) }}</span>
           </div>
-          <!-- <ng-container *ngFor="let room of rooms"> -->
-            <ng-container *ngFor="let room of filteredRooms">
+          
+          <ng-container *ngFor="let room of filteredRooms">
             <div class="room-name">Room {{ room.roomId }}</div>
-                <div *ngFor="let day of days"
-                [ngClass]="getCellClass(room.roomId, day)"
-                (mousedown)="onMouseDown(room.roomId, day, $event)"
-                (mouseover)="onMouseOver(room.roomId, day, $event)"
-                (mouseup)="onMouseUp($event)"
-                class="cell" 
-                [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, day) ? 'auto' : 'none' }"
-                >
-                  <span *ngIf="hasReservation(room.roomId,day)" >
-                    {{ getCustomerName(room.roomId, day) }}
-                  </span>
-                </div>
-
+            <div *ngFor="let dayObj of days" [ngClass]="getCellClass(room.roomId, dayObj)"
+              (mousedown)="onMouseDown(room.roomId, dayObj, $event)" 
+              (mouseover)="onMouseOver(room.roomId, dayObj, $event)"
+              (mouseup)="onMouseUp(dayObj, $event)" class="cell"
+              [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, dayObj) ? 'auto' : 'none' }">
+              <span *ngIf="hasReservation(room.roomId, dayObj)">
+                {{ getCustomerName(room.roomId, dayObj) }}
+              </span>
+            </div>
           </ng-container>
+
         </div>
       </div>
     </div>
