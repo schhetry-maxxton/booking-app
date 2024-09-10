@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { IRoom } from '../Interface/iroom';
+import { IRoomWithAvailability } from '../Interface/rooms-with-availability'; // Updated import
 import { IRoomAvailability } from '../Interface/iroom-availability';
-import { ReservationService } from '../Services/Reservation/reservation.service';
+import { ReservationService } from '../Services/Reservation2/reservation2.service';
 import { RandomNumberService } from '../Services/RandomNumber/random-number.service';
 import { IReservation } from '../Interface/ireservation';
 import { ICustomer } from '../Interface/icustomer';
 import { CustomersService } from '../Services/Customers/customers.service';
 import { jsPDF } from 'jspdf'; 
+
 
 
 @Component({
@@ -17,12 +18,14 @@ import { jsPDF } from 'jspdf';
 })
 export class FilterComponent implements OnInit {
   
-  rooms: IRoom[] = [];
-  filteredRooms: Array<IRoom & IRoomAvailability> = [];
+  rooms: IRoomWithAvailability[] = [];  // Updated type
+  filteredRooms: IRoomWithAvailability[] = [];  // Only rooms, not availabilities
+
+  // Updated type
   availability: IRoomAvailability[] = [];
   locations: string[] = [];
   filterForm: FormGroup;
-  selectedRoom: IRoom | null = null;
+  selectedRoom: IRoomWithAvailability | null = null;  // Updated type
   bookingForm: FormGroup;
   customerForm: FormGroup;
   paymentForm: FormGroup;
@@ -92,10 +95,6 @@ export class FilterComponent implements OnInit {
       this.updateTotalPrice();
     });
 
-    // this.filterForm.get('location')?.valueChanges.subscribe(() => {
-    //   this.applyFilters();
-    // });
-
     this.bookingForm.get('stayDateFrom')?.valueChanges.subscribe(() => {
       this.updateDateValidation();
     });
@@ -111,6 +110,38 @@ export class FilterComponent implements OnInit {
     this.paymentForm.get('totalAmount')?.valueChanges.subscribe(() => {
       this.updateDueAmount();
     });
+  }
+
+  // Function to combine room data with their availabilities
+  private makeRoomsData(rooms: IRoomWithAvailability[], availabilities: IRoomAvailability[]): IRoomWithAvailability[] {
+    console.log('Rooms Data:', rooms);  // Log the rooms data
+    // console.log('Availabilities Data:', availabilities);  // Log the availability data
+
+    // Step 1: Create a map to associate rooms by roomId, and initialize an empty availabilities array for each room
+    const roomMap = new Map<number, IRoomWithAvailability>();
+    
+    rooms.forEach(room => {
+      room.availabilities = [];  // Initialize the availabilities array for each room
+      roomMap.set(room.roomId, room);  // Map the room by its roomId
+    });
+    
+    console.log('Room Map after initialization:', roomMap);  // Log room map after initializing
+
+    // Step 2: Loop through the availabilities and add them to the corresponding room
+    availabilities.forEach(avail => {
+      const room = roomMap.get(avail.roomId);  // Find the room by roomId
+      
+      if (room) {
+        room.availabilities.push(avail);  // Add the availability to the correct room
+      }
+    });
+
+    // Log the final room data after combining with availabilities
+    console.log('Room Map after merging availabilities:', roomMap);
+   
+    // Step 3: Return the array of rooms with their availabilities combined
+    return Array.from(roomMap.values());  // Convert the Map back into an array of rooms
+    
   }
 
   private updateDateValidation(): void {
@@ -130,12 +161,25 @@ export class FilterComponent implements OnInit {
     }
   }
 
+  // Method to get the minStay of a room (across all availabilities)
+getMinStay(room: IRoomWithAvailability): number | null {
+  return room.availabilities.length > 0
+    ? Math.min(...room.availabilities.map(a => a.minStay))
+    : null;
+}
+
+// Method to get the maxStay of a room (across all availabilities)
+getMaxStay(room: IRoomWithAvailability): number | null {
+  return room.availabilities.length > 0
+    ? Math.max(...room.availabilities.map(a => a.maxStay))
+    : null;
+}
+
 
   ngOnInit(): void {
     this.reservationService.getRoomsAndStays().subscribe(
       data => {
-        this.rooms = data.rooms;
-        this.availability = data.stays;
+        this.rooms = this.makeRoomsData(data.rooms, data.stays); // Call the new function
         this.initializeLocations();
         this.applyFilters();
       },
@@ -143,11 +187,13 @@ export class FilterComponent implements OnInit {
         console.error('Error fetching data', error);
       }
     );
+
     this.reservations = this.reservationService.getReservations(); 
+    
   }
 
   initializeLocations(): void {
-    const locationN=this.rooms.map(room => room.locationName);
+    const locationN = this.rooms.map(room => room.locationName);
     const uniqueLocations = Array.from(new Set(locationN));
     this.locations = uniqueLocations;
   }
@@ -157,127 +203,28 @@ export class FilterComponent implements OnInit {
     return `Assets/images/Room${imageIndex}.jpg`;
   }
 
-  applyFilters(): void {
-    const filters = this.filterForm.value;
-  
-    if (this.filterForm.invalid) {
-      alert("Invalid input");
-      this.filterForm.patchValue({
-        numberOfPersons: [1],
-        minStay: [''],
-        maxStay: ['']
-      });
-      return;
+  onBirthDateChange(): void {
+    const birthDate = this.customerForm.get('birthDate')?.value;
+    if (birthDate) {
+      this.customerForm.get('age')?.setValue(this.calculateAge(new Date(birthDate)));
     }
+  }
 
-    const stayDateFrom = new Date(filters.dateFrom);
-    const stayDateTo = new Date(filters.dateTo);
-  
-    if (stayDateFrom >= stayDateTo) {
-      alert("Invalid dates: 'Check-in Date' must be before the 'Check-out date'");
-      return;
+  calculateAge(birthDate: Date): number {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
     }
-
-    const durationOfStay = (stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24); // Duration in days
-
-  // Calculate the maximum allowable stay from all availabilities
-  const maximumMaxStay = Math.max(...this.availability.map(a => a.maxStay || 0));
-
-  // If the duration of stay exceeds the maximum allowable stay, return no rooms
-  if (durationOfStay > maximumMaxStay) {
-    this.filteredRooms = [];
-    this.filteredRoomsCount = 0;
-    // alert("No rooms available for the selected duration. Maximum stay limit exceeded.");
-    return;
+    return age;
   }
 
-    const unavailableRoomIds = this.reservations
-    .filter(res => this.isDateRangeOverlapping(
-      new Date(filters.dateFrom),
-      new Date(filters.dateTo),
-      new Date(res.arrivalDate),
-      new Date(res.departureDate)
-    ))
-    .map(res => res.roomId);
-  
-    const filteredAvailability = this.availability.filter(avail => {
-      const room = this.rooms.find(room => room.roomId === avail.roomId);
-  
-      if (!room || unavailableRoomIds.includes(room.roomId)) return false;
-  
-      
-      return (
-        (!filters.location || room.locationName === filters.location) &&
-        this.isAvailable(avail, filters) &&
-        this.isWithinStayDuration(avail, filters) &&
-        this.isCapacityMatch(room, filters) &&
-        this.isWithinPriceRange(room, filters)
-      );
-    });
-  
-    this.filteredRooms = filteredAvailability.map(avail => {
-      const room = this.rooms.find(room => room.roomId === avail.roomId);
-      return { ...room, ...avail } as IRoom & IRoomAvailability;
-    });
-  
-    this.filteredRoomsCount = this.filteredRooms.length;
-  }
-  
-  private isAvailable(avail: IRoomAvailability, filters: any): boolean {
-    const stayDateFrom = new Date(filters.dateFrom);
-    const stayDateTo = new Date(filters.dateTo);
-    const availFrom = new Date(avail.stayDateFrom);
-    const availTo = new Date(avail.stayDateTo);
-  
-    return ((!filters.dateFrom && !filters.dateTo) || (stayDateFrom >= availFrom && stayDateTo <= availTo));
-  }
-  
-  private isCapacityMatch(room: IRoom, filters: any): boolean {
-    const numberOfPersons = filters.numberOfPersons || 1;
-    return room.guestCapacity >= numberOfPersons;
-  }
-  
-  private isWithinPriceRange(room: IRoom, filters: any): boolean {
-    const maxPrice = filters.maxPrice || 4000;
-    return room.pricePerDayPerPerson <= maxPrice;
-  }
-  
-  private isWithinStayDuration(avail: IRoomAvailability, filters: any): boolean {
-    const minStay = filters.minStay || 0;
-    const maxStay = filters.maxStay || 0;
-  
-    return (minStay <= 0 || avail.minStay >= minStay) &&
-           (maxStay <= 0 || avail.maxStay <= maxStay);
-  }
-
-  private isDateRangeOverlapping(
-    stayDateFrom: Date,
-    stayDateTo: Date,
-    availFrom: Date,
-    availTo: Date
-  ): boolean {
-    return (stayDateFrom <= availTo && stayDateTo >= availFrom);
-  }
-
-  private getISTDateTime(): string {
-    const now = new Date();
-    const istDate = new Date(now.getTime());
-    const year = istDate.getFullYear();
-    const month = String(istDate.getMonth() + 1).padStart(2, '0');
-    const day = String(istDate.getDate()).padStart(2, '0');
-    const hours = String(istDate.getHours()).padStart(2, '0');
-    const minutes = String(istDate.getMinutes()).padStart(2, '0');
-  
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  }
-
-  // Method to check if both Check-in and Check-out dates are provided
   isBookingAllowed(): boolean {
     const checkInDate = this.filterForm.get('dateFrom')?.value;
     const checkOutDate = this.filterForm.get('dateTo')?.value;
     return checkInDate && checkOutDate; // Returns true only if both dates are filled
   }
-
 
   newCustomer(): void {
     this.customerForm.reset();
@@ -313,26 +260,153 @@ export class FilterComponent implements OnInit {
     }
   }
 
-
-  onBirthDateChange(): void {
-    const birthDate = this.customerForm.get('birthDate')?.value;
-    if (birthDate) {
-      this.customerForm.get('age')?.setValue(this.calculateAge(new Date(birthDate)));
+  applyFilters(): void {
+    const filters = this.filterForm.value;
+  
+    // If no filter fields are provided (i.e., no date or location is selected), show all rooms
+    const noFiltersApplied = !filters.dateFrom && !filters.dateTo && !filters.location;
+  
+    if (noFiltersApplied) {
+      // If no filters are applied, show all rooms without any filtering
+      this.filteredRooms = this.rooms.map(room => ({
+        ...room,   // Room details
+        // No need to add availability details since we're showing all rooms
+      }));
+      this.filteredRoomsCount = this.filteredRooms.length;
+      return;
     }
+  
+    // If filter form is invalid, reset to default filter values
+    if (this.filterForm.invalid) {
+      alert("Invalid input");
+      this.filterForm.patchValue({
+        numberOfPersons: [1],
+        minStay: [''],
+        maxStay: ['']
+      });
+      return;
+    }
+  
+    const stayDateFrom = new Date(filters.dateFrom);
+    const stayDateTo = new Date(filters.dateTo);
+  
+    // Check if 'dateFrom' is greater than 'dateTo'
+    if (stayDateFrom >= stayDateTo) {
+      alert("Invalid dates: 'Check-in Date' must be before the 'Check-out date'");
+      return;
+    }
+  
+    const durationOfStay = (stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24); // Duration in days
+  
+    // Calculate the maximum allowable stay from all availabilities
+    const maximumMaxStay = Math.max(...this.rooms.flatMap(room => room.availabilities.map(a => a.maxStay || 0)));
+  
+    // If the duration of stay exceeds the maximum allowable stay, return no rooms
+    if (durationOfStay > maximumMaxStay) {
+      this.filteredRooms = [];
+      this.filteredRoomsCount = 0;
+      return;
+    }
+  
+    // Get room IDs that are unavailable due to existing reservations
+    const unavailableRoomIds = this.reservations
+      .filter(res => this.isDateRangeOverlapping(
+        new Date(filters.dateFrom),
+        new Date(filters.dateTo),
+        new Date(res.arrivalDate),
+        new Date(res.departureDate)
+      ))
+      .map(res => res.roomId);
+  
+    // Get the day of the week from the selected stay dates
+    const arrivalDay = filters.dateFrom ? new Date(filters.dateFrom).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() : null;
+    const departureDay = filters.dateTo ? new Date(filters.dateTo).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() : null;
+  
+    // Now, apply the filters
+    this.filteredRooms = this.rooms.flatMap(room => {
+      if (unavailableRoomIds.includes(room.roomId)) {
+        return []; // Skip rooms that are unavailable due to reservations
+      }
+  
+      // Filter the room's availabilities based on the filter criteria
+      const matchedAvailabilities = room.availabilities.filter(avail => {
+        const isValidArrivalDay = arrivalDay ? avail.arrivalDays.includes(arrivalDay) : true; // Check for valid arrival day if provided
+        const isValidDepartureDay = departureDay ? avail.departureDays.includes(departureDay) : true; // Check for valid departure day if provided
+  
+        return (
+          this.isAvailable(avail, filters) &&
+          this.isWithinStayDuration(avail, filters) &&
+          this.isCapacityMatch(room, filters) &&
+          this.isWithinPriceRange(room, filters) &&
+          isValidArrivalDay &&  // Check if it's a valid arrival day
+          isValidDepartureDay   // Check if it's a valid departure day
+        );
+      });
+  
+      // If there are no matched availabilities, skip the room
+      if (matchedAvailabilities.length === 0) {
+        return [];
+      }
+  
+      // Return the room (not availability) if any availabilities matched the criteria
+      return { ...room };
+    });
+  
+    this.filteredRoomsCount = this.filteredRooms.length;
+  }
+  
+  
+  
+
+  private isAvailable(avail: IRoomAvailability, filters: any): boolean {
+    const stayDateFrom = new Date(filters.dateFrom);
+    const stayDateTo = new Date(filters.dateTo);
+    const availFrom = new Date(avail.stayDateFrom);
+    const availTo = new Date(avail.stayDateTo);
+  
+    return ((!filters.dateFrom && !filters.dateTo) || (stayDateFrom >= availFrom && stayDateTo <= availTo));
   }
 
-  calculateAge(birthDate: Date): number {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
+  private isCapacityMatch(room: IRoomWithAvailability, filters: any): boolean {
+    const numberOfPersons = filters.numberOfPersons || 1;
+    return room.guestCapacity >= numberOfPersons;
   }
 
+  private isWithinPriceRange(room: IRoomWithAvailability, filters: any): boolean {
+    const maxPrice = filters.maxPrice || 4000;
+    return room.pricePerDayPerPerson <= maxPrice;
+  }
 
-  openBookingModal(room: IRoom): void {
+  private isWithinStayDuration(avail: IRoomAvailability, filters: any): boolean {
+    const minStay = filters.minStay || 0;
+    const maxStay = filters.maxStay || 0;
+  
+    return (minStay <= 0 || avail.minStay >= minStay) &&
+           (maxStay <= 0 || avail.maxStay <= maxStay);
+  }
+
+  private isDateRangeOverlapping(
+    stayDateFrom: Date,
+    stayDateTo: Date,
+    availFrom: Date,
+    availTo: Date
+  ): boolean {
+    return (stayDateFrom <= availTo && stayDateTo >= availFrom);
+  }
+
+  private getISTDateTime(): string {
+    const now = new Date();
+    const istDate = new Date(now.getTime());
+    const year = istDate.getFullYear();
+    const month = String(istDate.getMonth() + 1).padStart(2, '0');
+    const day = String(istDate.getDate()).padStart(2, '0');
+    const hours = String(istDate.getHours()).padStart(2, '0');
+    const minutes = String(istDate.getMinutes()).padStart(2, '0');
+  
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  openBookingModal(room: IRoomWithAvailability): void {
     this.selectedRoom = room;
     const stayDateFrom = new Date(this.filterForm.get('dateFrom')?.value);
     const stayDateTo = new Date(this.filterForm.get('dateTo')?.value);
@@ -347,15 +421,14 @@ export class FilterComponent implements OnInit {
     }
   
     const numberOfDays = Math.ceil((stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24));
-  
     const formattedDateTime = this.getISTDateTime();
   
     this.bookingForm.patchValue({
       reservationId: this.randomNumberService.generateRandomNumber(),
       roomNo: room.roomId,
-      stayDateFrom : stayDateFrom.toISOString().split('T')[0],
+      stayDateFrom: stayDateFrom.toISOString().split('T')[0],
       stayDateTo: stayDateTo.toISOString().split('T')[0],
-      numberOfDays : numberOfDays, 
+      numberOfDays: numberOfDays, 
       reservationDate: formattedDateTime,
       totalNumberOfGuests: numberOfPerson,
       pricePerDayPerPerson: pricePerDays,
@@ -374,7 +447,6 @@ export class FilterComponent implements OnInit {
     const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal')!);
     bookingModal.show();
   }
-  
 
   closeBookingModal(): void {
     const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal')!);
@@ -384,11 +456,11 @@ export class FilterComponent implements OnInit {
   nextStep(): void {
     if (this.currentStep === 1 && this.bookingForm.valid) {
       this.updateCustomerForm();
-      this.showCustomerIdInput=false;
+      this.showCustomerIdInput = false;
       this.currentStep = 2;
     } else if (this.currentStep === 2 && this.customerForm.valid) {
       this.currentStep = 3;
-      this.showCustomerIdInput=true;
+      this.showCustomerIdInput = true;
     } else if (this.currentStep === 3 && this.paymentForm.valid) {
       this.submitBooking();
       this.currentStep = 4; 
@@ -405,7 +477,7 @@ export class FilterComponent implements OnInit {
       this.showCustomerForm = false; 
       this.showCustomerIdInput = false;
       this.showButtons = true;
-      this.errorMessage=null;
+      this.errorMessage = null;
     }
   }
 
@@ -463,44 +535,25 @@ export class FilterComponent implements OnInit {
     }
   }
 
-  // calculateNumberOfDays(): number {
-  //   const stayDateFrom = new Date(this.bookingForm.get('stayDateFrom')?.value);
-  //   const stayDateTo = new Date(this.bookingForm.get('stayDateTo')?.value);
-    
-  //   stayDateFrom.setHours(12, 0, 0, 0);
-  //   stayDateTo.setHours(11, 0, 0, 0);
-  
-  //   if (stayDateTo.getHours() > 11) {
-  //     stayDateTo.setDate(stayDateTo.getDate() + 1);
-  //   }
-  
-  //   const numberOfDays = Math.ceil((stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24));
-  
-  //   return numberOfDays <= 0 ? 1 : numberOfDays;
-  // }
-  
   calculateNumberOfDays(): number {
-  const stayDateFrom = new Date(this.bookingForm.get('stayDateFrom')?.value);
-  let stayDateTo = new Date(this.bookingForm.get('stayDateTo')?.value);
+    const stayDateFrom = new Date(this.bookingForm.get('stayDateFrom')?.value);
+    let stayDateTo = new Date(this.bookingForm.get('stayDateTo')?.value);
 
-  // Ensure stayDateTo is always at least one day after stayDateFrom
-  if (stayDateFrom && stayDateTo) {
-    if (stayDateTo <= stayDateFrom) {
-      stayDateTo = new Date(stayDateFrom);
-      stayDateTo.setDate(stayDateTo.getDate() + 1);
-      this.bookingForm.get('stayDateTo')?.setValue(stayDateTo.toISOString().split('T')[0], { emitEvent: false });
+    if (stayDateFrom && stayDateTo) {
+      if (stayDateTo <= stayDateFrom) {
+        stayDateTo = new Date(stayDateFrom);
+        stayDateTo.setDate(stayDateTo.getDate() + 1);
+        this.bookingForm.get('stayDateTo')?.setValue(stayDateTo.toISOString().split('T')[0], { emitEvent: false });
+      }
     }
+
+    stayDateFrom.setHours(12, 0, 0, 0);
+    stayDateTo.setHours(11, 0, 0, 0);
+
+    const numberOfDays = Math.ceil((stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24));
+
+    return numberOfDays <= 0 ? 1 : numberOfDays;
   }
-
-  // Set check-in and check-out hours
-  stayDateFrom.setHours(12, 0, 0, 0);
-  stayDateTo.setHours(11, 0, 0, 0);
-
-  const numberOfDays = Math.ceil((stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24));
-
-  // Return at least one day for single-day stays
-  return numberOfDays <= 0 ? 1 : numberOfDays;
-}
 
   submitBooking(): void {
     if (this.paymentForm.valid) {
@@ -532,7 +585,7 @@ export class FilterComponent implements OnInit {
       const newCustomer: ICustomer = {
         customerId: bookingData.customer.customerId,
         age: bookingData.customer.age,
-        birthDate: bookingData.customer.birthDate, // Save as timestamp
+        birthDate: bookingData.customer.birthDate,
         firstName: bookingData.customer.firstName,
         middleName: bookingData.customer.middleName,
         lastName: bookingData.customer.lastName,
@@ -548,7 +601,6 @@ export class FilterComponent implements OnInit {
       const reservationData = newReservation;
       const customerData = newCustomer;
 
-      // Save to local storage
       this.reservationService.saveReservation(reservationData);
       this.customerService.saveCustomer(customerData);
       this.currentStep = 4;
@@ -557,14 +609,14 @@ export class FilterComponent implements OnInit {
       this.paymentForm.markAllAsTouched();
     }
   }
-  
+
   resetForms(): void {
     this.closeBookingModal();
     this.bookingForm.reset();
     this.customerForm.reset();
     this.paymentForm.reset();
     this.selectedRoom = null;
-    this.currentStep = 1; 
+    this.currentStep = 1;
     this.showCustomerIdInput = false;
     this.showCustomerForm = false;
     this.showButtons = true;
@@ -603,24 +655,20 @@ export class FilterComponent implements OnInit {
     const doc = new jsPDF();
 
     console.log('Booking Form:', this.bookingForm.value);
-  console.log('Customer Form:', this.customerForm.value);
-  console.log('Payment Form:', this.paymentForm.value);
+    console.log('Customer Form:', this.customerForm.value);
+    console.log('Payment Form:', this.paymentForm.value);
     
     const imgWidth = 50; 
     const imgHeight = 20;
     doc.addImage('Assets/plugin.png', 'PNG', 10, 10, imgWidth, imgHeight);
 
-  // doc.setFont('helvetica', 'bold');
-  // doc.setFontSize(16);
-  // doc.text('Discover The Comfortable', 70, 20);  
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(12);
+    doc.text('www.luxstays.com', 90, 20);  
 
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(12);
-  doc.text('www.luxstays.com', 90, 20);  
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.text('Invoice', 170, 20);  
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('Invoice', 170, 20);  
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(14);
@@ -633,7 +681,6 @@ export class FilterComponent implements OnInit {
     doc.text(`Number of Days: ${this.bookingForm.get('numberOfDays')?.value}`, 10, 100);
     doc.text(`Total Guests: ${this.bookingForm.get('totalNumberOfGuests')?.value}`, 10, 110);
   
-    // Customer Information
     doc.setFontSize(14);
     doc.text('Customer Information', 10, 130);
     doc.setFontSize(10);
@@ -642,7 +689,6 @@ export class FilterComponent implements OnInit {
     doc.text(`Address: ${this.customerForm.get('address')?.value}`, 10, 160);
     doc.text(`Mobile: ${this.customerForm.get('mobileNumber')?.value}`, 10, 170);
   
-    // Payment Information
     doc.setFontSize(14);
     doc.text('Payment Information', 10, 190);
     doc.setFontSize(10);
@@ -650,14 +696,12 @@ export class FilterComponent implements OnInit {
     doc.text(`Paid Amount: ${this.paymentForm.get('paidAmount')?.value}`, 10, 210);
     doc.text(`Due Amount: ${this.paymentForm.get('dueAmount')?.value}`, 10, 220);
 
-  // Footer
-  doc.setFontSize(10);
-  doc.setTextColor(100);
-  doc.text('Thank you for booking with us!', 10, 260);
-  doc.text('For inquiries, contact us at support@companywebsite.com | Phone: +123-456-7890', 10, 270);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text('Thank you for booking with us!', 10, 260);
+    doc.text('For inquiries, contact us at support@companywebsite.com | Phone: +123-456-7890', 10, 270);
 
-  // Save the generated PDF
-  doc.save(`Invoice_${this.bookingForm.get('reservationId')?.value}.pdf`);
+    doc.save(`Invoice_${this.bookingForm.get('reservationId')?.value}.pdf`);
   }
 
 }

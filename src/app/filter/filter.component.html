@@ -112,8 +112,8 @@
                 <strong>Location:</strong> {{ room.locationName }}<br>
                 <strong>Price per day:</strong> {{ room.pricePerDayPerPerson | currency }}<br>
                 <strong>Guest Capacity:</strong> {{ room.guestCapacity }}<br>
-                <strong>Min stay:</strong> {{ room.minStay }}<br>
-                <strong>Max stay:</strong> {{ room.maxStay }}
+                <strong>Min stay:</strong> {{ getMinStay(room) }}<br>
+                <strong>Max stay:</strong> {{ getMaxStay(room) }}
               </p>
             </div>
             <!-- <div class="card-footer text-center bg-transparent border-0">
