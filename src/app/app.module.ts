@@ -19,6 +19,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ModalComponent } from './modal/modal.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NewReservationComponent } from './new-reservation/new-reservation.component';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     CharttComponent,
     RoomAvailabilityGanttComponent,
     ModalComponent,
+    NewReservationComponent,
   ],
   imports: [
     BrowserModule,

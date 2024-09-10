@@ -161,7 +161,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   
 
   generateChart(): void {
-    const totalMonths = 12; 
+    const totalMonths = 5; 
     const startMonth = 7;
     const startYear = this.year;
   
@@ -572,6 +572,10 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
     const minStay = roomData.minStayMap[startDayString] || 1;
     const maxStay = roomData.maxStayMap[startDayString] || Number.MAX_SAFE_INTEGER;
+
+    console.log("minStay : ", minStay);
+    console.log("maxStay : ", maxStay);
+    
     const stayLength = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) + 1;
 
     if (stayLength < minStay || stayLength > maxStay || !validDepartureDays.has(endDayString) || this.checkOverlap(startDay, endDay, roomData, dayObj)) {

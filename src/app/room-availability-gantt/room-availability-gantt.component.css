@@ -26,14 +26,18 @@ body {
   align-items: center;
   justify-content: center;
   background-color: #f8f9fa;
-  /* border: 0.5px  rgb(90, 85, 85);  */
   border:1px solid #EAEAEA;
   height: 40px;
   padding: 0 5px;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-weight: bold;
+
+  position: sticky;
+  left: 0;
+  z-index: 10;
 }
+
 
 .day-header {
   display: flex;

@@ -8,8 +8,7 @@ import { IReservation } from '../Interface/ireservation';
 import { ICustomer } from '../Interface/icustomer';
 import { CustomersService } from '../Services/Customers/customers.service';
 import { jsPDF } from 'jspdf'; 
-// import autoTable from 'jspdf-autotable';
-// import logo from 'Assets/plugin.png';
+
 
 @Component({
   selector: 'app-filter',
