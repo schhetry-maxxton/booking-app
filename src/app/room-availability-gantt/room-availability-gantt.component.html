@@ -50,6 +50,11 @@
 
       <div class="chart-container">
         <div class="chart" [style.grid-template-columns]="'repeat(' + (days.length + 1) + ', 1fr)'">
+          <div class="month-header">Month</div>
+          <div *ngFor="let section of getMonthSections()" class="month-name" [style.grid-column]="'span ' + section.dayCount">
+            {{ section.monthName }}
+          </div>
+
           <div class="day-header">Room</div>
           <div *ngFor="let dayObj of days" [ngClass]="{ 'day-header': true, 'weekend': isWeekend(dayObj) }">
             {{ dayObj.day }}<br>
