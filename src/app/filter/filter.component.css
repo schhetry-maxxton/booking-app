@@ -81,6 +81,9 @@
   margin: 0; /* Remove default margin */
 }
 
+/* .new-reservation{
+  
+} */
 
 
 .container {
@@ -251,4 +254,8 @@ small.text-danger {
 .customer{
   display: flex;
   justify-content: space-around;
+}
+
+.cdk-overlay-container {
+  z-index: 1200 !important; /* Ensure it's below the modal's z-index */
 }

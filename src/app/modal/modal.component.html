@@ -113,7 +113,7 @@
               <div class="row mb-3" *ngIf="!isExistingCustomer">
                 <div class="col-md-5">
                   <label for="birthDate" class="form-label">Birth Date</label>
-                  <input type="date" id="birthDate" class="form-control" formControlName="birthDate" (change)="onBirthDateChange()">
+                  <input type="date" id="birthDate" class="form-control" formControlName="birthDate" (change)="onBirthDateChange()" [max]="DOB">
                   <div *ngIf="customerForm.get('birthDate')?.invalid && customerForm.get('birthDate')?.touched">
                     <small *ngIf="customerForm.get('birthDate')?.errors" class="text-danger">Birth Date is required.</small>
                   </div>

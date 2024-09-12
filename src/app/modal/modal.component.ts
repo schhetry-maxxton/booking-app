@@ -30,7 +30,7 @@ export class ModalComponent {
   isExistingCustomer: boolean = false;
   showButtons: boolean = true;
   errorMessage: string | null = null;
-  
+  DOB: string;
 
   constructor(public activeModal: NgbActiveModal,
     private fb: FormBuilder,
@@ -38,6 +38,9 @@ export class ModalComponent {
     private reservationService: ReservationService,
     private customerService: CustomersService
   ) { 
+
+    const today=new Date();
+    this.DOB=today.toISOString().split('T')[0];
 
     this.bookingForm = this.fb.group({
       reservationId: [''],

@@ -12,14 +12,29 @@ import { provideHttpClient } from '@angular/common/http';
 import { HomeComponent } from './home/home.component';
 import { CharttComponent } from './chartt/chartt.component';
 import { AngularResizeEventModule } from 'angular-resize-event';
-import {OverlayModule} from '@angular/cdk/overlay';
+import { OverlayModule, Overlay, ScrollStrategyOptions  } from '@angular/cdk/overlay';
+
 import { RoomAvailabilityGanttComponent } from './room-availability-gantt/room-availability-gantt.component';
-import {CdkDrag} from '@angular/cdk/drag-drop';
+import { CdkDrag } from '@angular/cdk/drag-drop';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ModalComponent } from './modal/modal.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NewReservationComponent } from './new-reservation/new-reservation.component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { provideNativeDateAdapter } from '@angular/material/core';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {
+  MAT_DIALOG_DATA,
+  MatDialog,
+  MatDialogActions,
+  MatDialogClose,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle,
+} from '@angular/material/dialog';
 
 @NgModule({
   declarations: [
@@ -45,11 +60,19 @@ import { NewReservationComponent } from './new-reservation/new-reservation.compo
     CdkDrag,
     MatSnackBarModule,
     MatTooltipModule,
-    NgbModule
+    NgbModule,
+    MatFormFieldModule, MatInputModule, MatDatepickerModule,
+    BrowserAnimationsModule, MatDialogContent
   ],
   providers: [
     provideClientHydration(), 
-    provideHttpClient()
+    provideHttpClient(),
+    provideNativeDateAdapter(),
+    {
+      provide: 'MAT_DATEPICKER_SCROLL_STRATEGY',
+      deps: [Overlay],
+      useFactory: (overlay: Overlay) => overlay.scrollStrategies.noop()  // No scrolling when datepicker is open
+    }
   ],
   bootstrap: [AppComponent]
 })

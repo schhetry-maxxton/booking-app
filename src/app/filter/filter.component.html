@@ -63,6 +63,93 @@
       <p>Number of rooms available: {{ filteredRoomsCount }}</p>
     </div>
 
+    <div class="new-reservation">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reservationModal">New reservation</button>
+    </div>
+
+    <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="reservationModalLabel">New Reservation Filter</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+              <div class="row">
+                <!-- <div class="form-group col-md-2 mb-3">
+                  <label for="location" class="form-label">Location</label>
+                  <select id="location" formControlName="location" class="form-control">
+                    <option value="">Select Location</option>
+                    <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
+                  </select>
+                </div> -->
+    
+                <div class="form-group col-md-4 mb-3">
+                  <label for="dateFrom" class="form-label">Check In</label>
+                  <input id="dateFrom" type="date" formControlName="dateFrom" class="form-control"
+                  (change)="onCheckInDateChange()"
+              [min]="selectedRoom?.availabilities?.[0]?.stayDateFrom | date:'yyyy-MM-dd'"
+              [max]="selectedRoom?.availabilities?.[0]?.stayDateTo | date:'yyyy-MM-dd'">
+                </div>
+
+                <!-- <div class="form-group col-md-4 mb-3">
+                  <mat-form-field appearance="fill">
+                    <mat-label>Check-in Date</mat-label>
+                    <input matInput [matDatepicker]="picker1" formControlName="dateFrom" [matDatepickerFilter]="checkInDateFilter">
+                    <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                    <mat-datepicker #picker1></mat-datepicker>
+                  </mat-form-field>
+                </div>
+    
+                <div class="form-group col-md-4 mb-3">
+                  <mat-form-field appearance="fill">
+                    <mat-label>Check-out Date</mat-label>
+                    <input matInput [matDatepicker]="picker2" formControlName="dateTo" [matDatepickerFilter]="checkOutDateFilter">
+                    <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                    <mat-datepicker #picker2></mat-datepicker>
+                  </mat-form-field>
+                </div> -->
+                
+                <div class="form-group col-md-4 mb-3">
+                  <label for="dateTo" class="form-label">Check Out</label>
+                  <input id="dateTo" type="date" formControlName="dateTo" class="form-control"
+                  (change)="onCheckOutDateChange()"
+              [min]="selectedRoom?.availabilities?.[0]?.stayDateFrom | date:'yyyy-MM-dd'"
+              [max]="selectedRoom?.availabilities?.[0]?.stayDateTo | date:'yyyy-MM-dd'">
+                </div>
+    
+                <div class="form-group col-md-4 mb-3">
+                  <label for="numberOfPersons" class="form-label">Guests</label>
+                  <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
+                </div>
+    
+                <!-- <div class="form-group col-md-2 mb-3">
+                  <label for="maxPrice" class="form-label">Price per day per person</label>
+                  <input type="range" class="form-range" min="0" max="4000" id="maxPrice" formControlName="maxPrice">
+                  <output id="priceOutput">{{ filterForm.get('maxPrice')?.value }}</output>
+                </div>
+    
+                <div class="form-group col-md-1 mb-3">
+                  <label for="minStay" class="form-label">Min Stay</label>
+                  <input id="minStay" type="number" formControlName="minStay" class="form-control" placeholder="Enter a value">
+                </div>
+    
+                <div class="form-group col-md-1 mb-3">
+                  <label for="maxStay" class="form-label">Max Stay</label>
+                  <input id="maxStay" type="number" formControlName="maxStay" class="form-control" placeholder="Enter a value">
+                </div> -->
+              </div>
+    
+              <div class="text-center">
+                <button type="submit" class="btn btn-primary">Find Rooms</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="container my-2" *ngIf="filteredRooms.length > 0">
       <!-- <h2 class="text-center mb-4" style="color: slategrey;">Filtered Rooms</h2> -->
       <!-- <table class="table table-striped table-bordered table-hover">
@@ -109,11 +196,12 @@
             <div class="card-body">
               <h5 class="card-title">{{ room.roomName }}</h5>
               <p class="card-text">
+                <strong>Room Id:</strong> {{ room.roomId }}<br>
                 <strong>Location:</strong> {{ room.locationName }}<br>
                 <strong>Price per day:</strong> {{ room.pricePerDayPerPerson | currency }}<br>
                 <strong>Guest Capacity:</strong> {{ room.guestCapacity }}<br>
-                <strong>Min stay:</strong> {{ getMinStay(room) }}<br>
-                <strong>Max stay:</strong> {{ getMaxStay(room) }}
+                <!-- <strong>Min stay:</strong> {{ getMinStay(room) }}<br>
+                <strong>Max stay:</strong> {{ getMaxStay(room) }} -->
               </p>
             </div>
             <!-- <div class="card-footer text-center bg-transparent border-0">

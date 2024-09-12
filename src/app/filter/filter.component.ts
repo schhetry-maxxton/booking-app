@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IRoomWithAvailability } from '../Interface/rooms-with-availability'; // Updated import
 import { IRoomAvailability } from '../Interface/iroom-availability';
@@ -10,11 +10,11 @@ import { CustomersService } from '../Services/Customers/customers.service';
 import { jsPDF } from 'jspdf'; 
 
 
-
 @Component({
   selector: 'app-filter',
   templateUrl: './filter.component.html',
-  styleUrls: ['./filter.component.css']
+  styleUrls: ['./filter.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FilterComponent implements OnInit {
   
@@ -38,6 +38,8 @@ export class FilterComponent implements OnInit {
   isExistingCustomer: boolean = false;
   showButtons: boolean = true;
   errorMessage: string | null = null;
+  minCheckInDate: Date | null = null;
+  maxCheckOutDate?: Date | null = null;
 
   constructor(
     private reservationService: ReservationService,
@@ -111,6 +113,46 @@ export class FilterComponent implements OnInit {
       this.updateDueAmount();
     });
   }
+  
+checkInDateFilter = (date: Date | null): boolean => {
+    if (!this.selectedRoom || !this.minCheckInDate || !this.maxCheckOutDate) return false;
+    const checkInDate = date || new Date();
+    return checkInDate >= this.minCheckInDate && checkInDate <= this.maxCheckOutDate;
+  };
+
+  // Function to filter check-out dates based on the selected room's availability
+  checkOutDateFilter = (date: Date | null): boolean => {
+
+    if (!this.maxCheckOutDate) {
+      return false;
+    }
+
+    const checkOutDate = date || new Date();
+    if (!this.selectedRoom || !this.bookingForm.get('stayDateFrom')?.value) return false;
+
+    
+    const checkInDate = new Date(this.bookingForm.get('stayDateFrom')?.value);
+    return checkOutDate > checkInDate && checkOutDate <= this.maxCheckOutDate;
+  };
+
+
+  openReservationModal(room: IRoomWithAvailability): void {
+    this.selectedRoom = room;
+
+    // Set the min and max dates for the check-in and check-out
+    if (room.availabilities.length > 0) {
+      this.minCheckInDate = new Date(room.availabilities[0].stayDateFrom);
+      this.maxCheckOutDate = new Date(room.availabilities[0].stayDateTo);
+    } else {
+      this.minCheckInDate = null;
+      this.maxCheckOutDate = null;
+    }
+
+    // Reset the booking form when opening the modal
+    this.bookingForm.reset();
+    const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal')!);
+    reservationModal.show();
+  }
 
   // Function to combine room data with their availabilities
   private makeRoomsData(rooms: IRoomWithAvailability[], availabilities: IRoomAvailability[]): IRoomWithAvailability[] {
@@ -161,19 +203,18 @@ export class FilterComponent implements OnInit {
     }
   }
 
-  // Method to get the minStay of a room (across all availabilities)
-getMinStay(room: IRoomWithAvailability): number | null {
-  return room.availabilities.length > 0
-    ? Math.min(...room.availabilities.map(a => a.minStay))
-    : null;
-}
+ // Method to get the specific minStay of a particular availability
+// getMinStay(availability: IRoomAvailability): number | null {
+//   // Return the minStay value specific to the given availability
+//   return availability.minStay !== undefined ? availability.minStay : null;
+// }
 
-// Method to get the maxStay of a room (across all availabilities)
-getMaxStay(room: IRoomWithAvailability): number | null {
-  return room.availabilities.length > 0
-    ? Math.max(...room.availabilities.map(a => a.maxStay))
-    : null;
-}
+// // Method to get the specific maxStay of a particular availability
+// getMaxStay(availability: IRoomAvailability): number | null {
+//   // Return the maxStay value specific to the given availability
+//   return availability.maxStay !== undefined ? availability.maxStay : null;
+// }
+
 
 
   ngOnInit(): void {
@@ -189,8 +230,64 @@ getMaxStay(room: IRoomWithAvailability): number | null {
     );
 
     this.reservations = this.reservationService.getReservations(); 
-    
   }
+
+  isDateAvailable(date: Date, type: 'arrival' | 'departure'): boolean {
+
+    if (!this.selectedRoom || !this.selectedRoom.availabilities) return false;
+
+    this.selectedRoom= this.rooms[0];
+
+    console.log(" selectedRoom ", this.selectedRoom);
+    
+    // if (!this.selectedRoom) return false;
+
+    const availabilities = this.selectedRoom.availabilities;
+
+    // Check if the date falls within any availability range and matches the valid arrival/departure days
+    for (const availability of availabilities) {
+
+      const stayDateFrom = new Date(availability.stayDateFrom);
+      const stayDateTo = new Date(availability.stayDateTo);
+
+      if (date >= stayDateFrom && date <= stayDateTo) {
+        const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+
+        if (type === 'arrival' && availability.arrivalDays.includes(dayOfWeek)) {
+          return true;
+        } else if (type === 'departure' && availability.departureDays.includes(dayOfWeek)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+
+  onCheckInDateChange(): void {
+    const checkInDate = this.filterForm.get('stayDateFrom')?.value;
+    if (checkInDate) {
+      const isValidCheckIn = this.isDateAvailable(new Date(checkInDate), 'arrival');
+      if (!isValidCheckIn) {
+        alert('Invalid check-in date selected. Please choose a valid arrival date.');
+        this.bookingForm.get('stayDateFrom')?.setValue('');
+      }
+    }
+  }
+
+  // This will handle the change event of the stayDateTo field in the date picker
+  onCheckOutDateChange(): void {
+    const checkOutDate = this.filterForm.get('stayDateTo')?.value;
+    if (checkOutDate) {
+      const isValidCheckOut = this.isDateAvailable(new Date(checkOutDate), 'departure');
+      if (!isValidCheckOut) {
+        alert('Invalid check-out date selected. Please choose a valid departure date.');
+        this.bookingForm.get('stayDateTo')?.setValue('');
+      }
+    }
+  }
+
 
   initializeLocations(): void {
     const locationN = this.rooms.map(room => room.locationName);
@@ -270,7 +367,6 @@ getMaxStay(room: IRoomWithAvailability): number | null {
       // If no filters are applied, show all rooms without any filtering
       this.filteredRooms = this.rooms.map(room => ({
         ...room,   // Room details
-        // No need to add availability details since we're showing all rooms
       }));
       this.filteredRoomsCount = this.filteredRooms.length;
       return;
@@ -299,14 +395,14 @@ getMaxStay(room: IRoomWithAvailability): number | null {
     const durationOfStay = (stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24); // Duration in days
   
     // Calculate the maximum allowable stay from all availabilities
-    const maximumMaxStay = Math.max(...this.rooms.flatMap(room => room.availabilities.map(a => a.maxStay || 0)));
+    // const maximumMaxStay = Math.max(...this.rooms.flatMap(room => room.availabilities.map(a => a.maxStay || 0)));
   
-    // If the duration of stay exceeds the maximum allowable stay, return no rooms
-    if (durationOfStay > maximumMaxStay) {
-      this.filteredRooms = [];
-      this.filteredRoomsCount = 0;
-      return;
-    }
+    // // If the duration of stay exceeds the maximum allowable stay, return no rooms
+    // if (durationOfStay > maximumMaxStay) {
+    //   this.filteredRooms = [];
+    //   this.filteredRoomsCount = 0;
+    //   return;
+    // }
   
     // Get room IDs that are unavailable due to existing reservations
     const unavailableRoomIds = this.reservations
@@ -319,8 +415,8 @@ getMaxStay(room: IRoomWithAvailability): number | null {
       .map(res => res.roomId);
   
     // Get the day of the week from the selected stay dates
-    const arrivalDay = filters.dateFrom ? new Date(filters.dateFrom).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() : null;
-    const departureDay = filters.dateTo ? new Date(filters.dateTo).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() : null;
+    // const arrivalDay = filters.dateFrom ? new Date(filters.dateFrom).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() : null;
+    // const departureDay = filters.dateTo ? new Date(filters.dateTo).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() : null;
   
     // Now, apply the filters
     this.filteredRooms = this.rooms.flatMap(room => {
@@ -330,19 +426,25 @@ getMaxStay(room: IRoomWithAvailability): number | null {
   
       // Filter the room's availabilities based on the filter criteria
       const matchedAvailabilities = room.availabilities.filter(avail => {
-        const isValidArrivalDay = arrivalDay ? avail.arrivalDays.includes(arrivalDay) : true; // Check for valid arrival day if provided
-        const isValidDepartureDay = departureDay ? avail.departureDays.includes(departureDay) : true; // Check for valid departure day if provided
+        const isValidArrivalDay = filters.dateFrom ? avail.arrivalDays.includes(new Date(filters.dateFrom).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()) : true;
+        const isValidDepartureDay = filters.dateTo ? avail.departureDays.includes(new Date(filters.dateTo).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()) : true;
   
+        const availabilityDuration = (new Date(filters.dateTo).getTime() - new Date(filters.dateFrom).getTime()) / (1000 * 3600 * 24); // Duration in days
+        console.log(" Room no. ", room);
+        
+        console.log(" availabilityDuration ", availabilityDuration);
+        
         return (
           this.isAvailable(avail, filters) &&
-          this.isWithinStayDuration(avail, filters) &&
+          this.isWithinStayDuration(availabilityDuration, avail.minStay, avail.maxStay) &&
           this.isCapacityMatch(room, filters) &&
           this.isWithinPriceRange(room, filters) &&
           isValidArrivalDay &&  // Check if it's a valid arrival day
           isValidDepartureDay   // Check if it's a valid departure day
         );
       });
-  
+
+      
       // If there are no matched availabilities, skip the room
       if (matchedAvailabilities.length === 0) {
         return [];
@@ -353,11 +455,10 @@ getMaxStay(room: IRoomWithAvailability): number | null {
     });
   
     this.filteredRoomsCount = this.filteredRooms.length;
+    console.log(" filteredRooms ", this.filteredRooms);
+    
   }
   
-  
-  
-
   private isAvailable(avail: IRoomAvailability, filters: any): boolean {
     const stayDateFrom = new Date(filters.dateFrom);
     const stayDateTo = new Date(filters.dateTo);
@@ -377,12 +478,20 @@ getMaxStay(room: IRoomWithAvailability): number | null {
     return room.pricePerDayPerPerson <= maxPrice;
   }
 
-  private isWithinStayDuration(avail: IRoomAvailability, filters: any): boolean {
-    const minStay = filters.minStay || 0;
-    const maxStay = filters.maxStay || 0;
+  // private isWithinStayDuration(avail: IRoomAvailability, filters: any): boolean {
+  //   const minStay = filters.minStay || 0;
+  //   const maxStay = filters.maxStay || 0;
   
-    return (minStay <= 0 || avail.minStay >= minStay) &&
-           (maxStay <= 0 || avail.maxStay <= maxStay);
+  //   return (minStay <= 0 || avail.minStay >= minStay) &&
+  //          (maxStay <= 0 || avail.maxStay <= maxStay);
+  // }
+
+  private isWithinStayDuration(duration: number, minStay: number, maxStay: number): boolean {
+  console.log(" no. of days ", duration);
+  console.log(" minStay ", minStay);
+  console.log(" maxStay ", maxStay);
+  
+    return (duration >= minStay && duration <= maxStay);
   }
 
   private isDateRangeOverlapping(
