@@ -24,7 +24,7 @@ import { NewReservationComponent } from './new-reservation/new-reservation.compo
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { provideNativeDateAdapter } from '@angular/material/core';
+import { MatNativeDateModule, provideNativeDateAdapter } from '@angular/material/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {
   MAT_DIALOG_DATA,
@@ -32,9 +32,11 @@ import {
   MatDialogActions,
   MatDialogClose,
   MatDialogContent,
+  MatDialogModule,
   MatDialogRef,
   MatDialogTitle,
 } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
   declarations: [
@@ -61,7 +63,12 @@ import {
     MatSnackBarModule,
     MatTooltipModule,
     NgbModule,
-    MatFormFieldModule, MatInputModule, MatDatepickerModule,
+    MatDialogModule,
+    MatDatepickerModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatNativeDateModule,
     BrowserAnimationsModule, MatDialogContent
   ],
   providers: [

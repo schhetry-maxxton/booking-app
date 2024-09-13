@@ -20,6 +20,7 @@ export class ModalComponent {
   // @Input() roomId!: number;
   // @Input() pricePerDayPerPerson!: number;
   @Input() bookingDetails: any;
+  // @Input() reservationDetails: any;
   bookingForm: FormGroup;
   customerForm: FormGroup;
   paymentForm: FormGroup;
@@ -97,6 +98,7 @@ export class ModalComponent {
     this.bookingForm.get('totalNumberOfGuests')?.valueChanges.subscribe(() => {
       this.updateTotalPrice();
     });
+    
   
     this.paymentForm.get('totalAmount')?.valueChanges.subscribe(() => {
       this.updateDueAmount();
@@ -118,11 +120,11 @@ export class ModalComponent {
     this.setupInitialFormValues();
     this.updateNumberOfDays();
     this.updateTotalPrice();  
-    
   }
 
   setupInitialFormValues(): void {
     if (this.bookingDetails) {
+      
       const stayDateFrom = new Date(this.bookingDetails.arrivalDate);
       const stayDateTo = new Date(this.bookingDetails.departureDate);
   
@@ -135,6 +137,8 @@ export class ModalComponent {
         stayDateTo.setDate(stayDateTo.getDate() + 1);
       }
   
+      console.log(" bookingDetails : ", this.bookingDetails);
+      
       this.bookingForm.patchValue({
         reservationId: this.randomNumberService.generateRandomNumber(),
         roomNo: this.bookingDetails.roomId,

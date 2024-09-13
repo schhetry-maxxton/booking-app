@@ -1,5 +1,100 @@
 <div class="result-section p-3 border">
+  <div class="new-reservation">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reservationModal">New reservation</button>
+  </div>
   <h3 style="color: darkcyan; text-align: center;" >Reservations</h3>
+  
+  <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="reservationModalLabel">New Reservation Filter</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+            <div class="row">
+              <div class="form-group col-md-4 mb-3">
+                <label for="dateFrom" class="form-label">Check In</label>
+                <input id="dateFrom" type="date" formControlName="dateFrom" class="form-control">
+              </div>
+
+              <!-- <div class="form-group col-md-4 mb-3">
+                <mat-form-field appearance="fill">
+                  <mat-label>Check-in Date</mat-label>
+                  <input matInput [matDatepicker]="picker1" formControlName="dateFrom" [matDatepickerFilter]="checkInDateFilter">
+                  <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                  <mat-datepicker #picker1></mat-datepicker>
+                </mat-form-field>
+              </div>
+  
+              <div class="form-group col-md-4 mb-3">
+                <mat-form-field appearance="fill">
+                  <mat-label>Check-out Date</mat-label>
+                  <input matInput [matDatepicker]="picker2" formControlName="dateTo" [matDatepickerFilter]="checkOutDateFilter">
+                  <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                  <mat-datepicker #picker2></mat-datepicker>
+                </mat-form-field>
+              </div> -->
+              
+              <div class="form-group col-md-4 mb-3">
+                <label for="dateTo" class="form-label">Check Out</label>
+                <input id="dateTo" type="date" formControlName="dateTo" class="form-control">
+              </div>
+  
+              <div class="form-group col-md-4 mb-3">
+                <label for="numberOfPersons" class="form-label">Guests</label>
+                <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
+              </div>
+            </div>
+  
+            <div class="text-center">
+              <button type="submit" class="btn btn-primary">Find Rooms</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container my-2" *ngIf="filteredRooms.length > 0">
+    <!-- <h2 class="text-center mb-4" style="color: slategrey;">Filtered Rooms</h2> -->
+     <table class="table table-striped table-bordered table-hover">
+      <thead class="thead-dark">
+        <tr>
+          <th>Room ID</th>
+          <th>Room Name</th>
+          <th>Location</th>
+          <th>Price per Day</th>
+          <th>Guest Capacity</th>
+          <!-- <th>Available from</th>
+          <th>Available to</th>
+          <th>Min Stay</th>
+          <th>Max Stay</th> -->
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let room of filteredRooms">
+          <td>{{ room.roomId }}</td>
+          <td>{{ room.roomName }}</td>
+          <td>{{ room.locationName }}</td>
+          <td>{{ room.pricePerDayPerPerson | currency }}</td>
+          <td>{{ room.guestCapacity }}</td>
+          <!-- <td>{{ room.stayDateFrom }}</td>
+          <td>{{ room.stayDateTo }}</td>
+          <td>{{ room.minStay }}</td>
+          <td>{{ room.maxStay }}</td> -->
+          <td>
+            <!-- <button class="btn btn-outline-primary" (click)="openBookingModal(room)" [disabled]="!isFilterApplied">Book Now</button> -->
+            <button class="btn btn-outline-primary" *ngIf="isBookingAllowed()" (click)="openBookingModal(room)">
+              Book Now
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table> 
+  </div>
 <table class="table table-light table-striped table-hover mt-4">
   <thead>
     <tr>

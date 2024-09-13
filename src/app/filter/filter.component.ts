@@ -14,7 +14,7 @@ import { jsPDF } from 'jspdf';
   selector: 'app-filter',
   templateUrl: './filter.component.html',
   styleUrls: ['./filter.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  // changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FilterComponent implements OnInit {
   
@@ -22,7 +22,7 @@ export class FilterComponent implements OnInit {
   filteredRooms: IRoomWithAvailability[] = [];  // Only rooms, not availabilities
 
   // Updated type
-  availability: IRoomAvailability[] = [];
+  // availability: IRoomAvailability[] = [];
   locations: string[] = [];
   filterForm: FormGroup;
   selectedRoom: IRoomWithAvailability | null = null;  // Updated type
@@ -104,7 +104,7 @@ export class FilterComponent implements OnInit {
     });
 
     this.filterForm.get('maxPrice')?.valueChanges.subscribe(value => {
-      console.log("Max Price changed to: ", value);  // Check if the value is updating
+      // console.log("Max Price changed to: ", value);  // Check if the value is updating
       this.applyFilters();  // Trigger filters after maxPrice change
     });
     
@@ -164,6 +164,7 @@ export class FilterComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    console.log(" Hello ngOnInit 1");
     this.reservationService.getRoomsAndStays().subscribe(
       data => {
         this.rooms = this.makeRoomsData(data.rooms, data.stays); // Call the new function
@@ -175,6 +176,8 @@ export class FilterComponent implements OnInit {
       }
     );
 
+    console.log(" Hello ngOnInit  2");
+    
     this.reservations = this.reservationService.getReservations(); 
   }
 
@@ -356,7 +359,7 @@ export class FilterComponent implements OnInit {
 
   private isWithinPriceRange(room: IRoomWithAvailability, filters: any): boolean {
     const maxPrice = filters.maxPrice || 4000;
-    console.log("Applying price filter, maxPrice: ", maxPrice, " Room price: ", room.pricePerDayPerPerson);  // Debugging
+    // console.log("Applying price filter, maxPrice: ", maxPrice, " Room price: ", room.pricePerDayPerPerson);  // Debugging
     return room.pricePerDayPerPerson <= maxPrice;
   }
   
