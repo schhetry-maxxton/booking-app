@@ -1,1 +1,31 @@
-<p>new-reservation works!</p>
+<form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+    <div class="row">
+      <div class="form-group col-md-4 mb-3">
+        <mat-form-field appearance="fill">
+          <mat-label>Check-in Date</mat-label>
+          <input matInput [matDatepicker]="picker1" formControlName="dateFrom">
+          <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+          <mat-datepicker #picker1></mat-datepicker>
+        </mat-form-field>
+      </div>
+  
+      <div class="form-group col-md-4 mb-3">
+        <mat-form-field appearance="fill">
+          <mat-label>Check-out Date</mat-label>
+          <input matInput [matDatepicker]="picker2" formControlName="dateTo">
+          <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+          <mat-datepicker #picker2></mat-datepicker>
+        </mat-form-field>
+      </div>
+  
+      <div class="form-group col-md-4 mb-3">
+        <label for="numberOfPersons" class="form-label">Guests</label>
+        <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
+      </div>
+    </div>
+  
+    <div class="text-center">
+      <button type="submit" mat-raised-button color="primary">Find Rooms</button>
+    </div>
+  </form>
+  

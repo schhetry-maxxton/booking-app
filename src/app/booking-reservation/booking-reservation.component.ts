@@ -14,10 +14,10 @@ import { ModalComponent } from '../modal/modal.component';
 })
 export class BookingReservationComponent {
   reservations: IReservation[]=[];
-  rooms: IRoomWithAvailability[] = [];  // Updated type
-  filteredRooms: IRoomWithAvailability[] = [];  // Only rooms, not availabilities
+  rooms: IRoomWithAvailability[] = [];  
+  filteredRooms: IRoomWithAvailability[] = [];  
   filterForm: FormGroup;
-  selectedRoom: IRoomWithAvailability | null = null;  // Updated type
+  selectedRoom: IRoomWithAvailability | null = null;  
   currentStep: number = 1; 
   filteredRoomsCount: number | null = null;
   isFilterApplied: boolean = false;
@@ -37,7 +37,6 @@ export class BookingReservationComponent {
     this.reservationService.getRoomsAndStays().subscribe(
       data => {
         this.rooms = this.makeRoomsData(data.rooms, data.stays);
-        // Initially, no rooms are shown until filters are applied
         this.filteredRooms = [];
       },
       error => {
@@ -62,8 +61,7 @@ export class BookingReservationComponent {
     }
 
     private makeRoomsData(rooms: IRoomWithAvailability[], availabilities: IRoomAvailability[]): IRoomWithAvailability[] {
-      console.log('Rooms Data:', rooms);  // Log the rooms data
-      // console.log('Availabilities Data:', availabilities);  // Log the availability data
+      console.log('Rooms Data:', rooms); 
   
       // Step 1: Create a map to associate rooms by roomId, and initialize an empty availabilities array for each room
       const roomMap = new Map<number, IRoomWithAvailability>();
@@ -98,23 +96,95 @@ export class BookingReservationComponent {
       return checkInDate && checkOutDate; // Returns true only if both dates are filled
     }
 
+    // applyFilters(): void {
+    //   const filters = this.filterForm.value;
+  
+    //   // Get the values of check-in and check-out dates
+    //   const stayDateFrom = filters.dateFrom ? new Date(filters.dateFrom) : null;
+    //   const stayDateTo = filters.dateTo ? new Date(filters.dateTo) : null;
+  
+    //   // Check if check-in and check-out dates are provided
+    //   const datesProvided = !!stayDateFrom && !!stayDateTo;
+  
+    //   // No rooms are shown if no filters are provided
+    //   if (!datesProvided && !filters.numberOfPersons) {
+    //     this.filteredRooms = [];
+    //     return;
+    //   }
+  
+    //   // Get the rooms unavailable due to existing reservations
+    //   const unavailableRoomIds = this.reservations
+    //     .filter(res => {
+    //       if (stayDateFrom && stayDateTo) {
+    //         return this.isDateRangeOverlapping(
+    //           stayDateFrom,
+    //           stayDateTo,
+    //           new Date(res.arrivalDate),
+    //           new Date(res.departureDate)
+    //         );
+    //       }
+    //       return false;
+    //     })
+    //     .map(res => res.roomId);
+  
+    //   // Filter the rooms based on availability, dates, and capacity
+    //   this.filteredRooms = this.rooms.flatMap(room => {
+    //     if (unavailableRoomIds.includes(room.roomId)) {
+    //       return [];  // Skip unavailable rooms
+    //     }
+  
+    //     const matchedAvailabilities = room.availabilities.filter(avail => {
+    //       if (datesProvided) {
+    //         const isValidArrivalDay = filters.dateFrom
+    //           ? avail.arrivalDays.includes(
+    //               new Date(filters.dateFrom).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
+    //             )
+    //           : true;
+  
+    //         const isValidDepartureDay = filters.dateTo
+    //           ? avail.departureDays.includes(
+    //               new Date(filters.dateTo).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
+    //             )
+    //           : true;
+  
+    //         const availabilityDuration = (stayDateTo!.getTime() - stayDateFrom!.getTime()) / (1000 * 3600 * 24);  // Duration in days
+  
+    //         const isValidStay = this.isWithinStayDuration(availabilityDuration, avail.minStay, avail.maxStay);
+    //         const isCapacity = this.isCapacityMatch(room, filters);
+  
+    //         return isValidStay && isCapacity && isValidArrivalDay && isValidDepartureDay;
+    //       }
+  
+    //       return false;  // If no dates are provided, return no matches
+    //     });
+  
+    //     if (matchedAvailabilities.length === 0) {
+    //       return [];
+    //     }
+  
+    //     return { ...room };
+    //   });
+  
+    //   this.filteredRoomsCount = this.filteredRooms.length;
+    //   this.isFilterApplied = true;
+  
+    //   console.log('Filtered Rooms:', this.filteredRooms);  // Debugging filtered rooms
+  
+    //   // Close the modal once filters are applied
+    //   this.closeModal();
+    // }
+
     applyFilters(): void {
       const filters = this.filterForm.value;
   
-      // Get the values of check-in and check-out dates
       const stayDateFrom = filters.dateFrom ? new Date(filters.dateFrom) : null;
       const stayDateTo = filters.dateTo ? new Date(filters.dateTo) : null;
   
-      // Check if check-in and check-out dates are provided
-      const datesProvided = !!stayDateFrom && !!stayDateTo;
-  
-      // No rooms are shown if no filters are provided
-      if (!datesProvided && !filters.numberOfPersons) {
+      if (!stayDateFrom || !stayDateTo || !filters.numberOfPersons) {
         this.filteredRooms = [];
         return;
       }
   
-      // Get the rooms unavailable due to existing reservations
       const unavailableRoomIds = this.reservations
         .filter(res => {
           if (stayDateFrom && stayDateTo) {
@@ -129,35 +199,29 @@ export class BookingReservationComponent {
         })
         .map(res => res.roomId);
   
-      // Filter the rooms based on availability, dates, and capacity
       this.filteredRooms = this.rooms.flatMap(room => {
         if (unavailableRoomIds.includes(room.roomId)) {
-          return [];  // Skip unavailable rooms
+          return [];
         }
   
         const matchedAvailabilities = room.availabilities.filter(avail => {
-          if (datesProvided) {
-            const isValidArrivalDay = filters.dateFrom
-              ? avail.arrivalDays.includes(
-                  new Date(filters.dateFrom).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
-                )
-              : true;
+          const isValidArrivalDay = filters.dateFrom
+            ? avail.arrivalDays.includes(
+                new Date(filters.dateFrom).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
+              )
+            : true;
   
-            const isValidDepartureDay = filters.dateTo
-              ? avail.departureDays.includes(
-                  new Date(filters.dateTo).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
-                )
-              : true;
+          const isValidDepartureDay = filters.dateTo
+            ? avail.departureDays.includes(
+                new Date(filters.dateTo).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
+              )
+            : true;
   
-            const availabilityDuration = (stayDateTo!.getTime() - stayDateFrom!.getTime()) / (1000 * 3600 * 24);  // Duration in days
+          const availabilityDuration = (stayDateTo!.getTime() - stayDateFrom!.getTime()) / (1000 * 3600 * 24);
+          const isValidStay = this.isWithinStayDuration(availabilityDuration, avail.minStay, avail.maxStay);
+          const isCapacity = this.isCapacityMatch(room, filters);
   
-            const isValidStay = this.isWithinStayDuration(availabilityDuration, avail.minStay, avail.maxStay);
-            const isCapacity = this.isCapacityMatch(room, filters);
-  
-            return isValidStay && isCapacity && isValidArrivalDay && isValidDepartureDay;
-          }
-  
-          return false;  // If no dates are provided, return no matches
+          return isValidStay && isCapacity && isValidArrivalDay && isValidDepartureDay;
         });
   
         if (matchedAvailabilities.length === 0) {
@@ -169,34 +233,9 @@ export class BookingReservationComponent {
   
       this.filteredRoomsCount = this.filteredRooms.length;
       this.isFilterApplied = true;
-  
-      console.log('Filtered Rooms:', this.filteredRooms);  // Debugging filtered rooms
-  
-      // Close the modal once filters are applied
-      this.closeModal();
+      this.closeFilterModal();
     }
     
-    closeModal(): void {
-      const reservationModal = document.getElementById('reservationModal');
-      
-      if (reservationModal) {
-        const modalInstance = bootstrap.Modal.getInstance(reservationModal);
-        
-        if (modalInstance) {
-          modalInstance.hide();
-        }
-      }
-    
-      // Remove the modal backdrop manually after the modal is closed
-      const modalBackdrop = document.querySelector('.modal-backdrop');
-      
-      if (modalBackdrop) {
-        modalBackdrop.remove();  // Manually remove the modal backdrop
-      }
-    }
-    
-
-
     private isAvailable(avail: IRoomAvailability, filters: any): boolean {
       const stayDateFrom = new Date(filters.dateFrom);
       const stayDateTo = new Date(filters.dateTo);
@@ -228,6 +267,7 @@ export class BookingReservationComponent {
       return (stayDateFrom <= availTo && stayDateTo >= availFrom);
     }
 
+    
 
     openReservationModal(room: IRoomWithAvailability): void {
       this.selectedRoom = room;
@@ -256,29 +296,142 @@ export class BookingReservationComponent {
       reservationModal.show();
     }
     
-    openBookingModal(roomDetails: any): void {
-      console.log('Booking Details:', roomDetails);
+    // openBookingModal(roomDetails: any): void {
+    //   console.log('Booking Details:', roomDetails);
       
-      if(roomDetails){
-        
-        const bookingDetails = {
-          roomId: roomDetails.roomId,
-          locationId: roomDetails.locationId, // Assuming you have a location ID
-          roomName: roomDetails.roomName, // Assuming you have a room name
-          pricePerDayPerPerson: roomDetails.pricePerDayPerPerson,
-          arrivalDate: roomDetails.availabilities.stayDateFrom,
-          departureDate: roomDetails.availabilities.stayDateTo,
-          locationName: roomDetails.locationName // Add any other details you have
-        };
-      }
-      const modalRef = this.modalService.open(ModalComponent);
-      modalRef.componentInstance.bookingDetails = roomDetails;
+    //   if(roomDetails){
+    //     const bookingDetails = {
+    //       roomId: roomDetails.roomId,
+    //       locationId: roomDetails.locationId, // Assuming you have a location ID
+    //       roomName: roomDetails.roomName, // Assuming you have a room name
+    //       pricePerDayPerPerson: roomDetails.pricePerDayPerPerson,
+    //       arrivalDate: roomDetails.availabilities.stayDateFrom,
+    //       departureDate: roomDetails.availabilities.stayDateTo,
+    //       locationName: roomDetails.locationName // Add any other details you have
+    //     };
+    //   }
+    //   const modalRef = this.modalService.open(ModalComponent);
+    //   modalRef.componentInstance.bookingDetails = roomDetails;
   
-      modalRef.result.then((result) => {
-          console.log('Modal closed with result:', result);
-          this.ngOnInit();
-      }, (reason) => {
-          console.log('Modal dismissed with reason:', reason);
+    //   modalRef.result.then((result) => {
+    //       console.log('Modal closed with result:', result);
+    //       this.ngOnInit();
+    //   }, (reason) => {
+    //       console.log('Modal dismissed with reason:', reason);
+    //   });
+    // }
+
+    openBookingModal(room: IRoomWithAvailability): void {
+      this.selectedRoom = room;
+  
+      if (room.availabilities.length > 0) {
+        const availableFrom = new Date(room.availabilities[0].stayDateFrom);
+        const availableTo = new Date(room.availabilities[0].stayDateTo);
+  
+        const dateFrom = this.filterForm.get('dateFrom')?.value
+          ? new Date(this.filterForm.get('dateFrom')?.value)
+          : availableFrom;
+  
+        const dateTo = this.filterForm.get('dateTo')?.value
+          ? new Date(this.filterForm.get('dateTo')?.value)
+          : availableTo;
+  
+        this.filterForm.patchValue({
+          dateFrom: dateFrom.toISOString().split('T')[0],
+          dateTo: dateTo.toISOString().split('T')[0],
+        });
+  
+        const modalRef = this.modalService.open(ModalComponent);
+        modalRef.componentInstance.bookingDetails = {
+          roomId: room.roomId,
+          arrivalDate: dateFrom,
+          departureDate: dateTo,
+          pricePerDayPerPerson: room.pricePerDayPerPerson,
+          roomName: room.roomName,
+        };
+  
+        // Only close the modal, do not reset anything here
+        modalRef.result.then(
+          result => {
+            console.log('Modal closed successfully.');
+          },
+          reason => {
+            console.log('Modal dismissed:', reason);
+          }
+        );
+      }
+    }
+
+    // closeModal(): void {
+    //   const reservationModal = document.getElementById('reservationModal');
+      
+    //   if (reservationModal) {
+    //     const modalInstance = bootstrap.Modal.getInstance(reservationModal);
+        
+    //     if (modalInstance) {
+    //       modalInstance.hide();
+    //     }
+    //   }
+    
+    //   // Remove the modal backdrop manually after the modal is closed
+    //   const modalBackdrop = document.querySelector('.modal-backdrop');
+      
+    //   if (modalBackdrop) {
+    //     modalBackdrop.remove();  // Manually remove the modal backdrop
+    //   }
+    // }
+
+    openFilterModal(): void {
+      // Reset the filter form when opening the modal
+      this.filterForm.reset({
+        dateFrom: '',
+        dateTo: '',
+        numberOfPersons: 1  // Reset to default value
       });
+  
+      // Show the filter modal (for selecting date and number of persons)
+      const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal')!);
+      reservationModal.show();
+    }
+  
+    /**
+     * Closes the booking modal (for "Book Now") without resetting anything.
+     */
+    closeBookingModal(): void {
+      const bookingModal = document.getElementById('bookingModal');
+      if (bookingModal) {
+        const modalInstance = bootstrap.Modal.getInstance(bookingModal);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+      }
+  
+      const modalBackdrop = document.querySelector('.modal-backdrop');
+      
+      if (modalBackdrop) {
+        modalBackdrop.remove();  // Manually remove the modal backdrop
+      }
+      // No reset or filtered rooms action here, just close the modal
+    }
+  
+    /**
+     * Closes the filter modal after applying filters.
+     * Resets the filter form only when the filter modal is reopened.
+     */
+    closeFilterModal(): void {
+      const reservationModal = document.getElementById('reservationModal');
+      
+      if (reservationModal) {
+        const modalInstance = bootstrap.Modal.getInstance(reservationModal);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+      }
+
+        const modalBackdrop = document.querySelector('.modal-backdrop');
+      
+      if (modalBackdrop) {
+        modalBackdrop.remove();  // Manually remove the modal backdrop
+      }
     }
 }
