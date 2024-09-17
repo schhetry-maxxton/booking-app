@@ -691,7 +691,12 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     console.log("minStay : ", minStay);
     console.log("maxStay : ", maxStay);
     
-    const stayLength = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) + 1;
+    const stayLength = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+    // console.log(" endDate.getTime()", endDate.getTime()/ (1000 * 60 * 60 * 24));
+    // console.log(" startDate.getTime()", startDate.getTime()/ (1000 * 60 * 60 * 24));
+
+    console.log(" stayLength", stayLength);
+    
 
     if (stayLength < minStay || stayLength > maxStay || !validDepartureDays.has(endDayString) || this.checkOverlap(startDay, endDay, roomData, dayObj)) {
       this.clearAllSelections();
