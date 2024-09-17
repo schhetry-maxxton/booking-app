@@ -495,15 +495,60 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   onMouseDown(roomId: number, dayObj: DayObj, event: MouseEvent) {
     event.preventDefault();
     this.isMouseDown = true;
-  
-    if (this.selectedRoomId !== null) {
-      this.clearSelectionInRoom(this.selectedRoomId, dayObj.month, dayObj.year);
+
+    const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+    if (!roomData) return;
+
+    const dayName = this.getDayName(dayObj);
+    
+    // Check if the selected day is an available arrival day
+    if (roomData.arrivalDays[dayName]) {
+        this.selectedRoomId = roomId;
+        this.startDay = dayObj.day;
+
+        // Highlight valid departure days based on validArrivalDayDepartures
+        this.highlightValidDepartureDays(roomId, dayObj);
+    } else {
+        // If it's not an arrival day, clear the highlights and start a new selection
+        this.clearAllSelections();
     }
+}
+
+
+highlightValidDepartureDays(roomId: number, dayObj: DayObj): void {
+  const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+  if (!roomData) return;
+
+  const dayName = this.getDayName(dayObj);
+  const validDepartureDays = roomData.arrivalDays[dayName] || [];
+
+  // Loop through the days and highlight only the valid departure days
+  this.days.forEach(day => {
+      const dayNameOfCurrent = this.getDayName(day);
+
+      // Highlight the cell if it is a valid departure day
+      if (validDepartureDays.includes(dayNameOfCurrent)) {
+          this.addDepartureHighlight(roomId, day);  // Add a class to visually highlight the cell
+      }
+  });
+}
+
+
+addDepartureHighlight(roomId: number, dayObj: DayObj) {
+  const cellKey = `${roomId}-${dayObj.day}-${dayObj.month}-${dayObj.year}`;
   
-    this.selectedRoomId = roomId;
-    this.startDay = dayObj.day;
-    this.addSelection(dayObj.day, dayObj.day, roomId, dayObj.month, dayObj.year); 
+  // Add a special class to highlight valid departure days
+  const departureHighlightClass = 'valid-departure-highlight';
+  
+  this.selectedCells.add(cellKey);
+  
+  // Find the cell element by its identifier and apply the highlight class
+  const cellElement = document.querySelector(`[data-cell="${cellKey}"]`);
+  if (cellElement) {
+      cellElement.classList.add(departureHighlightClass);
   }
+}
+
 
 
   onMouseOver(roomId: number, dayObj: DayObj, event: MouseEvent) {
@@ -729,7 +774,13 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
   clearAllSelections() {
     this.selectedCells.clear();
-  }
+
+    // Remove highlight from all cells
+    document.querySelectorAll('.valid-departure-highlight').forEach(cell => {
+      cell.classList.remove('valid-departure-highlight');
+  });
+}
+
 
   isCellClickable(roomId: number, dayObj: DayObj): boolean {
     const date = new Date(dayObj.year, dayObj.month, dayObj.day);
