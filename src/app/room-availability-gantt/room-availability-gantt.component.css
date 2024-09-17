@@ -162,6 +162,35 @@ h4{
   border-bottom:1px solid white;
 }
 
+/* Start of a reservation - rounded on the left side */
+.cell.reservation-start {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+/* End of a reservation - rounded on the right side */
+.cell.reservation-end {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+/* Remove the border between adjacent reserved cells */
+.cell.reserved + .cell.reserved {
+  border-left: none;
+}
+
+/* Fix possible conflicts with reserved cells styling */
+.cell.reserved.reservation-end {
+  border-top-right-radius: 40px !important;
+  border-bottom-right-radius: 40px !important;
+}
+
+.cell.reserved.reservation-start {
+  border-top-left-radius: 40px !important;
+  border-bottom-left-radius: 40px !important;
+}
+
+
 
 .selected {
   border: 2px solid #7aec1c; 

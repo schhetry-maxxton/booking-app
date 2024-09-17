@@ -41,7 +41,7 @@ export class CalendarComponent {
     this.daysInCurrentMonth = this.generateDaysForMonth(this.currentMonth, this.currentYear);
     this.daysInNextMonth = this.generateDaysForMonth(this.nextMonth, this.nextYear);
   }
-  
+
  // Generates the array of days for the month, including empty cells for days before the first of the month
  generateDaysForMonth(month: number, year: number): { day: number, fromPreviousMonth: boolean }[] {
   const firstDayOfMonth = new Date(year, month - 1, 1).getDay(); // Find the weekday of the 1st day of the month
@@ -126,14 +126,15 @@ selectDate(day: number, month: number, year: number): void {
     }
   }
 }
+
 calculateNightStay(arrivalDate: Date, departureDate: Date): number {
   // Set check-in time for arrival day at 11:00 AM
   const checkInDate = new Date(arrivalDate);
-  checkInDate.setHours(11, 0, 0, 0);  // 11:00 AM
+  checkInDate.setHours(12, 0, 0, 0);  // 12:00 pM
 
-  // Set check-out time for departure day at 10:00 AM
+  // Set check-out time for departure day at 11:00 AM
   const checkOutDate = new Date(departureDate);
-  checkOutDate.setHours(10, 0, 0, 0);  // 10:00 AM
+  checkOutDate.setHours(11, 0, 0, 0);  // 11:00 AM
 
   // Calculate the difference in time (in milliseconds)
   const timeDiff = checkOutDate.getTime() - checkInDate.getTime();

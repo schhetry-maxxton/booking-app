@@ -318,25 +318,103 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     console.log(this.availabilityTable);
   }
   
+  // getCellClass(roomId: number, dayObj: { day: number, month: number, year: number }): string {
+  //   const { day, month, year } = dayObj;
+  //   const date = new Date(year, month, day); // Current day being processed
+  //   date.setHours(12, 0, 0, 0); // Set time to 12 PM to align with check-in
+  
+  //   const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+  
+  //   if (!roomData) return '';
+  
+  //   // Check if the current day is within any availability period
+  //   const isAvailable = roomData.availability.some(
+  //     (avail) => date >= avail.start && date <= avail.end
+  //   );
+  
+  //   // Check if the current day is within any reservation period
+  //   const isReserved = roomData.reservations.some(
+  //     (reserv) => {
+  //       const reservationStartDate = new Date(reserv.start);
+  //       const reservationEndDate = new Date(reserv.end);
+  
+  //       reservationStartDate.setHours(12, 0, 0, 0); // Check-in time
+  //       reservationEndDate.setHours(11, 0, 0, 0); // Check-out time
+  
+  //       return date >= reservationStartDate && date <= reservationEndDate;
+  //     }
+  //   );
+  
+  //   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  //   const isArrivalDay = roomData.arrivalDays[dayName] ? true : false;
+  
+  //   const isSelected = this.selectedCells.has(`${roomId}-${day}-${month}-${year}`);
+  
+  //   // Check if the current cell is the start of a reservation
+  //   const isReservationStart = roomData.reservations.some(reserv => {
+  //     const reservationStartDate = new Date(reserv.start);
+  //     reservationStartDate.setHours(12, 0, 0, 0); // Set check-in time
+  //     return reservationStartDate.toDateString() === date.toDateString(); // Is this the reservation start date?
+  //   });
+  
+  //   // Check if the current cell is the end of a reservation
+  //   const isReservationEnd = roomData.reservations.some(reserv => {
+  //     const reservationEndDate = new Date(reserv.end);
+  //     reservationEndDate.setHours(11, 0, 0, 0); // Set check-out time
+  //     return reservationEndDate.toDateString() === date.toDateString(); // Is this the reservation end date?
+  //   });
+  
+  //   // Build the cell class based on the availability and reservation status
+  //   let cellClass = '';
+  
+  //   if (isSelected) {
+  //     cellClass = 'selected';
+  //   } else if (isReserved) {
+  //     cellClass = 'reserved';
+  //   } else if (isAvailable && isArrivalDay) {
+  //     cellClass = 'available arrival-day';
+  //   } else if (isAvailable) {
+  //     cellClass = 'available';
+  //   } else {
+  //     cellClass = 'not-available';
+  //   }
+  
+  //   // Append border-radius classes for the start and end of reservations
+  //   if (isReservationStart) {
+  //     cellClass += ' reservation-start';
+  //   }
+  //   if (isReservationEnd) {
+  //     cellClass += ' reservation-end';
+  //   }
+  
+  //   return cellClass;
+  // }
+  
   getCellClass(roomId: number, dayObj: { day: number, month: number, year: number }): string {
     const { day, month, year } = dayObj;
-    const date = new Date(year, month, day);
-    date.setHours(12, 0, 0, 0);
+    const date = new Date(year, month, day); // Current day being processed
+    date.setHours(12, 0, 0, 0); // Set time to 12 PM to align with check-in
   
     const roomData = this.availabilityTable.find(data => data.roomId === roomId);
   
     if (!roomData) return '';
   
+    // Check if the current day is within any availability period
     const isAvailable = roomData.availability.some(
       (avail) => date >= avail.start && date <= avail.end
     );
   
+    // Check if the current day is within any reservation period
     const isReserved = roomData.reservations.some(
       (reserv) => {
+        const reservationStartDate = new Date(reserv.start);
         const reservationEndDate = new Date(reserv.end);
-        reservationEndDate.setHours(11, 0, 0, 0);
   
-        return date >= reserv.start && date <= reservationEndDate;
+        reservationStartDate.setHours(12, 0, 0, 0); // Check-in time
+        reservationEndDate.setHours(11, 0, 0, 0); // Check-out time
+  
+        // Reserved period is the night before the checkout date
+        return date >= reservationStartDate && date < reservationEndDate;
       }
     );
   
@@ -344,11 +422,48 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const isArrivalDay = roomData.arrivalDays[dayName] ? true : false;
   
     const isSelected = this.selectedCells.has(`${roomId}-${day}-${month}-${year}`);
-    if (isSelected) return 'selected';
-    if (isReserved) return 'reserved';
-    if (isAvailable && isArrivalDay) return 'available arrival-day';
-    if (isAvailable) return 'available';
-    return 'not-available';
+  
+    // Check if the current cell is the start of a reservation
+    const isReservationStart = roomData.reservations.some(reserv => {
+      const reservationStartDate = new Date(reserv.start);
+      reservationStartDate.setHours(12, 0, 0, 0); // Set check-in time
+      return reservationStartDate.toDateString() === date.toDateString(); // Is this the reservation start date?
+    });
+  
+    // Check if the current cell is the last night of a reservation
+    const isReservationEnd = roomData.reservations.some(reserv => {
+      const reservationEndDate = new Date(reserv.end);
+      reservationEndDate.setHours(11, 0, 0, 0); // Check-out time
+      const lastNightDate = new Date(reservationEndDate);
+      lastNightDate.setDate(lastNightDate.getDate() - 1); // Subtract one day for the last reserved night
+  
+      return lastNightDate.toDateString() === date.toDateString(); // Is this the last night before check-out?
+    });
+  
+    // Build the cell class based on the availability and reservation status
+    let cellClass = '';
+  
+    if (isSelected) {
+      cellClass = 'selected';
+    } else if (isReserved) {
+      cellClass = 'reserved';
+    } else if (isAvailable && isArrivalDay) {
+      cellClass = 'available arrival-day';
+    } else if (isAvailable) {
+      cellClass = 'available';
+    } else {
+      cellClass = 'not-available';
+    }
+  
+    // Append border-radius classes for the start and end of reservations
+    if (isReservationStart) {
+      cellClass += ' reservation-start';
+    }
+    if (isReservationEnd) {
+      cellClass += ' reservation-end';
+    }
+  
+    return cellClass;
   }
   
   

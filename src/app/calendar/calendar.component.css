@@ -103,7 +103,7 @@
     border-radius: 50%;
   }
 
-  .day.selected-arrival ::after{
+  /* .day.selected-arrival ::after{
     content: "";
     position: absolute;
     top: 1px;
@@ -121,15 +121,61 @@
     width: 50%;
     height: 40px;
     background: linear-gradient(90deg, rgba(0, 123, 255, 0.2), transparent);
-  }
+  } */
   
   /* Selected range styling */
-  .day.selected-range {
+  /* .day.selected-range {
     background-color: rgba(0, 123, 255, 0.2);
     color: black;
     border-left: none;
     border-right: none;
-  }
+  } */
+
+  /* Selected range styling - make sure the range connects smoothly to the rounded arrival and departure */
+/* Base styling for the date range */
+.day.selected-range {
+  background-color: rgba(0, 123, 255, 0.2);
+  color: black;
+  position: relative;
+}
+
+/* Connect the range from the arrival date (left side) */
+.day.selected-arrival::after, 
+.day.selected-departure::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 60%;  /* Ensure height covers the vertical gap */
+  background-color: rgba(0, 123, 255, 0.2); /* Match the range color */
+  z-index: -1; /* Ensure the range stays behind the circular dates */
+}
+
+/* Connect the range from the right side of the arrival date */
+.day.selected-arrival::after {
+  right: 0;  /* Align to the right of the arrival date */
+  width: 50%; /* Extend to half the cell width */
+  border-bottom-right-radius: 0; /* Remove right-side rounding */
+  border-top-right-radius: 0;
+}
+
+/* Connect the range from the left side of the departure date */
+.day.selected-departure::after {
+  left: 0;  /* Align to the left of the departure date */
+  width: 50%; /* Extend to half the cell width */
+  border-bottom-left-radius: 0; /* Remove left-side rounding */
+  border-top-left-radius: 0;
+}
+
+/* Circular appearance for selected arrival and departure dates */
+.day.selected-arrival,
+.day.selected-departure {
+  border-radius: 50%; /* Keep them circular */
+  position: relative; /* Ensure pseudo-elements stay positioned correctly */
+  z-index: 1;  /* Ensure the dates stay on top of the range */
+}
+
+
   
   /* Button styles aligned to the right */
   .calendar-controls-right {
