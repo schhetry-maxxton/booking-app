@@ -15,11 +15,9 @@ import { jsPDF } from 'jspdf';
   styleUrl: './modal.component.css'
 })
 export class ModalComponent {
-  // @Input() arrivalDate!: Date;
-  // @Input() departureDate!: Date;
-  // @Input() roomId!: number;
-  // @Input() pricePerDayPerPerson!: number;
   @Input() bookingDetails: any;
+  @Input() filteredRooms: any[] = []; // Accept filtered rooms from parent
+  @Input() filterForm: any; // Accept filter form data from parent
   // @Input() reservationDetails: any;
   bookingForm: FormGroup;
   customerForm: FormGroup;
@@ -42,6 +40,9 @@ export class ModalComponent {
 
     const today=new Date();
     this.DOB=today.toISOString().split('T')[0];
+
+    
+
 
     this.bookingForm = this.fb.group({
       reservationId: [''],
@@ -120,6 +121,25 @@ export class ModalComponent {
     this.setupInitialFormValues();
     this.updateNumberOfDays();
     this.updateTotalPrice();  
+    if (this.filterForm) {
+      this.bookingForm.patchValue({
+        dateFrom: this.filterForm.dateFrom,
+        dateTo: this.filterForm.dateTo,
+        numberOfPersons: this.filterForm.numberOfPersons,
+      });
+    }
+  }
+
+
+  selectRoom(room: any): void {
+    this.selectRoom = room;
+    // Proceed with room selection and prefill booking details
+    this.bookingForm.patchValue({
+      // Adjust as per your booking form structure
+      dateFrom: this.filterForm.dateFrom,
+      dateTo: this.filterForm.dateTo,
+      numberOfPersons: this.filterForm.numberOfPersons,
+    });
   }
 
   setupInitialFormValues(): void {

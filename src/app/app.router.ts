@@ -21,6 +21,7 @@ export const router: Routes = [
     { path : 'chart1' , component : PlanningChartComponent},
     { path : 'modal' , component : ModalComponent},
     { path : 'newReservation' , component : NewReservationComponent},
+    
 ];
 
 export const routes = RouterModule.forRoot(router);
