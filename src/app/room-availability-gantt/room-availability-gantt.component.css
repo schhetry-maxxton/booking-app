@@ -310,10 +310,19 @@ select {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.mat-tooltip {
-  max-width: 200px; /* Adjust tooltip width */
+/* .mat-tooltip {
+  max-width: 200px;
   font-size: 14px;
   padding: 8px;
   white-space: nowrap;
+  z-index: 10000 !important; 
+} */
+
+.mat-tooltip {
+  font-size: 14px;
+  background-color: rgba(63, 81, 181, 0.9); /* Custom background color */
+  color: #ffffff; /* Custom text color */
+  padding: 8px; /* Add some padding */
+  border-radius: 4px; /* Rounded corners */
   z-index: 10000 !important; 
 }

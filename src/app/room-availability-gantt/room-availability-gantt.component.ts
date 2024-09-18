@@ -58,6 +58,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   selectedGuestCapacity: number | null = null;
   selectedLocation: string | null = null;
   maxGuestCapacity = 8;
+  reservationMap: { [key: string]: IReservation } = {};
 
   constructor(private reservationService: ReservationService, private modalService: NgbModal) {
     const today = new Date();
@@ -71,6 +72,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       this.stays = stays;
       this.filteredRooms = rooms;
       this.reservations = this.reservationService.getReservations();
+      this.buildReservationMap();
       this.updateRoomAvailability();
       this.generateChart();
       this.extractLocations();
@@ -183,6 +185,32 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     );
   
     return reservation ? new Date(reservation.departureDate).getDate() : -1;
+  }
+  
+   // Build a lookup map for reservations to optimize tooltip rendering
+   buildReservationMap(): void {
+    this.reservationMap = {};
+    this.reservations.forEach((reservation) => {
+      const start = new Date(reservation.arrivalDate);
+      const end = new Date(reservation.departureDate);
+
+      // Loop over each day of the reservation and add it to the map
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const key = `${reservation.roomId}-${d.toISOString().split('T')[0]}`;
+        this.reservationMap[key] = reservation;
+      }
+    });
+  }
+
+   // Function to get the reservation for a specific room and date (if any)
+   getReservationForCell(roomId: number, date: Date): IReservation | undefined {
+    const key = `${roomId}-${date.toISOString().split('T')[0]}`;
+    return this.reservationMap[key];
+  }
+
+  hasValidReservation(roomId: number, dayObj: { day: number, month: number, year: number }): boolean {
+    const date = new Date(dayObj.year, dayObj.month, dayObj.day);
+    return !!this.getReservationForCell(roomId, date);
   }
   
   hasReservation(roomId: number, dayObj: { day: number, month: number, year: number }): boolean {
