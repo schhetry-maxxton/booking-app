@@ -9,6 +9,7 @@ import { ModalComponent } from '../modal/modal.component';
 interface Availability {
   start: Date;
   end: Date;
+  status?: "CONFIRM" | "CHECKED-IN" | "CHECKED-OUT";
 }
 
 interface RoomData {
@@ -204,6 +205,26 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return reservation ? `${reservation.firstName} ${reservation.middleName} ${reservation.lastName}` : '';
   }
  
+  getTooltipForCell(roomId: number, dayObj: { day: number, month: number, year: number }): string {
+    const reservation = this.reservations.find(reservation =>
+      reservation.roomId === roomId &&
+      new Date(reservation.arrivalDate) <= new Date(dayObj.year, dayObj.month, dayObj.day) &&
+      new Date(reservation.departureDate) >= new Date(dayObj.year, dayObj.month, dayObj.day)
+    );
+  
+    if (reservation) {
+      const customerName = `${reservation.firstName} ${reservation.middleName || ''} ${reservation.lastName}`;
+      const arrivalDate = new Date(reservation.arrivalDate).toLocaleDateString();
+      const departureDate = new Date(reservation.departureDate).toLocaleDateString();
+      const stayLength = Math.ceil((new Date(reservation.departureDate).getTime() - new Date(reservation.arrivalDate).getTime()) / (1000 * 60 * 60 * 24));
+  
+      return `Customer: ${customerName}\nArrival: ${arrivalDate}\nDeparture: ${departureDate}\nStay: ${stayLength} nights`;
+    }
+  
+    return ''; // Return empty if no reservation is found for the cell
+  }
+
+  
   updateRoomAvailability(): void {
     const availabilityMap: { [roomId: number]: Availability[] } = {};
     const reservationMap: { [roomId: number]: Availability[] } = {};
@@ -281,7 +302,8 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
       reservationMap[roomId].push({
         start: startDate,
-        end: endDate
+        end: endDate,
+        status: reservation.status,
       });
     });
   
@@ -382,6 +404,14 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const isAvailable = roomData.availability.some(
       (avail) => date >= avail.start && date <= avail.end
     );
+    
+    const isCheckedIn = roomData.reservations.some(
+      (reserv) => date >= reserv.start && date <= reserv.end && reserv.status === 'CHECKED-IN'
+    );
+    
+    const isCheckedOut = roomData.reservations.some(
+      (reserv) => date >= reserv.start && date <= reserv.end && reserv.status === 'CHECKED-OUT'
+    );
   
     // Check if the current day is within any reservation period
     const isReserved = roomData.reservations.some(
@@ -393,7 +423,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         reservationEndDate.setHours(11, 0, 0, 0); // Check-out time
   
         // Reserved period is the night before the checkout date
-        return date >= reservationStartDate && date < reservationEndDate;
+        return date >= reservationStartDate && date < reservationEndDate && reserv.status === 'CONFIRM' ;
       }
     );
   
@@ -426,7 +456,11 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       cellClass = 'selected';
     } else if (isReserved) {
       cellClass = 'reserved';
-    } else if (isAvailable && isArrivalDay) {
+    } else if (isCheckedIn) {
+      cellClass = 'checked-in';
+    }else if (isCheckedOut) {
+      cellClass = 'checked-out';
+    }else if (isAvailable && isArrivalDay) {
       cellClass = 'available arrival-day';
     } else if (isAvailable) {
       cellClass = 'available';
@@ -444,6 +478,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   
     return cellClass;
   }
+  
   
   
   getDayName(dayObj: DayObj): string {

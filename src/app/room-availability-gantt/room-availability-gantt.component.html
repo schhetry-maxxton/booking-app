@@ -67,7 +67,9 @@
               (mousedown)="onMouseDown(room.roomId, dayObj, $event)" 
               (mouseover)="onMouseOver(room.roomId, dayObj, $event)"
               (mouseup)="onMouseUp(dayObj, $event)" class="cell"
-              [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, dayObj) ? 'auto' : 'none' }">
+              [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, dayObj) ? 'auto' : 'none' }"
+              
+            >
               <span *ngIf="hasReservation(room.roomId, dayObj)" >
                 {{ getCustomerName(room.roomId, dayObj) }}
               </span>
@@ -79,3 +81,9 @@
     </div>
   </div>
 </div>
+
+<button class="btn-primary" mat-raised-button
+        matTooltip="Info about the action"
+        aria-label="Button that displays a tooltip when focused or hovered over">
+  Action
+</button>
