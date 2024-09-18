@@ -118,25 +118,6 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     this.updateRoomAvailability();
   }
   
-  
-
-  // getMonthName(dayObj: DayObj): string {
-  //   return this.months[dayObj.month];
-  // }
-
-  // changeMonth(direction: number) {
-  //   this.selectedMonth += direction;
-  //   if (this.selectedMonth < 0) {
-  //     this.selectedMonth = 11;
-  //     this.year--;
-  //   } else if (this.selectedMonth > 11) {
-  //     this.selectedMonth = 0;
-  //     this.year++;
-  //   }
-  //   this.generateChart();
-  //   this.clearAllSelections();
-  // }
-
   getMonthSections(): { monthName: string, dayCount: number }[] {
     const sections: { monthName: string, dayCount: number }[] = [];
     let currentMonth = this.days[0].month;
@@ -158,11 +139,9 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return sections;
   }
 
-  
-
   generateChart(): void {
     const totalMonths = 5; 
-    const startMonth = 7;
+    const startMonth = new Date().getMonth();
     const startYear = this.year;
   
     this.days = [];
@@ -224,7 +203,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     );
     return reservation ? `${reservation.firstName} ${reservation.middleName} ${reservation.lastName}` : '';
   }
-  
+ 
   updateRoomAvailability(): void {
     const availabilityMap: { [roomId: number]: Availability[] } = {};
     const reservationMap: { [roomId: number]: Availability[] } = {};
@@ -495,60 +474,15 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   onMouseDown(roomId: number, dayObj: DayObj, event: MouseEvent) {
     event.preventDefault();
     this.isMouseDown = true;
-
-    const roomData = this.availabilityTable.find(data => data.roomId === roomId);
-    if (!roomData) return;
-
-    const dayName = this.getDayName(dayObj);
-    
-    // Check if the selected day is an available arrival day
-    if (roomData.arrivalDays[dayName]) {
-        this.selectedRoomId = roomId;
-        this.startDay = dayObj.day;
-
-        // Highlight valid departure days based on validArrivalDayDepartures
-        this.highlightValidDepartureDays(roomId, dayObj);
-    } else {
-        // If it's not an arrival day, clear the highlights and start a new selection
-        this.clearAllSelections();
+  
+    if (this.selectedRoomId !== null) {
+      this.clearSelectionInRoom(this.selectedRoomId, dayObj.month, dayObj.year);
     }
-}
-
-
-highlightValidDepartureDays(roomId: number, dayObj: DayObj): void {
-  const roomData = this.availabilityTable.find(data => data.roomId === roomId);
-  if (!roomData) return;
-
-  const dayName = this.getDayName(dayObj);
-  const validDepartureDays = roomData.arrivalDays[dayName] || [];
-
-  // Loop through the days and highlight only the valid departure days
-  this.days.forEach(day => {
-      const dayNameOfCurrent = this.getDayName(day);
-
-      // Highlight the cell if it is a valid departure day
-      if (validDepartureDays.includes(dayNameOfCurrent)) {
-          this.addDepartureHighlight(roomId, day);  // Add a class to visually highlight the cell
-      }
-  });
-}
-
-
-addDepartureHighlight(roomId: number, dayObj: DayObj) {
-  const cellKey = `${roomId}-${dayObj.day}-${dayObj.month}-${dayObj.year}`;
   
-  // Add a special class to highlight valid departure days
-  const departureHighlightClass = 'valid-departure-highlight';
-  
-  this.selectedCells.add(cellKey);
-  
-  // Find the cell element by its identifier and apply the highlight class
-  const cellElement = document.querySelector(`[data-cell="${cellKey}"]`);
-  if (cellElement) {
-      cellElement.classList.add(departureHighlightClass);
+    this.selectedRoomId = roomId;
+    this.startDay = dayObj.day;
+    this.addSelection(dayObj.day, dayObj.day, roomId, dayObj.month, dayObj.year); 
   }
-}
-
 
 
   onMouseOver(roomId: number, dayObj: DayObj, event: MouseEvent) {
@@ -774,13 +708,7 @@ addDepartureHighlight(roomId: number, dayObj: DayObj) {
 
   clearAllSelections() {
     this.selectedCells.clear();
-
-    // Remove highlight from all cells
-    document.querySelectorAll('.valid-departure-highlight').forEach(cell => {
-      cell.classList.remove('valid-departure-highlight');
-  });
-}
-
+  }
 
   isCellClickable(roomId: number, dayObj: DayObj): boolean {
     const date = new Date(dayObj.year, dayObj.month, dayObj.day);

@@ -6,6 +6,7 @@ import { IRoomAvailability } from '../Interface/iroom-availability';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalComponent } from '../modal/modal.component';
+import { CalendarService } from '../Services/Calendar/calendar.service';
 
 @Component({
   selector: 'app-booking-reservation',
@@ -22,13 +23,41 @@ export class BookingReservationComponent {
   filteredRoomsCount: number | null = null;
   isFilterApplied: boolean = false;
 
-  constructor(private reservationService:ReservationService, private fb: FormBuilder,private modalService: NgbModal){
+  currentMonth: number;
+  nextMonth: number;
+  currentYear: number;
+  nextYear: number;
+  daysInCurrentMonth: { day: number, fromPreviousMonth: boolean }[] = [];
+  daysInNextMonth: { day: number, fromPreviousMonth: boolean }[] = [];
+  selectedStartDate: Date | null = null;
+  selectedEndDate: Date | null = null;
+  today: Date = new Date();
+  arrivalDateDisplay: string = '';
+  departureDateDisplay: string = '';
+
+  selectedDays: Set<number> = new Set();  
+  nightsDisplay: string = '0 nights'; // Track nights count
+
+  selectedDatesDisplay: string | null = null;
+
+  constructor(private reservationService:ReservationService, private fb: FormBuilder,private modalService: NgbModal,
+    private calendarService: CalendarService
+  ){
 
     this.filterForm = this.fb.group({
       dateFrom: [''],
       dateTo: [''],
       numberOfPersons: [1, [Validators.min(1)]],
     });
+
+    this.currentYear = this.today.getFullYear();
+    this.nextYear = this.today.getFullYear();
+    this.currentMonth = this.today.getMonth() + 1; // Current month (1-12)
+    this.nextMonth = this.currentMonth === 12 ? 1 : this.currentMonth + 1; // Next month
+
+    if (this.currentMonth === 12) {
+      this.nextYear += 1; // Handle year increment for next month
+    }
 
   }
 
@@ -44,7 +73,280 @@ export class BookingReservationComponent {
       }
     );
     this.reservations = this.reservationService.getReservations();
+     // Listen for date selections from the CalendarComponent via CalendarService
+     this.calendarService.selectedDates$.subscribe(dates => {
+      if (dates.arrivalDate && dates.departureDate) {
+        // Display the selected dates in the label
+        this.selectedDatesDisplay = `${dates.arrivalDate.toLocaleDateString()} - ${dates.departureDate.toLocaleDateString()}`;
+
+        // Patch the form values with the selected dates
+        this.filterForm.patchValue({
+          dateFrom: dates.arrivalDate.toISOString().split('T')[0],
+          dateTo: dates.departureDate.toISOString().split('T')[0]
+        });
+      }
+    });
+
+    this.generateCalendarDays();
   }
+
+  // Generate days for both months, including previous and next month "filler" days
+  generateCalendarDays(): void {
+    this.daysInCurrentMonth = this.generateDaysForMonth(this.currentMonth, this.currentYear);
+    this.daysInNextMonth = this.generateDaysForMonth(this.nextMonth, this.nextYear);
+  }
+
+  // Generates the array of days for the month, including empty cells for days before the first of the month
+ generateDaysForMonth(month: number, year: number): { day: number, fromPreviousMonth: boolean }[] {
+  const firstDayOfMonth = new Date(year, month - 1, 1).getDay(); // Find the weekday of the 1st day of the month
+  const totalDays = new Date(year, month, 0).getDate(); // Total days in the current month
+
+  // Empty slots for previous days
+  const emptyDays = Array.from({ length: firstDayOfMonth }, () => ({
+    day: 0,
+    fromPreviousMonth: true
+  }));
+
+  // Actual days in the current month
+  const currentMonthDays = Array.from({ length: totalDays }, (_, i) => ({
+    day: i + 1,
+    fromPreviousMonth: false
+  }));
+
+  return [...emptyDays, ...currentMonthDays];
+}
+
+// Handle month navigation, adjusting year if needed
+nextMonthClick(): void {
+  if (this.currentMonth === 12) {
+    this.currentMonth = 1;
+    this.currentYear += 1;
+  } else {
+    this.currentMonth += 1;
+  }
+
+  if (this.nextMonth === 12) {
+    this.nextMonth = 1;
+    this.nextYear += 1;
+  } else {
+    this.nextMonth += 1;
+  }
+
+  this.generateCalendarDays();
+}
+
+previousMonthClick(): void {
+  if (this.currentMonth === 1) {
+    this.currentMonth = 12;
+    this.currentYear -= 1;
+  } else {
+    this.currentMonth -= 1;
+  }
+
+  if (this.nextMonth === 1) {
+    this.nextMonth = 12;
+    this.nextYear -= 1;
+  } else {
+    this.nextMonth -= 1;
+  }
+
+  this.generateCalendarDays();
+}
+
+// Select start or end date
+selectedArrivalDate: Date | null = null;  // Track the selected arrival date
+selectedDepartureDate: Date | null = null;  // Track the selected departure date
+
+  // Function to reset the selected dates
+  resetSelection(): void {
+    this.selectedArrivalDate = null;
+    this.selectedDepartureDate = null;
+    this.arrivalDateDisplay = '';
+    this.departureDateDisplay = '';
+    this.nightsDisplay = '0 nights'; // Reset to zero nights
+    this.selectedDatesDisplay = 'When do you want to go?';
+  
+    // Clear the dates from the form as well
+    this.filterForm.patchValue({
+      dateFrom: '',
+      dateTo: ''
+    });
+  }
+  
+
+  // Calculate the number of nights based on arrival and departure dates
+  getNightsDisplay(): string {
+    if (this.selectedArrivalDate && this.selectedDepartureDate) {
+      const stayDuration = this.calculateNightStay(this.selectedArrivalDate, this.selectedDepartureDate);
+      return `${stayDuration} night${stayDuration > 1 ? 's' : ''}`;
+    }
+    return '0 nights';  // Default message when no dates are selected
+  }
+
+selectDate(day: number, month: number, year: number): void {
+    const selectedDate = new Date(year, month - 1, day);  // Create the selected date object
+
+    if (!this.selectedArrivalDate) {
+      this.selectedArrivalDate = selectedDate;
+      this.selectedArrivalDate.setHours(12, 0, 0, 0); // Set arrival to 12 PM
+      this.arrivalDateDisplay = this.formatDate(this.selectedArrivalDate);
+      this.departureDateDisplay = ''; // Clear the departure date
+    } else if (selectedDate > this.selectedArrivalDate) {
+      this.selectedDepartureDate = selectedDate;
+      this.selectedDepartureDate.setHours(11, 0, 0, 0); // Set departure to 11 AM
+      this.departureDateDisplay = this.formatDate(this.selectedDepartureDate);
+    }
+
+    this.nightsDisplay = this.getNightsDisplay(); // Update nights count
+  }
+
+
+  calculateNightStay(arrivalDate: Date, departureDate: Date): number {
+    const checkInDate = new Date(arrivalDate);
+    checkInDate.setHours(12, 0, 0, 0);  // 12:00 PM
+    const checkOutDate = new Date(departureDate);
+    checkOutDate.setHours(11, 0, 0, 0);  // 11:00 AM
+    const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+    const daysDiff = timeDiff / (1000 * 3600 * 24);  // Convert to days
+    return Math.ceil(daysDiff);  // Return the number of nights
+  }
+
+  formatDate(date: Date): string {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+getCellClass(dayObj: { day: number, fromPreviousMonth: boolean }, month: number, year: number): string {
+  if (dayObj.fromPreviousMonth || dayObj.day === 0) {
+    return 'empty-cell';  // Make it non-selectable
+  }
+
+  // If the date is disabled
+  if (this.isDateLocked(dayObj.day, month, year)) {
+    return 'disabled';
+  }
+
+  const currentDate = new Date(year, month - 1, dayObj.day);
+  currentDate.setHours(12, 0, 0, 0); // Set to noon for comparison
+
+  // If this is the selected arrival day
+  if (this.selectedArrivalDate && currentDate.getTime() === this.selectedArrivalDate.getTime()) {
+    return 'selected-arrival';
+  }
+
+  // Set to 11 AM for the departure comparison
+  currentDate.setHours(11, 0, 0, 0); 
+
+  // If this is the selected departure day
+  if (this.selectedDepartureDate && currentDate.getTime() === this.selectedDepartureDate.getTime()) {
+    return 'selected-departure';
+  }
+
+  // If the date is within the selected range
+  if (this.selectedArrivalDate && this.selectedDepartureDate &&
+      currentDate > this.selectedArrivalDate &&
+      currentDate < this.selectedDepartureDate) {
+    return 'selected-range';
+  }
+
+  return '';  // Default case
+}
+
+// Check if a day is selected
+isDateSelected(day: number, month: number, year: number): boolean {
+  if (day === 0) return false; // Empty cell check
+
+  const date = new Date(year, month - 1, day);
+
+  const isStartDateSelected = this.selectedStartDate && date.getTime() === this.selectedStartDate.getTime();
+  const isEndDateSelected = this.selectedEndDate && date.getTime() === this.selectedEndDate.getTime();
+
+  return !!isStartDateSelected || !!isEndDateSelected;
+}
+
+// Check if a day is in the selected range
+isDateInRange(day: number, month: number, year: number): boolean {
+  if (!this.selectedStartDate || !this.selectedEndDate) return false;
+  const date = new Date(year, month - 1, day);
+  return date > this.selectedStartDate && date < this.selectedEndDate;
+}
+
+isDateLocked(day: number, month: number, year: number): boolean {
+  const selectedDate = new Date(year, month - 1, day);
+
+  // Set time to noon for the arrival date comparison
+  selectedDate.setHours(12, 0, 0, 0);
+
+  // Disable dates before the selected arrival date (12 PM)
+  if (this.selectedArrivalDate && selectedDate < this.selectedArrivalDate) {
+    return true;
+  }
+
+  // Disable past dates (before today at 12 PM)
+  const todayWithNoon = new Date(this.today);
+  todayWithNoon.setHours(12, 0, 0, 0);
+  
+  if (selectedDate < todayWithNoon) {
+    return true;
+  }
+
+  return false;  // Otherwise, the date is enabled
+}
+
+
+
+// Utility to get the name of the month
+  getMonthName(month: number): string {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return monthNames[month - 1];
+  }
+  
+  // saveSelection(): void {
+  //   if (this.selectedArrivalDate && this.selectedDepartureDate) {
+  //     // Push the selected dates to the CalendarService
+  //     this.calendarService.updateSelectedDates(this.selectedArrivalDate, this.selectedDepartureDate);
+  //     console.log("Dates updated in the service: ", this.selectedArrivalDate, this.selectedDepartureDate);
+  //   }
+  // }
+
+  saveSelection(): void {
+    if (this.selectedArrivalDate && this.selectedDepartureDate) {
+      // Patch the form values with the selected dates
+      this.filterForm.patchValue({
+        dateFrom: this.selectedArrivalDate.toISOString().split('T')[0],
+        dateTo: this.selectedDepartureDate.toISOString().split('T')[0]
+      });
+  
+      // Update the selectedDatesDisplay with formatted dates
+      this.selectedDatesDisplay = `${this.formatDate(this.selectedArrivalDate)} - ${this.formatDate(this.selectedDepartureDate)}`;
+  
+      // Close the calendar modal
+      const calendarModal = document.getElementById('CalendarModal');
+      if (calendarModal) {
+        const modalInstance = bootstrap.Modal.getInstance(calendarModal);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+      }
+  
+      // Explicitly remove the modal backdrop
+      const modalBackdrop = document.querySelector('.modal-backdrop');
+      if (modalBackdrop) {
+        modalBackdrop.remove();  // Manually remove the modal backdrop
+      }
+  
+      // Open the reservation filter modal to allow guest selection
+      const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal')!);
+      reservationModal.show();
+    }
+  }
+  
+  
+  
+  
+  
 
     onStatusChange(reservation: IReservation): void {
       try {
@@ -176,15 +478,16 @@ export class BookingReservationComponent {
 
     applyFilters(): void {
       const filters = this.filterForm.value;
-  
+      
       const stayDateFrom = filters.dateFrom ? new Date(filters.dateFrom) : null;
       const stayDateTo = filters.dateTo ? new Date(filters.dateTo) : null;
-  
+      
       if (!stayDateFrom || !stayDateTo || !filters.numberOfPersons) {
         this.filteredRooms = [];
         return;
       }
-  
+    
+      // Filtering logic remains unchanged
       const unavailableRoomIds = this.reservations
         .filter(res => {
           if (stayDateFrom && stayDateTo) {
@@ -198,43 +501,47 @@ export class BookingReservationComponent {
           return false;
         })
         .map(res => res.roomId);
-  
+    
       this.filteredRooms = this.rooms.flatMap(room => {
         if (unavailableRoomIds.includes(room.roomId)) {
           return [];
         }
-  
+    
         const matchedAvailabilities = room.availabilities.filter(avail => {
           const isValidArrivalDay = filters.dateFrom
             ? avail.arrivalDays.includes(
                 new Date(filters.dateFrom).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
               )
             : true;
-  
+    
           const isValidDepartureDay = filters.dateTo
             ? avail.departureDays.includes(
                 new Date(filters.dateTo).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
               )
             : true;
-  
+    
           const availabilityDuration = (stayDateTo!.getTime() - stayDateFrom!.getTime()) / (1000 * 3600 * 24);
           const isValidStay = this.isWithinStayDuration(availabilityDuration, avail.minStay, avail.maxStay);
           const isCapacity = this.isCapacityMatch(room, filters);
-  
+    
           return isValidStay && isCapacity && isValidArrivalDay && isValidDepartureDay;
         });
-  
+    
         if (matchedAvailabilities.length === 0) {
           return [];
         }
-  
+    
         return { ...room };
       });
-  
+    
       this.filteredRoomsCount = this.filteredRooms.length;
       this.isFilterApplied = true;
+      
+      // Properly close the filter modal after applying filters
       this.closeFilterModal();
     }
+    
+    
     
     private isAvailable(avail: IRoomAvailability, filters: any): boolean {
       const stayDateFrom = new Date(filters.dateFrom);
@@ -341,6 +648,11 @@ export class BookingReservationComponent {
           dateTo: dateTo.toISOString().split('T')[0],
         });
   
+
+        const numberOfPersons = this.filterForm.get('numberOfPersons')?.value || 1;
+
+        console.log(" numberOfPersons", numberOfPersons);
+        
         const modalRef = this.modalService.open(ModalComponent);
         modalRef.componentInstance.bookingDetails = {
           roomId: room.roomId,
@@ -348,6 +660,7 @@ export class BookingReservationComponent {
           departureDate: dateTo,
           pricePerDayPerPerson: room.pricePerDayPerPerson,
           roomName: room.roomName,
+          numberOfPersons: numberOfPersons 
         };
   
         // Only close the modal, do not reset anything here
@@ -424,14 +737,15 @@ export class BookingReservationComponent {
       if (reservationModal) {
         const modalInstance = bootstrap.Modal.getInstance(reservationModal);
         if (modalInstance) {
-          modalInstance.hide();
+          modalInstance.hide();  // Ensure modal is closed properly
         }
       }
-
-        const modalBackdrop = document.querySelector('.modal-backdrop');
-      
+    
+      // Remove the modal backdrop explicitly to avoid the hazy screen issue
+      const modalBackdrop = document.querySelector('.modal-backdrop');
       if (modalBackdrop) {
         modalBackdrop.remove();  // Manually remove the modal backdrop
       }
     }
+    
 }

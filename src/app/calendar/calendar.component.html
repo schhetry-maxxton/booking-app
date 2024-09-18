@@ -1,13 +1,13 @@
 <!-- Trigger Button to Open Modal -->
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#dualCalendarModal">
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#CalendarModal">
     Open Calendar
   </button>
   
-  <div class="modal fade" id="dualCalendarModal" tabindex="-1" aria-labelledby="dualCalendarModalLabel" aria-hidden="true">
+  <div class="modal fade" id="CalendarModal" tabindex="-1" aria-labelledby="CalendarModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="dualCalendarModalLabel">Select Dates</h5>
+                <h5 class="modal-title" id="CalendarModalLabel">Choose your arrival and departure day</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -72,6 +72,22 @@
                         </div>
                     </div>
                 </div>
+
+            <!-- Main container wrapping all elements -->
+            <div class="calendar-actions-container">
+                <!-- Only show nights info and clear dates link if both arrival and departure are selected -->
+                <div *ngIf="selectedArrivalDate && selectedDepartureDate">
+                    <!-- Number of nights and selected dates -->
+                    <span class="nights-info">{{ arrivalDateDisplay }} - {{ departureDateDisplay }} ({{ nightsDisplay }})</span>
+            
+                    <!-- Clear selection link -->
+                    <a href="javascript:void(0);" class="reset-link" (click)="resetSelection()">Clear dates</a>
+                </div>
+            
+                <!-- Save selection button -->
+                <button class="btn btn-primary">Save selection</button>
+            </div>
+  
             </div>
         </div>
     </div>

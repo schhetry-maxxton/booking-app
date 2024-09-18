@@ -3,7 +3,7 @@
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reservationModal">New reservation</button>
   </div>
 
-  <h3 style="color: darkcyan; text-align: center;" >Reservations</h3>
+
   
   <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -15,34 +15,22 @@
         <div class="modal-body">
           <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
             <div class="row">
-              <div class="form-group col-md-4 mb-3">
+               <!-- <div class="form-group col-md-4 mb-3">
                 <label for="dateFrom" class="form-label">Check In</label>
                 <input id="dateFrom" type="date" formControlName="dateFrom" class="form-control">
               </div>
-
-              <!-- <div class="form-group col-md-4 mb-3">
-                <mat-form-field appearance="fill">
-                  <mat-label>Check-in Date</mat-label>
-                  <input matInput [matDatepicker]="picker1" formControlName="dateFrom" [matDatepickerFilter]="checkInDateFilter">
-                  <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-                  <mat-datepicker #picker1></mat-datepicker>
-                </mat-form-field>
-              </div>
-  
-              <div class="form-group col-md-4 mb-3">
-                <mat-form-field appearance="fill">
-                  <mat-label>Check-out Date</mat-label>
-                  <input matInput [matDatepicker]="picker2" formControlName="dateTo" [matDatepickerFilter]="checkOutDateFilter">
-                  <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
-                  <mat-datepicker #picker2></mat-datepicker>
-                </mat-form-field>
-              </div> -->
               
               <div class="form-group col-md-4 mb-3">
                 <label for="dateTo" class="form-label">Check Out</label>
                 <input id="dateTo" type="date" formControlName="dateTo" class="form-control">
+              </div> -->
+              <div class="form-group col-md-4 mb-3">
+                <label for="dates" class="form-label">Dates</label>
+                <p id="dates" class="form-control" data-bs-toggle="modal" data-bs-target="#CalendarModal">
+                  {{ selectedDatesDisplay || 'When do you want to go?' }}
+                </p>
               </div>
-  
+              
               <div class="form-group col-md-4 mb-3">
                 <label for="numberOfPersons" class="form-label">Guests</label>
                 <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
@@ -88,7 +76,7 @@
           <td>{{ room.maxStay }}</td> -->
           <td>
             <!-- <button class="btn btn-outline-primary" (click)="openBookingModal(room)" [disabled]="!isFilterApplied">Book Now</button> -->
-            <button class="btn btn-outline-primary" *ngIf="isBookingAllowed()" (click)="openBookingModal(room)">
+            <button class="btn btn-outline-primary" *ngIf="isBookingAllowed()" (click)="openBookingModal(room)"> 
               Book Now
             </button>
           </td>
@@ -96,6 +84,8 @@
       </tbody>
     </table> 
   </div>
+
+  <h3 style="color: darkcyan; text-align: center;" >Reservations</h3>
 <table class="table table-light table-striped table-hover mt-4">
   <thead>
     <tr>
@@ -149,4 +139,79 @@
 </table>
 </div>
 
-<app-calendar></app-calendar>
+<!-- <app-calendar></app-calendar> -->
+<!-- Calendar Modal -->
+<div class="modal fade" id="CalendarModal" tabindex="-1" aria-labelledby="CalendarModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="CalendarModalLabel">Choose your arrival and departure day</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Selected Date Fields (aligned with calendar) -->
+        <div class="row mb-3" style="width: 720px; margin: 0 auto;">
+          <div class="col-6">
+            <label for="arrivalDate" class="form-label">Arrival Date</label>
+            <input type="text" id="arrivalDate" class="form-control no-border" [value]="arrivalDateDisplay" disabled>
+          </div>
+          <div class="col-6">
+            <label for="departureDate" class="form-label">Departure Date</label>
+            <input type="text" id="departureDate" class="form-control no-border" [value]="departureDateDisplay" disabled>
+          </div>
+        </div>
+
+        <!-- Month Navigation Controls and Month Name/Year -->
+        <div class="calendar-controls-right" style="width: 100%; display: flex; justify-content: flex-end;">
+          <button (click)="previousMonthClick()" class="btn calendar-nav-btn left">prev</button>
+          <button (click)="nextMonthClick()" class="btn calendar-nav-btn right">next</button>
+        </div>
+
+        <!-- Calendar for Current and Next Month -->
+        <div class="calendar-container" style="width: 720px; margin: 0 auto;">
+          <div class="calendar">
+            <div class="month-header-left">{{ getMonthName(currentMonth) }} {{ currentYear }}</div>
+            <div class="weekdays">
+              <div *ngFor="let day of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" class="weekday">
+                {{ day }}
+              </div>
+            </div>
+            <div class="days-grid">
+              <div *ngFor="let dayObj of daysInCurrentMonth"
+                   [ngClass]="getCellClass(dayObj, currentMonth, currentYear)"
+                   (click)="selectDate(dayObj.day, currentMonth, currentYear)"
+                   class="day">
+                {{ dayObj.day > 0 ? dayObj.day : '' }}
+              </div>
+            </div>
+          </div>
+          <div class="calendar">
+            <div class="month-header-left">{{ getMonthName(nextMonth) }} {{ nextYear }}</div>
+            <div class="weekdays">
+              <div *ngFor="let day of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" class="weekday">
+                {{ day }}
+              </div>
+            </div>
+            <div class="days-grid">
+              <div *ngFor="let dayObj of daysInNextMonth"
+                   [ngClass]="getCellClass(dayObj, nextMonth, nextYear)"
+                   (click)="selectDate(dayObj.day, nextMonth, nextYear)"
+                   class="day">
+                {{ dayObj.day > 0 ? dayObj.day : '' }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main container wrapping all elements -->
+        <div class="calendar-actions-container">
+          <div *ngIf="selectedArrivalDate && selectedDepartureDate">
+            <span class="nights-info">{{ arrivalDateDisplay }} - {{ departureDateDisplay }} ({{ nightsDisplay }})</span>
+            <a href="javascript:void(0);" class="reset-link" (click)="resetSelection()">Clear dates</a>
+          </div>
+          <button class="btn btn-primary" (click)="saveSelection()">Save selection</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

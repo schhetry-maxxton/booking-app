@@ -5,6 +5,7 @@ body {
 .container-fluid {
   width: 100%;
   padding: 20px;
+  position: relative; 
 }
 
 .chart-container {
@@ -137,7 +138,8 @@ h4{
   text-align: center;
   vertical-align: middle;
   border: 1px solid #EAEAEA;
-  overflow: visible; /* Hide overflow */
+  /* overflow: visible;  */
+  overflow: visible !important;
 }
 
 .cell span {
@@ -148,7 +150,7 @@ h4{
   width:max-content; /* Span the full width of the reservation cells */
   /* height: 100%; */
   white-space: nowrap; /* Prevent text wrapping */
-  overflow: hidden; /* Hide overflow */
+  overflow: visible; /* Hide overflow */
   text-overflow: visible; /* Show ellipsis for overflow */
   display: block; /* Ensure it behaves like a block element within the cell */
 }
@@ -315,7 +317,10 @@ select {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.valid-departure-highlight {
-  border: 2px solid #007bff;  /* A blue border to indicate valid departure days */
-  background-color: rgba(0, 123, 255, 0.1);  /* A light blue background */
+.mat-tooltip {
+  max-width: 200px; /* Adjust tooltip width */
+  font-size: 14px;
+  padding: 8px;
+  white-space: nowrap;
+  z-index: 10000 !important; 
 }

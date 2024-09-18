@@ -68,8 +68,7 @@
               (mouseover)="onMouseOver(room.roomId, dayObj, $event)"
               (mouseup)="onMouseUp(dayObj, $event)" class="cell"
               [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, dayObj) ? 'auto' : 'none' }">
-              <span *ngIf="hasReservation(room.roomId, dayObj)" matTooltip="test"
-              aria-label="Tooltip while hovering">
+              <span *ngIf="hasReservation(room.roomId, dayObj)" >
                 {{ getCustomerName(room.roomId, dayObj) }}
               </span>
             </div>

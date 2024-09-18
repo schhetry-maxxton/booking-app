@@ -4,7 +4,6 @@ import { ReservationService } from '../Services/Reservation/reservation.service'
 import { RandomNumberService } from '../Services/RandomNumber/random-number.service';
 import { CustomersService } from '../Services/Customers/customers.service';
 import { IReservation } from '../Interface/ireservation';
-import { IRoom } from '../Interface/iroom';
 import { ICustomer } from '../Interface/icustomer';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { jsPDF } from 'jspdf'; 
@@ -40,8 +39,6 @@ export class ModalComponent {
 
     const today=new Date();
     this.DOB=today.toISOString().split('T')[0];
-
-    
 
 
     this.bookingForm = this.fb.group({
@@ -79,14 +76,6 @@ export class ModalComponent {
       paidAmount: ['', [Validators.required]],
       dueAmount: ['']
     });
-
-    // this.bookingForm.get('totalNumberOfGuests')?.valueChanges.subscribe(() => {
-    //   this.updateTotalPrice();
-    // });
-
-    // this.paymentForm.get('totalAmount')?.valueChanges.subscribe(() => {
-    //   this.updateDueAmount();
-    // });
 
     this.bookingForm.get('stayDateFrom')?.valueChanges.subscribe(() => {
       this.updateNumberOfDays();
@@ -157,7 +146,7 @@ export class ModalComponent {
         stayDateTo.setDate(stayDateTo.getDate() + 1);
       }
   
-      console.log(" bookingDetails : ", this.bookingDetails);
+      console.log("modal  bookingDetails : ", this.bookingDetails);
       
       this.bookingForm.patchValue({
         reservationId: this.randomNumberService.generateRandomNumber(),
@@ -166,7 +155,7 @@ export class ModalComponent {
         stayDateTo: stayDateTo.toISOString().split('T')[0],     // Format date for input
         numberOfDays: this.calculateNumberOfDays(),
         reservationDate: this.getISTDateTime(),
-        totalNumberOfGuests: 1,
+        totalNumberOfGuests: this.bookingDetails.numberOfPersons,
         pricePerDayPerPerson: this.bookingDetails.pricePerDayPerPerson,
       });
     }
