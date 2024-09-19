@@ -34,8 +34,8 @@ export class BookingReservationComponent {
   today: Date = new Date();
   arrivalDateDisplay: string = '';
   departureDateDisplay: string = '';
-
-  selectedDays: Set<number> = new Set();  
+  validArrivalDates: Set<string> = new Set();
+  validDepartureDates: Set<string> = new Set();
   nightsDisplay: string = '0 nights'; // Track nights count
 
   selectedDatesDisplay: string | null = null;
@@ -73,20 +73,6 @@ export class BookingReservationComponent {
       }
     );
     this.reservations = this.reservationService.getReservations();
-     // Listen for date selections from the CalendarComponent via CalendarService
-     this.calendarService.selectedDates$.subscribe(dates => {
-      if (dates.arrivalDate && dates.departureDate) {
-        // Display the selected dates in the label
-        this.selectedDatesDisplay = `${dates.arrivalDate.toLocaleDateString()} - ${dates.departureDate.toLocaleDateString()}`;
-
-        // Patch the form values with the selected dates
-        this.filterForm.patchValue({
-          dateFrom: dates.arrivalDate.toISOString().split('T')[0],
-          dateTo: dates.departureDate.toISOString().split('T')[0]
-        });
-      }
-    });
-
     this.generateCalendarDays();
   }
 
@@ -166,7 +152,7 @@ selectedDepartureDate: Date | null = null;  // Track the selected departure date
     this.nightsDisplay = '0 nights'; // Reset to zero nights
     this.selectedDatesDisplay = 'When do you want to go?';
   
-    // Clear the dates from the form as well
+    // Clear the form values
     this.filterForm.patchValue({
       dateFrom: '',
       dateTo: ''
@@ -302,14 +288,7 @@ isDateLocked(day: number, month: number, year: number): boolean {
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     return monthNames[month - 1];
   }
-  
-  // saveSelection(): void {
-  //   if (this.selectedArrivalDate && this.selectedDepartureDate) {
-  //     // Push the selected dates to the CalendarService
-  //     this.calendarService.updateSelectedDates(this.selectedArrivalDate, this.selectedDepartureDate);
-  //     console.log("Dates updated in the service: ", this.selectedArrivalDate, this.selectedDepartureDate);
-  //   }
-  // }
+
 
   saveSelection(): void {
     if (this.selectedArrivalDate && this.selectedDepartureDate) {
@@ -342,10 +321,25 @@ isDateLocked(day: number, month: number, year: number): boolean {
       reservationModal.show();
     }
   }
+
+  closeCalendarModal(): void {
+    const calendarModal = document.getElementById('CalendarModal');
+    if (calendarModal) {
+      const modalInstance = bootstrap.Modal.getInstance(calendarModal);
+      if (modalInstance) {
+        modalInstance.hide();  // Close the calendar modal
+      }
+    }
   
+    // Remove the backdrop manually if it still exists
+    const modalBackdrop = document.querySelector('.modal-backdrop');
+    if (modalBackdrop) {
+      modalBackdrop.remove();
+    }
   
-  
-  
+    // Reopen the filter modal after closing the calendar modal
+    this.openFilterModal();
+  }
   
 
     onStatusChange(reservation: IReservation): void {
@@ -397,84 +391,6 @@ isDateLocked(day: number, month: number, year: number): boolean {
       const checkOutDate = this.filterForm.get('dateTo')?.value;
       return checkInDate && checkOutDate; // Returns true only if both dates are filled
     }
-
-    // applyFilters(): void {
-    //   const filters = this.filterForm.value;
-  
-    //   // Get the values of check-in and check-out dates
-    //   const stayDateFrom = filters.dateFrom ? new Date(filters.dateFrom) : null;
-    //   const stayDateTo = filters.dateTo ? new Date(filters.dateTo) : null;
-  
-    //   // Check if check-in and check-out dates are provided
-    //   const datesProvided = !!stayDateFrom && !!stayDateTo;
-  
-    //   // No rooms are shown if no filters are provided
-    //   if (!datesProvided && !filters.numberOfPersons) {
-    //     this.filteredRooms = [];
-    //     return;
-    //   }
-  
-    //   // Get the rooms unavailable due to existing reservations
-    //   const unavailableRoomIds = this.reservations
-    //     .filter(res => {
-    //       if (stayDateFrom && stayDateTo) {
-    //         return this.isDateRangeOverlapping(
-    //           stayDateFrom,
-    //           stayDateTo,
-    //           new Date(res.arrivalDate),
-    //           new Date(res.departureDate)
-    //         );
-    //       }
-    //       return false;
-    //     })
-    //     .map(res => res.roomId);
-  
-    //   // Filter the rooms based on availability, dates, and capacity
-    //   this.filteredRooms = this.rooms.flatMap(room => {
-    //     if (unavailableRoomIds.includes(room.roomId)) {
-    //       return [];  // Skip unavailable rooms
-    //     }
-  
-    //     const matchedAvailabilities = room.availabilities.filter(avail => {
-    //       if (datesProvided) {
-    //         const isValidArrivalDay = filters.dateFrom
-    //           ? avail.arrivalDays.includes(
-    //               new Date(filters.dateFrom).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
-    //             )
-    //           : true;
-  
-    //         const isValidDepartureDay = filters.dateTo
-    //           ? avail.departureDays.includes(
-    //               new Date(filters.dateTo).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
-    //             )
-    //           : true;
-  
-    //         const availabilityDuration = (stayDateTo!.getTime() - stayDateFrom!.getTime()) / (1000 * 3600 * 24);  // Duration in days
-  
-    //         const isValidStay = this.isWithinStayDuration(availabilityDuration, avail.minStay, avail.maxStay);
-    //         const isCapacity = this.isCapacityMatch(room, filters);
-  
-    //         return isValidStay && isCapacity && isValidArrivalDay && isValidDepartureDay;
-    //       }
-  
-    //       return false;  // If no dates are provided, return no matches
-    //     });
-  
-    //     if (matchedAvailabilities.length === 0) {
-    //       return [];
-    //     }
-  
-    //     return { ...room };
-    //   });
-  
-    //   this.filteredRoomsCount = this.filteredRooms.length;
-    //   this.isFilterApplied = true;
-  
-    //   console.log('Filtered Rooms:', this.filteredRooms);  // Debugging filtered rooms
-  
-    //   // Close the modal once filters are applied
-    //   this.closeModal();
-    // }
 
     applyFilters(): void {
       const filters = this.filterForm.value;
@@ -675,25 +591,6 @@ isDateLocked(day: number, month: number, year: number): boolean {
       }
     }
 
-    // closeModal(): void {
-    //   const reservationModal = document.getElementById('reservationModal');
-      
-    //   if (reservationModal) {
-    //     const modalInstance = bootstrap.Modal.getInstance(reservationModal);
-        
-    //     if (modalInstance) {
-    //       modalInstance.hide();
-    //     }
-    //   }
-    
-    //   // Remove the modal backdrop manually after the modal is closed
-    //   const modalBackdrop = document.querySelector('.modal-backdrop');
-      
-    //   if (modalBackdrop) {
-    //     modalBackdrop.remove();  // Manually remove the modal backdrop
-    //   }
-    // }
-
     openFilterModal(): void {
       // Reset the filter form when opening the modal
       this.filterForm.reset({
@@ -702,14 +599,13 @@ isDateLocked(day: number, month: number, year: number): boolean {
         numberOfPersons: 1  // Reset to default value
       });
   
+      this.resetSelection();
+      
       // Show the filter modal (for selecting date and number of persons)
       const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal')!);
       reservationModal.show();
     }
   
-    /**
-     * Closes the booking modal (for "Book Now") without resetting anything.
-     */
     closeBookingModal(): void {
       const bookingModal = document.getElementById('bookingModal');
       if (bookingModal) {
@@ -748,4 +644,5 @@ isDateLocked(day: number, month: number, year: number): boolean {
       }
     }
     
+  
 }

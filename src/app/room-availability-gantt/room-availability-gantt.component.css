@@ -168,6 +168,8 @@ h4{
   background-color: orange; /* Orange for checked-in */
   color: white;
   border: none;
+  border-top: 1px solid white;
+  border-bottom:1px solid white;
 }
 
 /* Color for 'CHECKED-OUT' status */
@@ -175,6 +177,8 @@ h4{
   background-color: #D2B48C; /* Light brown for checked-out */
   color: white;
   border: none;
+  border-top: 1px solid white;
+  border-bottom:1px solid white;
 }
 
 .cell.reservation-start {

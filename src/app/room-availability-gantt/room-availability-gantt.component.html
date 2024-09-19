@@ -69,7 +69,7 @@
               (mouseup)="onMouseUp(dayObj, $event)" class="cell"
               [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, dayObj) ? 'auto' : 'none' }"
               matTooltip="{{ getTooltipForCell(room.roomId, dayObj) }}"
-       [matTooltipDisabled]="!hasValidReservation(room.roomId, dayObj)"
+              [matTooltipDisabled]="!hasValidReservation(room.roomId, dayObj)"
             >
               <span *ngIf="hasReservation(room.roomId, dayObj)" >
                 {{ getCustomerName(room.roomId, dayObj) }}
