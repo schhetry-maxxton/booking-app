@@ -293,3 +293,30 @@
 #remove-btn{
     background-color: rgb(192, 183, 183);
 }
+
+.day.available-arrival {
+    background-color: #28a745; /* Green background for available arrival dates */
+    color: white;
+  }
+  
+  .day.selected-arrival {
+    background-color: #007bff; /* Blue background for selected arrival */
+    color: white;
+  }
+  
+  .day.selected-departure {
+    background-color: #ffc107; /* Yellow background for selected departure */
+    color: white;
+  }
+  
+  .day.selected-range {
+    background-color: #17a2b8; /* Cyan background for selected range */
+    color: white;
+  }
+  
+  .day.disabled {
+    background-color: #d6d6d6; /* Grey for disabled dates */
+    color: #999;
+    pointer-events: none; /* Disable clicking */
+  }
+  
