@@ -231,37 +231,48 @@ h4{
 }
 
 .legends {
-  width: 20%;
-  padding-bottom: 20px;
-  padding-top: 20px;
-}
-
-.row.legend {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: nowrap;
+  padding-bottom: 15px;
+  padding-top: 15px;
+  text-align: center; /* Center the text inside the legend container */
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 0 15px; /* Space between items */
-  font-size: 24px;
+  justify-content: center; /* Center the content inside each legend item */
+  margin-bottom: 10px; /* Space between legend items */
+  font-size: 20px;
 }
 
 .legend-box {
   width: 20px;
   height: 20px;
-  border-radius: 50%; /* Rounded corners for a cleaner look */
-  margin-right: 10px; /* Space between box and text */
+  border-radius: 50%;
+  margin-right: 10px;
 }
 
-.legend-box-span{
-  font-size: 20px;
-  color: #333; /* Dark text for readability */
+.legend-box-span {
+  font-size: 16px;
+  color: #333;
 }
+
+@media (max-width: 768px) {
+  .legend-item {
+    font-size: 14px;
+  }
+
+  .legend-box {
+    width: 15px;
+    height: 15px;
+  }
+
+  .legend-box-span {
+    font-size: 14px;
+  }
+}
+
+
+
 
 /* ============ CSS for Filter ============= */
 

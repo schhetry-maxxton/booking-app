@@ -26,7 +26,7 @@
               </div> -->
               <div class="form-group col-md-4 mb-3">
                 <label for="dates" class="form-label">Dates</label>
-                <p id="dates" class="form-control" data-bs-toggle="modal" data-bs-target="#CalendarModal">
+                <p id="dates" class="form-control" data-bs-toggle="modal" data-bs-target="#CalendarModal" (click)="resetSelection()">
                   {{ selectedDatesDisplay || 'When do you want to go?' }}
                 </p>
               </div>
@@ -146,7 +146,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="CalendarModalLabel">Choose your arrival and departure day</h5>
-        <button type="button" (click)="closeCalendarModal()" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" (click)="closeCalendarModal()" (click)="resetSelection()" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- Selected Date Fields (aligned with calendar) -->

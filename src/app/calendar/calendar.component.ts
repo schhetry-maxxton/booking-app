@@ -157,37 +157,74 @@ selectDate(day: number, month: number, year: number): void {
     return `${day}/${month}/${year}`;
   }
 
+// getCellClass(dayObj: { day: number, fromPreviousMonth: boolean }, month: number, year: number): string {
+//   if (dayObj.fromPreviousMonth || dayObj.day === 0) {
+//     return 'empty-cell';  // Make it non-selectable
+//   }
+
+//   // If the date is disabled
+//   if (this.isDateLocked(dayObj.day, month, year)) {
+//     return 'disabled';
+//   }
+
+//   const currentDate = new Date(year, month - 1, dayObj.day);
+//   currentDate.setHours(12, 0, 0, 0); // Set to noon for comparison
+
+//   // If this is the selected arrival day
+//   if (this.selectedArrivalDate && currentDate.getTime() === this.selectedArrivalDate.getTime()) {
+//     return 'selected-arrival';
+//   }
+
+//   // Set to 11 AM for the departure comparison
+//   currentDate.setHours(11, 0, 0, 0); 
+
+//   // If this is the selected departure day
+//   if (this.selectedDepartureDate && currentDate.getTime() === this.selectedDepartureDate.getTime()) {
+//     return 'selected-departure';
+//   }
+
+//   // If the date is within the selected range
+//   if (this.selectedArrivalDate && this.selectedDepartureDate &&
+//       currentDate > this.selectedArrivalDate &&
+//       currentDate < this.selectedDepartureDate) {
+//     return 'selected-range';
+//   }
+
+//   return '';  // Default case
+// }
+
 getCellClass(dayObj: { day: number, fromPreviousMonth: boolean }, month: number, year: number): string {
   if (dayObj.fromPreviousMonth || dayObj.day === 0) {
     return 'empty-cell';  // Make it non-selectable
   }
 
-  // If the date is disabled
+  const currentDate = new Date(year, month - 1, dayObj.day);
+  
+  // Set the time to 12:00 PM for comparison for arrival dates
+  // currentDate.setHours(12, 0, 0, 0);
+
+  // If the date is locked (not selectable)
   if (this.isDateLocked(dayObj.day, month, year)) {
     return 'disabled';
   }
 
-  const currentDate = new Date(year, month - 1, dayObj.day);
-  currentDate.setHours(12, 0, 0, 0); // Set to noon for comparison
-
-  // If this is the selected arrival day
+  // Check if this is the selected arrival day
   if (this.selectedArrivalDate && currentDate.getTime() === this.selectedArrivalDate.getTime()) {
-    return 'selected-arrival';
+    return 'selected-arrival';  // Highlight the selected arrival day
   }
 
-  // Set to 11 AM for the departure comparison
-  currentDate.setHours(11, 0, 0, 0); 
+  // Set the time to 11:00 AM for comparison for departure dates
+  // currentDate.setHours(11, 0, 0, 0);
 
-  // If this is the selected departure day
+  // Check if this is the selected departure day
   if (this.selectedDepartureDate && currentDate.getTime() === this.selectedDepartureDate.getTime()) {
-    return 'selected-departure';
+    return 'selected-departure';  // Highlight the selected departure day
   }
 
-  // If the date is within the selected range
-  if (this.selectedArrivalDate && this.selectedDepartureDate &&
-      currentDate > this.selectedArrivalDate &&
-      currentDate < this.selectedDepartureDate) {
-    return 'selected-range';
+  // Check if the current date falls within the selected date range (arrival -> departure)
+  if (this.selectedArrivalDate && this.selectedDepartureDate && 
+      currentDate > this.selectedArrivalDate && currentDate < this.selectedDepartureDate) {
+    return 'selected-range';  // Highlight the range between arrival and departure
   }
 
   return '';  // Default case

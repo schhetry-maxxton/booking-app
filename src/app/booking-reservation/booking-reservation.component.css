@@ -96,55 +96,12 @@
     background-color: #007bff;
     color: white;
   }
-  
-  /* Selected arrival day styling */
-  .day.selected-arrival {
-    background-color: #007bff;
-    color: white;
-    border-radius: 50%;
-  }
-  
-  /* Selected departure day styling */
-  .day.selected-departure {
-    background-color: #007bff;
-    color: white;
-    border-radius: 50%;
-  }
 
-  /* .day.selected-arrival ::after{
-    content: "";
-    position: absolute;
-    top: 1px;
-    right: 0;
-    width: 50%;
-    height: 40px;
-    background: linear-gradient(270deg, rgba(0, 123, 255, 0.2), transparent);
-  }
-
-  .day.selected-departure::after{
-    content: "";
-    position: absolute;
-    top: 1px;
-    left: 0;
-    width: 50%;
-    height: 40px;
-    background: linear-gradient(90deg, rgba(0, 123, 255, 0.2), transparent);
-  } */
-  
-  /* Selected range styling */
-  /* .day.selected-range {
-    background-color: rgba(0, 123, 255, 0.2);
-    color: black;
-    border-left: none;
-    border-right: none;
-  } */
-
-  /* Selected range styling - make sure the range connects smoothly to the rounded arrival and departure */
-/* Base styling for the date range */
 .day.selected-range {
   background-color: rgba(0, 123, 255, 0.2);
   color: black;
   position: relative;
+  pointer-events: none;
 }
 
 /* Connect the range from the arrival date (left side) */
@@ -180,11 +137,12 @@
 .day.selected-departure {
   border-radius: 50%; /* Keep them circular */
   position: relative; /* Ensure pseudo-elements stay positioned correctly */
-  z-index: 1;  /* Ensure the dates stay on top of the range */
+  z-index: 3;  /* Ensure the dates stay on top of the range */
+  background-color: #007bff;
+  color: white;
+  border-radius: 50%;
 }
 
-
-  
   /* Button styles aligned to the right */
   .calendar-controls-right {
     width: 100%;
@@ -295,28 +253,13 @@
 }
 
 .day.available-arrival {
-    background-color: #28a745; /* Green background for available arrival dates */
-    color: white;
+    text-align: center;
+    padding: 20px 0; /* Keep larger padding */
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 400;
+    background-color: white;
+    height: 60px;
   }
   
-  .day.selected-arrival {
-    background-color: #007bff; /* Blue background for selected arrival */
-    color: white;
-  }
-  
-  .day.selected-departure {
-    background-color: #ffc107; /* Yellow background for selected departure */
-    color: white;
-  }
-  
-  .day.selected-range {
-    background-color: #17a2b8; /* Cyan background for selected range */
-    color: white;
-  }
-  
-  .day.disabled {
-    background-color: #d6d6d6; /* Grey for disabled dates */
-    color: #999;
-    pointer-events: none; /* Disable clicking */
-  }
   
