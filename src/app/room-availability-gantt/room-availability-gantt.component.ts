@@ -200,6 +200,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         this.reservationMap[key] = reservation;
       }
     });
+    
   }
 
    // Function to get the reservation for a specific room and date (if any)

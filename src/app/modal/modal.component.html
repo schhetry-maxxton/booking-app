@@ -51,7 +51,7 @@
             </div>
           </div>
           </div>
-          <div>
+          <div class="d-flex justify-content-end mt-3" style="padding: 1rem;">
             <button type="button" class="btn btn-success" (click)="nextStep()">Next</button>
           </div>
           
@@ -63,14 +63,63 @@
           <button class="btn btn-info" (click)="newCustomer()">New customer</button>
           <button class="btn btn-info" (click)="existingCustomer()">Existing customer</button>
         </div>
-        <div class="row" *ngIf="this.showCustomerIdInput && isExistingCustomer">
-          <div class="col-8">
-            <input type="number" #customerIdInput placeholder="Enter Customer ID" class="form-control mt-2">
+        <!-- <div class="row" *ngIf="this.showCustomerIdInput && isExistingCustomer">
+          <div class="col-9">
+            <input type="number" #customerIdInput placeholder="Enter Customer ID" class="form-control">
           </div>
-          <div class="col-4 search-btn">
+          <div class="col-3 search-btn">
             <button type="button" class="btn btn-primary" (click)="searchCustomer(customerIdInput)">Search</button>
           </div>
+        </div> -->
+        
+        <!-- Input field for searching customer by name -->
+
+        <div  class="row" *ngIf="showCustomerIdInput && isExistingCustomer">
+          <!-- <label for="customerSearch">Search by Customer Name:</label> -->
+          <div class="col-9">
+            <input 
+              type="text" 
+              id="customerSearch" 
+              (input)="searchCustomerByName($event)" 
+              class="form-control" 
+              placeholder="Enter Customer Name"
+            >
+            
+          </div>
+          <div class="col-3 search-btn">
+            <button 
+              type="button" 
+              class="btn btn-primary" 
+              (click)="searchCustomerByNameOnClick()">Search
+            </button>
+          </div>
+          <!-- Display the list of matching customers (max 5) -->
+          <div *ngIf="filteredCustomers.length > 0" class="customer-list">
+            <ul>
+              <li 
+                *ngFor="let customer of filteredCustomers" 
+                (click)="selectCustomer(customer)"
+                (mouseover)="hoveredCustomer = customer"
+                [class.hover]="hoveredCustomer === customer"
+              >
+                <div>
+                  {{ customer.firstName }} {{ customer.middleName }} {{ customer.lastName }}
+                    <!-- Age: {{ customer.age }} Address: {{ customer.address }} ID: {{ customer.customerId }} -->
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div *ngIf="noResultsMessage" class="text-danger mt-2">
+            {{ noResultsMessage }}
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" (click)="previousStep()">Previous</button>
+            <button type="button" class="btn btn-success" (click)="nextStep()">Next</button>
+          </div>
         </div>
+
+
         
         <div *ngIf="errorMessage" class="alert alert-danger mt-2">
           {{ errorMessage }}
@@ -79,13 +128,12 @@
          <div *ngIf="showCustomerForm">
             <form [formGroup]="customerForm">
               <!-- Customer Form Fields -->
-              <div class="row mb-3">
+              <!-- <div class="row mb-3">
                 <div class="col-12">
                   <label for="customerId" class="form-label">Customer ID</label>
                   <p class="form-text">{{ customerForm.get('customerId')?.value }}</p>
-                  <!-- <input type="text" id="customerId" class="form-control" formControlName="customerId" readonly> -->
                 </div>
-              </div>
+              </div> -->
               <div class="row mb-3">
                 <div class="col-md-4">
                   <label for="firstName" class="form-label">First Name</label>
@@ -120,7 +168,7 @@
                 </div>
                 <div class="col-md-2">
                   <label for="age" class="form-label">Age</label>
-                  <input type="number" id="age" class="form-control" formControlName="age" readonly>
+                  <input type="number" id="age" class="form-control" formControlName="age" [disabled]="true" >
                   <div *ngIf="customerForm.get('age')?.invalid">
                     <small *ngIf="customerForm.get('age')?.errors?.['min']" class="text-danger">Age must be greater than 0.</small>
                   </div>
@@ -193,6 +241,7 @@
                     <small *ngIf="customerForm.get('country')?.errors" class="text-danger">Country is required.</small>
                   </div>
                 </div>
+                
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-primary" (click)="previousStep()">Previous</button>
@@ -272,8 +321,8 @@
             <input type="text" id="dueAmount" class="form-control" formControlName="dueAmount" readonly>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="previousStep()">Previous</button>
-            <button type="button" class="btn btn-primary" (click)="nextStep()">Submit</button>
+            <button type="button" class="btn btn-primary" (click)="previousStep()">Previous</button>
+            <button type="button" class="btn btn-success" (click)="nextStep()">Submit</button>
           </div>
           
         </form>
@@ -308,7 +357,7 @@
             </div>
             <button class="btn btn-success mt-3" (click)="downloadInvoicePDF()">Download Invoice</button>
           </div>
-        <button type="button" class="btn btn-secondary" (click)="resetForms()">Close</button>
+        <button type="button" class="btn btn-secondary" (click)="resetForms()" (click)="redirectToChart()">Close</button>
       </div>
     </ng-container>
   </div>

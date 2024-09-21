@@ -48,6 +48,15 @@ export class CustomersService {
     return customers.find(customer => customer.customerId === id);
   }
 
-  
+   // Get customers by their name (first, middle, or last)
+   getCustomersByName(name: string): ICustomer[] {
+    const customers = this.getCustomers();
+    const lowerName = name.toLowerCase(); // Case-insensitive search
+    return customers.filter(customer =>
+      customer.firstName.toLowerCase().includes(lowerName) ||
+      customer.middleName.toLowerCase().includes(lowerName) ||
+      customer.lastName.toLowerCase().includes(lowerName)
+    );
+  }
 
 }

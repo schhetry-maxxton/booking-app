@@ -262,4 +262,53 @@
     height: 60px;
   }
   
-  
+  .reservation-table {
+    width: 100%;
+    text-align: center; /* Center-align table content */
+    border-collapse: collapse;
+    font-size: 1.1rem;
+    margin-top: 20px;
+  }
+
+  .reservation-table thead {
+    padding: 4px;
+    background-color: #343a40;
+    color: white;
+  }
+  .reservation-table th {
+    padding: 7px;
+    font-weight: bold;
+  }
+
+  .reservation-table td {
+    padding: 7px;
+    vertical-align: middle; /* Center-align text vertically */
+  }
+
+  /* .status-cell {
+    text-align: center;
+  } */
+
+  .status-dropdown {
+    width: 100%;
+    /* padding: 0.2rem; */
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: #f8f9fa;
+    color: #333;
+    appearance: none;
+  }
+  .status-dropdown:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+  .status-dropdown {
+    /* padding: 3px; */
+    /* text-align-last: center; */
+  }
+
+  .status-dropdown:hover{
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    cursor: pointer;
+  }

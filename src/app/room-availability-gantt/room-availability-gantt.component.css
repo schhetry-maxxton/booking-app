@@ -104,33 +104,10 @@ h4{
   background-color: #fff3cd;
 }
 
-/* .reserved {
-  background-color: rgb(199, 97, 97);
- 
-} */
 
 .available.weekend {
   background-color: #d4edda;
 }
-
-/* .cell {
-  position: relative;
-  height: 40px;
-  text-align: center;
-  vertical-align: middle;
-  border:1px solid #EAEAEA;
-  overflow: visible;
-}
-
-.cell span {
-  position: absolute;
-  top: 50%; 
-  left: 50%;
-  transform: translate(-50%, -50%); 
-  white-space: nowrap; 
-  overflow: hidden; 
-  text-overflow: ellipsis;
-} */
 
 .cell {
   position: relative;
@@ -138,9 +115,21 @@ h4{
   text-align: center;
   vertical-align: middle;
   border: 1px solid #EAEAEA;
-  /* overflow: visible;  */
+  overflow: visible; 
   overflow: visible !important;
 }
+
+.cell {
+  position: relative;
+  height: 40px;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #EAEAEA;
+  overflow: hidden; /* Ensure overflow is handled */
+  white-space: nowrap; /* Prevent text wrapping */
+  text-overflow: ellipsis; /* Show ellipsis for overflowing text */
+}
+
 
 .cell span {
   position: absolute;
@@ -153,6 +142,7 @@ h4{
   overflow: visible; /* Hide overflow */
   text-overflow: visible; /* Show ellipsis for overflow */
   display: block; /* Ensure it behaves like a block element within the cell */
+  padding: 0 5px;
 }
 
 .cell.reserved {

@@ -86,8 +86,8 @@
   </div>
 
   <h3 style="color: darkcyan; text-align: center;" >Reservations</h3>
-<table class="table table-light table-striped table-hover mt-4">
-  <thead>
+<table class="table table-light table-striped table-hover reservation-table mt-4">
+  <thead class="thead-dark">
     <tr>
       <th>Reservation ID</th>
       <th>Customer name</th>
@@ -121,15 +121,14 @@
       <td>{{ reservation.arrivalDate | date:'yyyy-MM-dd' }}</td>
       <td>{{ reservation.departureDate | date:'yyyy-MM-dd' }}</td>
       <td>{{ reservation.reservationDate | date:'yyyy-MM-dd HH:mm:ss' }}</td>
-      <td>
-        <select [(ngModel)]="reservation.status" (change)="onStatusChange(reservation)">
+      <td class="status-cell">
+        <select class="form-select status-dropdown" [(ngModel)]="reservation.status" (change)="onStatusChange(reservation)">
           <option value="CONFIRM">Confirm</option>
           <option value="CHECKED-IN">Checked-In</option>
           <option value="CHECKED-OUT">Checked-Out</option>
       </select>
       </td>
       <td>{{ reservation.totalPrice }}</td>
-      
       <td>{{ reservation.paidAmount }}</td>
       <td>{{ reservation.dueAmount }}</td>
       <td>{{ reservation.numberOfGuest }}</td>

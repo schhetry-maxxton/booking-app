@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReservationService } from '../Services/Reservation/reservation.service';
 import { RandomNumberService } from '../Services/RandomNumber/random-number.service';
@@ -7,6 +8,7 @@ import { IReservation } from '../Interface/ireservation';
 import { ICustomer } from '../Interface/icustomer';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { jsPDF } from 'jspdf'; 
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-modal',
@@ -29,12 +31,17 @@ export class ModalComponent {
   showButtons: boolean = true;
   errorMessage: string | null = null;
   DOB: string;
+  filteredCustomers: ICustomer[] = [];
+  hoveredCustomer: ICustomer | null = null;
+  noResultsMessage: string | null = null;
 
   constructor(public activeModal: NgbActiveModal,
     private fb: FormBuilder,
     private randomNumberService: RandomNumberService,
     private reservationService: ReservationService,
-    private customerService: CustomersService
+    private customerService: CustomersService,
+    private router: Router,
+    private snackBar: MatSnackBar
   ) { 
 
     const today=new Date();
@@ -195,12 +202,57 @@ export class ModalComponent {
     }
   }
 
-  onBirthDateChange(): void {
-    const birthDate = this.customerForm.get('birthDate')?.value;
-    if (birthDate) {
-      this.customerForm.get('age')?.setValue(this.calculateAge(new Date(birthDate)));
+    // Search for existing customers by name
+    searchCustomerByName(event: Event | null = null): void {
+      const name = event ? (event.target as HTMLInputElement).value.trim().toLowerCase() : ''; // Get name from event or use an empty string
+  
+      if (name.length >= 2) {
+        // Get all customers
+        const customers = this.customerService.getCustomers();
+        
+        // Filter customers based on name
+        this.filteredCustomers = customers.filter(customer => {
+          const fullName = `${customer.firstName} ${customer.middleName ? customer.middleName : ''} ${customer.lastName}`.trim().toLowerCase();
+          return customer.firstName.toLowerCase().includes(name) || fullName.includes(name);
+        }).slice(0, 5); // Limit to 5 results
+  
+        if (this.filteredCustomers.length === 0) {
+          this.noResultsMessage = 'No customers found.'; // Set message if no results
+        } else {
+          this.noResultsMessage = null; // Clear the message if results found
+        }
+  
+      } else {
+        this.filteredCustomers = [];
+        this.noResultsMessage = 'Please enter at least 2 characters.'; // Message if input is too short
+      }
     }
-  }
+    
+  
+    searchCustomerByNameOnClick(): void {
+      const searchInput = (document.getElementById('customerSearchInput') as HTMLInputElement)?.value.trim();
+      if (searchInput) {
+        this.searchCustomerByName({ target: { value: searchInput } } as unknown as Event);
+      }
+    }
+
+    selectCustomer(customer: ICustomer): void {
+      this.customerForm.patchValue(customer); // Populate the form with selected customer details
+      this.showCustomerIdInput = false; // Hide search inputs after selection
+      this.showCustomerForm = true;     // Show the customer form
+      this.filteredCustomers = [];      // Clear the dropdown list
+      this.errorMessage=null;
+      this.noResultsMessage = null; 
+    }
+
+    onBirthDateChange(): void {
+      const birthDate = this.customerForm.get('birthDate')?.value;
+      if (birthDate) {
+        const age = this.calculateAge(new Date(birthDate));
+        this.customerForm.get('age')?.setValue(age);  // Set the calculated age
+      }
+    }
+    
 
   calculateAge(birthDate: Date): number {
     const today = new Date();
@@ -212,24 +264,6 @@ export class ModalComponent {
     return age;
   }
 
-  // calculateNumberOfDays(): number {
-  //   const stayDateFrom = new Date(this.bookingForm.get('stayDateFrom')?.value);
-  //   const stayDateTo = new Date(this.bookingForm.get('stayDateTo')?.value);
-    
-  //   // Set times for calculation
-  //   stayDateFrom.setHours(12, 0, 0, 0);
-  //   stayDateTo.setHours(11, 0, 0, 0);
-  
-  //   // Adjust endDate to the next day if it is after the check-out time
-  //   if (stayDateTo.getHours() > 11) {
-  //     stayDateTo.setDate(stayDateTo.getDate() + 1);
-  //   }
-  
-  //   const numberOfDays = Math.ceil((stayDateTo.getTime() - stayDateFrom.getTime()) / (1000 * 3600 * 24));
-    
-  //   // Handle the edge case where the number of days might be zero but it's a single-day stay
-  //   return numberOfDays <= 0 ? 1 : numberOfDays;
-  // }
 
   calculateNumberOfDays(): number {
     const stayDateFrom = new Date(this.bookingForm.get('stayDateFrom')?.value);
@@ -288,30 +322,77 @@ export class ModalComponent {
   }
 
   nextStep(): void {
+    this.errorMessage = null;
     if (this.currentStep === 1 && this.bookingForm.valid) {
       this.updateCustomerForm();
       this.showCustomerIdInput=false;
       this.currentStep = 2;
-    } else if (this.currentStep === 2 && this.customerForm.valid ) {
-      this.currentStep = 3;
+    }else if (this.currentStep === 2 && !this.isExistingCustomer && this.customerForm.valid) {
+      this.currentStep = 3; // Move to next step after new customer form
       this.showCustomerIdInput=true;
-    } else if (this.currentStep === 3 && this.paymentForm.valid) {
+    }  else if (this.currentStep === 2 && this.customerForm.valid) {
+      this.currentStep = 3; // Move to Search Existing Customer by Name
+      // this.errorMessage=null;
+    }  else if (this.currentStep === 3 && this.paymentForm.valid) {
       this.submitBooking();
       this.currentStep = 4;
     } else if (this.currentStep === 4) {
       this.resetForms();
     } else {
-      alert("Please fill in all required fields.");
+      this.errorMessage = 'Please fill in all required fields.';
+    
+      // Mark all form controls as touched to display validation errors
+      this.customerForm.markAllAsTouched();
+      this.bookingForm.markAllAsTouched();
+      this.paymentForm.markAllAsTouched();
     }
   }
 
+
+  // nextStep(): void {
+   
+  //   else if (this.currentStep === 2 && !this.isExistingCustomer && this.customerForm.valid) {
+  //     this.currentStep = 3; // Move to next step after new customer form
+  //   } 
+  //   else if (this.currentStep === 3 && this.paymentForm.valid) {
+  //     this.currentStep = 4; // Move to payment step
+  //   } 
+  //   else if (this.currentStep === 4) {
+  //     this.submitBooking(); // Submit the booking
+  //   } 
+  //   else {
+  //     // Show error message if form is not valid
+  //     this.errorMessage = 'Please fill in all required fields.';
+  
+  //     // Mark all form controls as touched to show errors
+  //     this.customerForm.markAllAsTouched();
+  //     this.bookingForm.markAllAsTouched();
+  //     this.paymentForm.markAllAsTouched();
+  //   }
+  // }
+  
+  // previousStep(): void {
+  //   // Logic to move back to the previous step
+  //   if (this.currentStep === 4) {
+  //     this.currentStep = 3; // Move back to Customer Form
+  //   } 
+  //   else if (this.currentStep === 3 && this.isExistingCustomer) {
+  //     this.currentStep = 2; // Move back to Customer Selection (New/Existing)
+  //   } 
+  //   else if (this.currentStep === 2) {
+  //     this.currentStep = 1; // Move back to Booking Form
+  //   }
+  // }
+
+  
   previousStep(): void {
     if (this.currentStep > 1) {
       this.currentStep--;
       this.showCustomerForm = false; 
       this.showCustomerIdInput = false;
       this.showButtons = true;
-      
+      this.errorMessage=null;
+      this.noResultsMessage = null; 
     }
   }
 
@@ -334,6 +415,7 @@ export class ModalComponent {
   }
 
   private submitBooking(): void {
+    this.customerForm.get('age')?.enable();
     if (this.paymentForm.valid) {
       const bookingData = {
         booking: this.bookingForm.value,
@@ -377,14 +459,24 @@ export class ModalComponent {
         district: bookingData.customer.district,
       };
 
+      console.log(" newCustomer ", newCustomer);
+      
       this.reservationService.saveReservation(newReservation);
       this.customerService.saveCustomer(newCustomer);
       this.currentStep = 4;
+      this.customerForm.get('age')?.disable();
     } else {
       this.customerForm.markAllAsTouched();
       this.paymentForm.markAllAsTouched();
     }
     
+  }
+
+  redirectToChart(){
+    // After saving booking, navigate to the Gantt chart
+    setTimeout(() => {
+      this.router.navigate(['/planningchart']);
+    }, 2000); // Delay to show message before redirecting
   }
 
   resetForms(): void {

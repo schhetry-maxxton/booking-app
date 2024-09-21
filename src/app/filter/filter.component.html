@@ -200,12 +200,22 @@
             <button class="btn btn-info" (click)="newCustomer()">New customer</button>
             <button class="btn btn-info" (click)="existingCustomer()">Existing customer</button>
           </div>
-          <div class="row" *ngIf="this.showCustomerIdInput && isExistingCustomer">
-            <div class="col-8">
-              <input type="number" #customerIdInput placeholder="Enter Customer ID" class="form-control mt-2">
+          <div class="row mt-3" *ngIf="showCustomerIdInput && isExistingCustomer">
+            <div class="col-9">
+              <input 
+                type="number" 
+                #customerIdInput 
+                placeholder="Enter Customer ID" 
+                class="form-control" 
+                (change)="searchCustomer(customerIdInput)"
+              >
             </div>
-            <div class="col-4 search-btn">
-              <button type="button" class="btn btn-primary" (click)="searchCustomer(customerIdInput)">Search</button>
+            <div class="col-3">
+              <button 
+                type="button" 
+                class="btn btn-primary" 
+                (click)="searchCustomer(customerIdInput)"
+              >Search</button>
             </div>
           </div>
           

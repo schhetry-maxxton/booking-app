@@ -21,7 +21,7 @@
   justify-content: space-between; /* Space between the buttons */
   align-items: center; /* Align items vertically center */
   padding: 1rem; /* Add some padding for spacing */
-  
+  border: none;
 }
   
 .customer{
@@ -29,6 +29,43 @@
   /* justify-content: space-between; */
   justify-content: space-around;
 }
+
+/* Style for customer search input */
+.search-customer {
+  margin-top: 1rem;
+}
+
+/* Remove bullet points and format list items */
+.customer-list ul {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 0.5rem;
+}
+
+.customer-list ul li {
+  /* border: 1px solid #ddd; */
+  padding: 10px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Styling individual customer details */
+.customer-list ul li div {
+  margin-bottom: 5px;
+}
+
+/* Hover effect for customer list */
+.customer-list ul li.hover {
+  background-color: #f1f1f1;
+}
+
+/* Change cursor to pointer */
+.customer-list ul li:hover {
+  background-color: #f0f8ff;
+  cursor: pointer;
+}
+
 
 .modal-header{
   display: flex;
@@ -111,7 +148,7 @@
   }
   
   .invoice-footer {
-    text-align: right;
+    text-align: center;
     font-weight: bold;
   }
   
