@@ -254,7 +254,52 @@
 
 .day.available-arrival {
     text-align: center;
-    padding: 20px 0; /* Keep larger padding */
+    padding: 20px 0; 
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 400;
+    background-color: white;
+    height: 60px;
+  }
+  
+  /* .day.available-arrival {
+    text-align: center;
+    padding: 20px 0;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 400;
+    background-color: white;
+    height: 60px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.day.available-arrival:hover {
+    background-color: #f0f8ff; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+    font-weight: 600; 
+} */
+
+/* .day.available-departure {
+  text-align: center;
+  padding: 20px 0;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 400;
+  background-color: white;
+  height: 60px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.day.available-departure:hover {
+  background-color: #e6ffe6; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+  font-weight: 600; /
+} */
+
+
+  .day.available-departure{
+    text-align: center;
+    padding: 20px 0; 
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 400;

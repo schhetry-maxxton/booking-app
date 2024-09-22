@@ -10,3 +10,5 @@ export interface IRoomWithAvailability {
     availabilities: IRoomAvailability[]; // New field to hold multiple availabilities
   }
   
+
+  
