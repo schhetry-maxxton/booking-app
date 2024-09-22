@@ -77,9 +77,20 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       this.generateChart();
       this.extractLocations();
       this.extractGuestCapacities();
+      this.initializeTooltips(); 
     });
   }
 
+
+  initializeTooltips() {
+    // Use Bootstrap's tooltip initialization
+    setTimeout(() => {
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.forEach((tooltipTriggerEl) => {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    }, 1000);  // Delay to ensure DOM is loaded
+  }
 
   extractLocations(): void {
     // Extract unique locations from rooms
