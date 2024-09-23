@@ -6,6 +6,11 @@
     cursor: pointer;
 }
 
+.dateSelection, .guestSelection{
+  font-size: 20px;
+  font-weight: bold;
+}
+
 /* General Styling */
 .calendar-container {
     display: flex;
@@ -169,6 +174,24 @@
   .calendar-controls-right .btn.right {
     margin-right: 36px; 
   }
+
+  .no-rooms-found{
+    text-align: center; /* Center the text horizontally */
+  margin: 20px auto; /* Center the div horizontally with auto margins */
+  padding: 15px; /* Add padding inside the div */
+  border: 1px solid #ddd; /* Light border around the div */
+  border-radius: 8px; /* Rounded corners */
+  background-color: #f8f9fa; /* Light background color */
+  max-width: 500px; /* Limit the width of the div */
+  font-family: 'Arial', sans-serif; /* Professional and clean font */
+  color: #333; /* Darker text color for readability */
+  }
+
+  .no-rooms-found p{
+    font-size: 1.2rem; /* Larger font size */
+  font-weight: bold; /* Bold text */
+  margin: 0; 
+  }
   
   /* Input Box (Non-Rounded Borders) */
   input.no-border {
@@ -236,6 +259,9 @@
   text-decoration: underline;
 }
 
+.date-span, .guest-span{
+  padding-right: 6px;
+}
 /* .btn {
   padding: 10px 20px;
   background-color: #28a745;
@@ -297,7 +323,7 @@
 } */
 
 
-  .day.available-departure{
+  /* .day.available-departure{
     text-align: center;
     padding: 20px 0; 
     cursor: pointer;
@@ -305,7 +331,7 @@
     font-weight: 400;
     background-color: white;
     height: 60px;
-  }
+  } */
   
   .reservation-table {
     width: 100%;

@@ -522,7 +522,7 @@ export class ModalComponent {
   downloadInvoicePDF(): void {
     const doc = new jsPDF();
 
-    console.log('Booking Form:', this.bookingForm.value);
+  console.log('Booking Form:', this.bookingForm.value);
   console.log('Customer Form:', this.customerForm.value);
   console.log('Payment Form:', this.paymentForm.value);
     
@@ -550,7 +550,7 @@ export class ModalComponent {
     doc.text(`Room No: ${this.bookingForm.get('roomNo')?.value}`, 10, 70);
     doc.text(`Stay From: ${this.bookingForm.get('stayDateFrom')?.value}`, 10, 80);
     doc.text(`Stay To: ${this.bookingForm.get('stayDateTo')?.value}`, 10, 90);
-    doc.text(`Number of Days: ${this.bookingForm.get('numberOfDays')?.value}`, 10, 100);
+    doc.text(`Number of Nights: ${this.bookingForm.get('numberOfDays')?.value}`, 10, 100);
     doc.text(`Total Guests: ${this.bookingForm.get('totalNumberOfGuests')?.value}`, 10, 110);
   
     // Customer Information
@@ -559,22 +559,22 @@ export class ModalComponent {
     doc.setFontSize(10);
     doc.text(`Customer ID: ${this.customerForm.get('customerId')?.value}`, 10, 140);
     doc.text(`Name: ${this.customerForm.get('firstName')?.value} ${this.customerForm.get('middleName')?.value} ${this.customerForm.get('lastName')?.value}`, 10, 150);
-    doc.text(`Address: ${this.customerForm.get('address')?.value}`, 10, 160);
+    doc.text(`Address: ${this.customerForm.get('address')?.value} ${this.customerForm.get('district')?.value}  ${this.customerForm.get('city')?.value}  ${this.customerForm.get('pincode')?.value}`, 10, 160);
     doc.text(`Mobile: ${this.customerForm.get('mobileNumber')?.value}`, 10, 170);
   
     // Payment Information
     doc.setFontSize(14);
     doc.text('Payment Information', 10, 190);
     doc.setFontSize(10);
-    doc.text(`Total Amount: ${this.paymentForm.get('totalAmount')?.value}`, 10, 200);
-    doc.text(`Paid Amount: ${this.paymentForm.get('paidAmount')?.value}`, 10, 210);
-    doc.text(`Due Amount: ${this.paymentForm.get('dueAmount')?.value}`, 10, 220);
+    doc.text(`Total Amount: ₹${this.paymentForm.get('totalAmount')?.value}`, 10, 200);
+    doc.text(`Paid Amount: ₹${this.paymentForm.get('paidAmount')?.value}`, 10, 210);
+    doc.text(`Due Amount: ₹${this.paymentForm.get('dueAmount')?.value}`, 10, 220);
 
   // Footer
   doc.setFontSize(10);
   doc.setTextColor(100);
   doc.text('Thank you for booking with us!', 10, 260);
-  doc.text('For inquiries, contact us at support@companywebsite.com | Phone: +123-456-7890', 10, 270);
+  doc.text('For inquiries, contact us at support@luxstays.com | Phone: +91-80932-82515', 10, 270);
 
   // Save the generated PDF
   doc.save(`Invoice_${this.bookingForm.get('reservationId')?.value}.pdf`);

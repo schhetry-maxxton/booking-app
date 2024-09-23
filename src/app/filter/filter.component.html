@@ -112,7 +112,7 @@
               <p class="card-text">
                 <strong>Room Id:</strong> {{ room.roomId }}<br>
                 <strong>Location:</strong> {{ room.locationName }}<br>
-                <strong>Price per day:</strong> {{ room.pricePerDayPerPerson | currency }}<br>
+                <strong>Price per day:</strong> ₹{{ room.pricePerDayPerPerson}}<br>
                 <strong>Guest Capacity:</strong> {{ room.guestCapacity }}<br>
                 <!-- <strong>Min stay:</strong> {{ getMinStay(room) }}<br>
                 <strong>Max stay:</strong> {{ getMaxStay(room) }} -->
@@ -167,7 +167,7 @@
                 <p class="form-text">{{ bookingForm.get('stayDateTo')?.value | date }}</p>
               </div>
               <div class="form-group">
-                <label class="form-label">Number of days</label>
+                <label class="form-label">Number of nights</label>
                 <p class="form-text">{{ bookingForm.get('numberOfDays')?.value }}</p>
               </div>
               <div class="form-group">

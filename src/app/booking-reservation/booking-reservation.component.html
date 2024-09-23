@@ -1,6 +1,6 @@
 <div class="result-section p-3 border">
   <div class="new-reservation">
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reservationModal">New reservation</button>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reservationModal" (click)="resetSelection()">New reservation</button>
   </div>
 
 
@@ -9,8 +9,8 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="reservationModalLabel">New Reservation Filter</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h3 class="modal-title" id="reservationModalLabel" style="color: darkcyan; text-align: center;">New Reservation Filter</h3>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="ngOnInit()"></button>
         </div>
         <div class="modal-body">
           <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
@@ -24,16 +24,19 @@
                 <label for="dateTo" class="form-label">Check Out</label>
                 <input id="dateTo" type="date" formControlName="dateTo" class="form-control">
               </div> -->
-              <div class="form-group col-md-4 mb-3">
-                <label for="dates" class="form-label">Dates</label>
+              <div class="form-group col-md-6 mb-3">
+                <label for="dates" class="dateSelection form-label">Dates</label>
                 <p id="dates" class="form-control" data-bs-toggle="modal" data-bs-target="#CalendarModal" (click)="resetSelection()">
-                  {{ selectedDatesDisplay || 'When do you want to go?' }}
+                  <span class="date-span" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24px" height="24px"><path d="M22.5 13.5v8.25a.75.75 0 0 1-.75.75H2.25a.75.75 0 0 1-.75-.75V5.25a.75.75 0 0 1 .75-.75h19.5a.75.75 0 0 1 .75.75zm1.5 0V5.25A2.25 2.25 0 0 0 21.75 3H2.25A2.25 2.25 0 0 0 0 5.25v16.5A2.25 2.25 0 0 0 2.25 24h19.5A2.25 2.25 0 0 0 24 21.75zm-23.25-3h22.5a.75.75 0 0 0 0-1.5H.75a.75.75 0 0 0 0 1.5M7.5 6V.75a.75.75 0 0 0-1.5 0V6a.75.75 0 0 0 1.5 0M18 6V.75a.75.75 0 0 0-1.5 0V6A.75.75 0 0 0 18 6M5.095 14.03a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06m.53-1.28a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5m-.53 6.53a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06m.53-1.28a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5m5.845-3.97a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06m.53-1.28A1.125 1.125 0 1 0 12 15a1.125 1.125 0 0 0 0-2.25.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5m-.53 6.53a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06M12 18a1.125 1.125 0 1 0 0 2.25A1.125 1.125 0 0 0 12 18a.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5m5.845-3.97a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06m.53-1.28a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5m-.53 6.53a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06m.53-1.28a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5"></path></svg></span>
+                  {{ selectedDatesDisplay || ' Checkin date - Checkout date' }}
                 </p>
               </div>
               
-              <div class="form-group col-md-4 mb-3">
-                <label for="numberOfPersons" class="form-label">Guests</label>
+              <div class="form-group col-md-6 mb-3">
+                <label for="numberOfPersons" class="guestSelection form-label">Guests</label>
+                
                 <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
+                
               </div>
             </div>
   
@@ -46,6 +49,9 @@
     </div>
   </div>
 
+  <div *ngIf="isFilterApplied && filteredRooms.length === 0" class="no-rooms-found">
+    <p>No rooms found matching your search criteria.</p>
+  </div>
   <div class="container my-2" *ngIf="filteredRooms.length > 0">
     <!-- <h2 class="text-center mb-4" style="color: slategrey;">Filtered Rooms</h2> -->
      <table class="table table-striped table-bordered table-hover">
@@ -54,7 +60,7 @@
           <th>Room ID</th>
           <th>Room Name</th>
           <th>Location</th>
-          <th>Price per Day</th>
+          <th>Price per Night</th>
           <th>Guest Capacity</th>
           <!-- <th>Available from</th>
           <th>Available to</th>

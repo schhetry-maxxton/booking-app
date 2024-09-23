@@ -127,7 +127,7 @@ h4{
   border: 1px solid #EAEAEA;
   overflow: hidden; /* Ensure overflow is handled */
   white-space: nowrap; /* Prevent text wrapping */
-  text-overflow: ellipsis; /* Show ellipsis for overflowing text */
+  text-overflow: visible; /* Show ellipsis for overflowing text */
 }
 
 
@@ -329,5 +329,9 @@ select {
   color: #ffffff; /* Custom text color */
   padding: 8px; /* Add some padding */
   border-radius: 4px; /* Rounded corners */
+  z-index: 10000 !important; 
+}
+
+.tooltip{
   z-index: 10000 !important; 
 }

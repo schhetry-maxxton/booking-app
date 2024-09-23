@@ -30,7 +30,7 @@
               <p class="form-text">{{ bookingForm.get('stayDateTo')?.value | date }}</p>
             </div>
             <div class="form-group">
-              <label class="form-label">Number of days</label>
+              <label class="form-label">Number of nights</label>
               <p class="form-text">{{ bookingForm.get('numberOfDays')?.value }}</p>
             </div>
             <div class="form-group">
@@ -43,11 +43,11 @@
             </div>
             <div class="form-group">
               <label class="form-label">Price per person</label>
-              <p class="form-text">{{ bookingForm.get('pricePerDayPerPerson')?.value | currency }}</p>
+              <p class="form-text">₹{{ bookingForm.get('pricePerDayPerPerson')?.value }}</p>
             </div>
             <div class="form-group">
               <label class="form-label">Total price</label>
-              <p class="form-text">{{ bookingForm.get('totalPrice')?.value | currency }}</p>
+              <p class="form-text">₹{{ bookingForm.get('totalPrice')?.value }}</p>
             </div>
           </div>
           </div>
@@ -330,7 +330,7 @@
       <div *ngSwitchCase="4">
         <!-- Confirmation Message -->
         <div class="text-center">
-            <h1>Your booking details have been successfully submitted.</h1>
+            <h3>Your booking details have been successfully submitted.</h3>
             <div class="invoice-header">
               <p>Reservation ID: {{ bookingForm.value.reservationId }}</p>
               <p>Room No: {{ bookingForm.value.roomNo }}</p>
@@ -343,7 +343,7 @@
             <div class="invoice-section">
               <h2>Customer Information</h2>
               <p>Customer ID: {{ customerForm.value.customerId }}</p>
-              <p>Name: {{ customerForm.value.firstName }} {{ customerForm.value.middleName }} {{ customerForm.value.lastName }}</p>
+              <p>Name: {{ customerForm.value.firstName }} {{ customerForm.value.middleName ? customerForm.value.middleName : '' }} {{ customerForm.value.lastName }}</p>
               <p>Address: {{ customerForm.value.address }}</p>
             </div>
             <div class="invoice-section">
