@@ -10,4 +10,5 @@ export interface IRoomAvailability {
     bookDateTo?: string; // Latest date to make a reservation
     minDeviation?: number; // Minimum days between booking and arrival
     maxDeviation?: number;
+    
 }
