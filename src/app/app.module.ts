@@ -38,6 +38,7 @@ import {
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { CalendarComponent } from './calendar/calendar.component';
+import { DualCalendarComponent } from './dual-calendar/dual-calendar.component';
 
 @NgModule({
   declarations: [
@@ -52,6 +53,7 @@ import { CalendarComponent } from './calendar/calendar.component';
     ModalComponent,
     NewReservationComponent,
     CalendarComponent,
+    DualCalendarComponent,
   ],
   imports: [
     BrowserModule,
