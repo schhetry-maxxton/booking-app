@@ -10,7 +10,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h3 class="modal-title" id="reservationModalLabel" style="color: darkcyan; text-align: center;">New Reservation Filter</h3>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="ngOnInit()"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
@@ -150,32 +150,34 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="CalendarModalLabel">Choose your arrival and departure day</h5>
+        <h3 class="modal-title" id="CalendarModalLabel" style="color: darkcyan; text-align: center;"></h3>
         <button type="button" (click)="closeCalendarModal()" (click)="resetSelection()" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- Selected Date Fields (aligned with calendar) -->
         <div class="row mb-3" style="width: 720px; margin: 0 auto;">
           <div class="col-6">
-            <label for="arrivalDate" class="form-label">Arrival Date</label>
+            <label for="arrivalDate" class="dateSelection form-label">Arrival Date</label>
             <input type="text" id="arrivalDate" class="form-control no-border" [value]="arrivalDateDisplay" disabled>
           </div>
           <div class="col-6">
-            <label for="departureDate" class="form-label">Departure Date</label>
+            <label for="departureDate" class="dateSelection form-label">Departure Date</label>
             <input type="text" id="departureDate" class="form-control no-border" [value]="departureDateDisplay" disabled>
           </div>
         </div>
 
         <!-- Month Navigation Controls and Month Name/Year -->
         <div class="calendar-controls-right" style="width: 100%; display: flex; justify-content: flex-end;">
-          <button (click)="previousMonthClick()" class="btn calendar-nav-btn left">prev</button>
+          <button *ngIf="showPreviousButton" (click)="previousMonthClick()" class="btn calendar-nav-btn left" [disabled]="isPreviousDisabled()">prev</button>
           <button (click)="nextMonthClick()" class="btn calendar-nav-btn right">next</button>
         </div>
 
         <!-- Calendar for Current and Next Month -->
         <div class="calendar-container" style="width: 720px; margin: 0 auto;">
           <div class="calendar">
-            <div class="month-header-left">{{ getMonthName(currentMonth) }} {{ currentYear }}</div>
+            <div class="month-header-left">
+              <h5>{{ getMonthName(currentMonth) }} {{ currentYear }}</h5>
+            </div>
             <div class="weekdays">
               <div *ngFor="let day of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" class="weekday">
                 {{ day }}
@@ -191,7 +193,9 @@
             </div>
           </div>
           <div class="calendar">
-            <div class="month-header-left">{{ getMonthName(nextMonth) }} {{ nextYear }}</div>
+            <div class="month-header-left">
+              <h5>{{ getMonthName(nextMonth) }} {{ nextYear }}</h5>
+            </div>
             <div class="weekdays">
               <div *ngFor="let day of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" class="weekday">
                 {{ day }}
@@ -206,6 +210,7 @@
               </div>
             </div>
           </div>
+         
         </div>
 
         <!-- Main container wrapping all elements -->

@@ -225,6 +225,24 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return !!this.getReservationForCell(roomId, date);
   }
   
+  getReservationSpan(roomId: number, dayObj: DayObj): string {
+    const startDay = this.getReservationStart(roomId, dayObj);
+    const endDay = this.getReservationEnd(roomId, dayObj);
+  
+    if (startDay === -1 || endDay === -1) {
+      return 'span 1';  // Default to a single cell if no reservation is found
+    }
+  
+    const spanLength = endDay - startDay + 1;
+    return `span ${spanLength}`;
+  }
+
+  isReservationStart(roomId: number, dayObj: DayObj): boolean {
+    const startDay = this.getReservationStart(roomId, dayObj);
+    return startDay === dayObj.day;
+  }
+
+  
   hasReservation(roomId: number, dayObj: { day: number, month: number, year: number }): boolean {
     const { day, month, year } = dayObj;
     const date = new Date(year, month, day);

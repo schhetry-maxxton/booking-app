@@ -426,7 +426,7 @@ export class ModalComponent {
       const newReservation: IReservation = {
         reservationId: bookingData.booking.reservationId,
         firstName: bookingData.customer.firstName,
-        middleName: bookingData.customer.middleName,
+        middleName: bookingData.customer.middleName || '',
         lastName: bookingData.customer.lastName,
         locationId: bookingData.booking.locationId, // Update this as needed
         roomId: bookingData.booking.roomNo,
@@ -448,7 +448,7 @@ export class ModalComponent {
         age: bookingData.customer.age,
         birthDate: bookingData.customer.birthDate,
         firstName: bookingData.customer.firstName,
-        middleName: bookingData.customer.middleName,
+        middleName: bookingData.customer.middleName || '',
         lastName: bookingData.customer.lastName,
         mobileNumber: bookingData.customer.mobileNumber,
         address: bookingData.customer.address,
@@ -558,7 +558,7 @@ export class ModalComponent {
     doc.text('Customer Information', 10, 130);
     doc.setFontSize(10);
     doc.text(`Customer ID: ${this.customerForm.get('customerId')?.value}`, 10, 140);
-    doc.text(`Name: ${this.customerForm.get('firstName')?.value} ${this.customerForm.get('middleName')?.value} ${this.customerForm.get('lastName')?.value}`, 10, 150);
+    doc.text(`Name: ${this.customerForm.get('firstName')?.value} ${this.customerForm.get('middleName')?.value || ''} ${this.customerForm.get('lastName')?.value || ''}`, 10, 150);
     doc.text(`Address: ${this.customerForm.get('address')?.value} ${this.customerForm.get('district')?.value}  ${this.customerForm.get('city')?.value}  ${this.customerForm.get('pincode')?.value}`, 10, 160);
     doc.text(`Mobile: ${this.customerForm.get('mobileNumber')?.value}`, 10, 170);
   
@@ -566,9 +566,9 @@ export class ModalComponent {
     doc.setFontSize(14);
     doc.text('Payment Information', 10, 190);
     doc.setFontSize(10);
-    doc.text(`Total Amount: ₹${this.paymentForm.get('totalAmount')?.value}`, 10, 200);
-    doc.text(`Paid Amount: ₹${this.paymentForm.get('paidAmount')?.value}`, 10, 210);
-    doc.text(`Due Amount: ₹${this.paymentForm.get('dueAmount')?.value}`, 10, 220);
+    doc.text(`Total Amount: ${this.paymentForm.get('totalAmount')?.value}`, 10, 200);
+    doc.text(`Paid Amount: ${this.paymentForm.get('paidAmount')?.value}`, 10, 210);
+    doc.text(`Due Amount: ${this.paymentForm.get('dueAmount')?.value}`, 10, 220);
 
   // Footer
   doc.setFontSize(10);

@@ -130,6 +130,14 @@ h4{
   text-overflow: visible; /* Show ellipsis for overflowing text */
 }
 
+.reservation-span {
+  background-color: rgba(90, 90, 207, 0.5);  /* Color for the reservation */
+  color: #fff;
+  padding: 5px;
+  border-radius: 4px;
+  display: block;
+  text-align: center;
+}
 
 .cell span {
   position: absolute;

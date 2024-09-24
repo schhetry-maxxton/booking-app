@@ -29,7 +29,7 @@
   .month-header-left {
     font-weight: 400;
     font-size: 1.2rem; /* Text size back to original */
-    text-align: left;  /* Left-align the month/year */
+    text-align: center;  /* Left-align the month/year */
     margin-bottom: 15px; /* Slightly increase space between month/year and weekdays */
   }
   
@@ -84,17 +84,15 @@
     /* background-color: #f0f0f0; */
   }
 
-  .day.disabled::before{
+  /* .day.disabled::before{
     position: absolute;
-    /* top: 30px;
-    left: 13px; */
     content: "";
     width: 20px;
     height: 1px;
     border-bottom: solid 1px #c2c2c2;
     -webkit-transform: rotate(-32deg);
     transform: rotate(-32deg);
-  }
+  } */
   
   /* Selected day styling */
   .day.selected {
@@ -298,12 +296,12 @@
     height: 60px;
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
-
+*/
 .day.available-arrival:hover {
     background-color: #f0f8ff; 
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  */
     font-weight: 600; 
-} */
+} 
 
 /* .day.available-departure {
   text-align: center;
@@ -314,13 +312,13 @@
   background-color: white;
   height: 60px;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
+} */
 
 .day.available-departure:hover {
   background-color: #e6ffe6; 
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  */
   font-weight: 600; /
-} */
+} 
 
 
   /* .day.available-departure{
