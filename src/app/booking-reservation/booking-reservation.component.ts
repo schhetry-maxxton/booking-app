@@ -10,6 +10,17 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalComponent } from '../modal/modal.component';
 import { CalendarService } from '../Services/Calendar/calendar.service';
 
+interface ValidDeparture {
+  date: string;  // "YYYY-MM-DD"
+  availabilities: IRoomAvailability[];  // Availabilities that generated the valid departure date
+}
+
+export interface reservationPeriod {
+  roomId: number;
+  arrivalDate: string; // "YYYY-MM-DD"
+  departureDate: string; // "YYYY-MM-DD"
+}
+
 @Component({
   selector: 'app-booking-reservation',
   templateUrl: './booking-reservation.component.html',
@@ -36,9 +47,11 @@ export class BookingReservationComponent {
   today: Date = new Date();
   arrivalDateDisplay: string = '';
   departureDateDisplay: string = '';
+  validDepartureDates: Date[] = [];
   validArrivalDates: Set<string> = new Set();
-  validDepartureDates: Set<string> = new Set();
+  // FvalidDepartureDates: Set<string> = new Set();
   nightsDisplay: string = '0 nights'; // Track nights count
+  // validDepartureMap: { [key: string]: { date: string, availabilities: IRoomAvailability[] } } = {};
 
   selectedDatesDisplay: string | null = null;
 
@@ -72,7 +85,7 @@ export class BookingReservationComponent {
       data => {
         this.rooms = this.makeRoomsData(data.rooms, data.stays);
         this.filteredRooms = [];
-        this.generateValidArrivalDates();  
+        // this.generateValidArrivalDates();  
       },
       error => {
         console.error('Error fetching data', error);
@@ -178,26 +191,30 @@ previousMonthClick(): void {
 
   selectDate(day: number, month: number, year: number): void {
     const selectedDate = new Date(year, month - 1, day);  // Create the selected date object
-    selectedDate.setHours(12, 0, 0, 0);  // Set the selected date to 12:00 PM for arrival logic consistency
   
     // Convert selectedDate to "YYYY-MM-DD" for comparison with validArrivalDates
     const selectedDateString = selectedDate.toISOString().split('T')[0];
   
     // If no arrival date is selected, check if the selected date is a valid arrival date
-    if (!this.selectedArrivalDate && this.validArrivalDates.has(selectedDateString)) {
+    if (!this.selectedArrivalDate) {
       console.log("step 2:  inside !this.selectedArrivalDate && this.validArrivalDates.has(selectedDateString) ");
       
       this.selectedArrivalDate = selectedDate;
+      this.selectedArrivalDate.setHours(12, 0, 0, 0); 
+      console.log('Selected Arrival Date:', this.formatDate(this.selectedArrivalDate));
       this.arrivalDateDisplay = this.formatDate(this.selectedArrivalDate);
       this.departureDateDisplay = '';  // Clear the departure date
       this.nightsDisplay = '0 nights';  // Reset nights display
       this.selectedDepartureDate = null;  // Clear any previously selected departure date
-      this.generateValidDepartureDates();  // Populate valid departure dates based on the selected arrival date
-      return;  // Exit the function since the arrival date has been set
+      // this.generateValidDepartureDates();  // Populate valid departure dates based on the selected arrival date
+      const { validDepartureDates, validDepartureMap } = this.calculateValidDepartureDatesForArrival(this.selectedArrivalDate);
+      this.validDepartureDates = validDepartureDates;
+      this.validDepartureMap = validDepartureMap;
+      console.log('Valid Departure Dates:', this.validDepartureDates.map(date => this.formatDate(date)));  // Exit the function since the arrival date has been set
     }
   
     // If an arrival date is already selected and the selected date is after the arrival date
-    if (this.selectedArrivalDate && selectedDate > this.selectedArrivalDate) {
+    else if (this.selectedArrivalDate && selectedDate > this.selectedArrivalDate) {
       this.selectedDepartureDate = selectedDate;
       this.selectedDepartureDate.setHours(11, 0, 0, 0);
       this.departureDateDisplay = this.formatDate(this.selectedDepartureDate);
@@ -205,8 +222,9 @@ previousMonthClick(): void {
       return;  // Exit the function since the departure date has been set
     }
   
+    this.generateCalendarDays(); 
     // If no valid selection, don't modify anything
-    console.log('Selected date is not valid for arrival or departure.');
+    // console.log('Selected date is not valid for arrival or departure.');
   }
   
   
@@ -223,73 +241,77 @@ previousMonthClick(): void {
     return Math.ceil(daysDiff);  // Return the number of nights
   }
 
+  
+// Utility to get the name of the month
+getMonthName(month: number): string {
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return monthNames[month - 1];
+}
+
+
   formatDate(date: Date): string {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); 
+  const day = date.getDate().toString().padStart(2, '0');
+  
+  return `${year}-${month}-${day}`; 
+    
   }
 
 getCellClass(dayObj: { day: number, fromPreviousMonth: boolean }, month: number, year: number): string {
-  // 1. Skip non-selectable cells (like previous/next month filler cells)
+
+  const date = new Date(year, month - 1, dayObj.day);  // Create date object for the current cell
+  const currentDate=this.formatDate(date);
+
   if (dayObj.fromPreviousMonth || dayObj.day === 0) {
     return 'empty-cell';  // Non-selectable empty cells
   }
 
-  const currentDate = new Date(year, month - 1, dayObj.day);  // Create date object for the current cell
-  currentDate.setHours(12, 0, 0, 0);  // Set to 12:00 PM for consistent comparison
+  if (date < this.today) {
+    console.log("");
+    
+    return 'disabled';
+}
+  // currentDate.setHours(12, 0, 0, 0);  // Set to 12:00 PM for consistent comparison
 
-  // Convert the date to the YYYY-MM-DD format for comparison
-  const dateString = currentDate.toISOString().split('T')[0];
-
-  // Scenario 1: Display selectable arrival dates when no arrival date is selected
   if (!this.selectedArrivalDate) {
-    if (this.validArrivalDates.has(dateString)) {
-      return 'available-arrival';  // Mark as selectable arrival day
+    const validArrivalDates = this.generateCombinedArrivalDates();  // Get valid arrival dates
+    if (validArrivalDates.has(currentDate)) {
+      return 'available-arrival';  // Highlight valid arrival dates
     }
-    return 'disabled';  // Disable all other dates
-  }
-
-  // Scenario 2: Display selectable departure dates after selecting an arrival date
-  if (this.selectedArrivalDate && !this.selectedDepartureDate) {
-    // Highlight the selected arrival date
-    if (currentDate.getTime() === this.selectedArrivalDate.getTime()) {
-      return 'selected-arrival';
-    }
-
-    // Mark valid departure dates as selectable
-    if (this.validDepartureDates.has(dateString)) {
-      return 'available-departure';  // Mark as selectable departure day
-    }
-    return 'disabled';  // Disable all other dates
-  }
-
-  // Scenario 3: Both arrival and departure dates are selected
-  if (this.selectedArrivalDate && this.selectedDepartureDate) {
-    // Highlight selected arrival date
-    if (currentDate.getTime() === this.selectedArrivalDate.getTime()) {
-      return 'selected-arrival';
-    }
-
-    // Highlight selected departure date
-    if (currentDate.getTime() === this.selectedDepartureDate.getTime()) {
-      return 'selected-departure';
-    }
-
-    // Highlight the range between arrival and departure dates
-    if (currentDate > this.selectedArrivalDate && currentDate < this.selectedDepartureDate) {
-      return 'selected-range';
-    }
-
-    // Disable all other dates outside the selected range
     return 'disabled';
   }
 
-  return '';  // Default case if no specific condition applies
+  if (this.selectedArrivalDate && currentDate === this.formatDate(this.selectedArrivalDate)) {
+    return 'selected-arrival';
+  }
+
+  if (this.selectedDepartureDate && currentDate === this.formatDate(this.selectedDepartureDate)) {
+    return 'selected-departure';
+  }
+
+  if (this.selectedArrivalDate && this.selectedDepartureDate && date > this.selectedArrivalDate && date < this.selectedDepartureDate) {
+    return 'selected-range';
+}
+
+const isValidDeparture = this.isValidDateInRange(date);
+if (isValidDeparture) {
+    return 'selected-arrival';
+}
+
+// If it's none of the above, disable the date
+return 'disabled';
 }
 
 
-
+isValidDateInRange(date: Date): boolean {
+  const newlyformattedDate = this.formatDate(date); // Convert the date to 'yyyy-mm-dd' format
+  const validDates = this.validDepartureDates.map(d => this.formatDate(d)); // Convert valid dates to 'yyyy-mm-dd'
+  
+  const isValid = validDates.includes(newlyformattedDate);
+  
+  return isValid;
+}
 
 
 // Check if a day is selected
@@ -311,31 +333,180 @@ isDateInRange(day: number, month: number, year: number): boolean {
   return date > this.selectedStartDate && date < this.selectedEndDate;
 }
 
-// isDateLocked(day: number, month: number, year: number): boolean {
-//   const selectedDate = new Date(year, month - 1, day);
-//   // selectedDate.setHours(12, 0, 0, 0);  // Set time to noon
+validDepartureMap: ValidDeparture[] = [];
 
-//   // If no arrival date is selected, lock all dates except valid arrival dates
-//   if (!this.selectedArrivalDate) {
-//     const dateString = selectedDate.toISOString().split('T')[0];
-//     return !this.validArrivalDates.has(dateString);  // Disable all non-arrival dates
-//   }
+calculateValidDepartureDatesForArrival(arrivalDate: Date): {
+  validDepartureDates: Date[], 
+  validDepartureMap: ValidDeparture[]
+} {
+  const validDepartureDates: Date[] = [];
+  const validDepartures: ValidDeparture[] = [];
 
-//   // If an arrival date is selected but no departure date is selected, lock all dates except valid departure dates
-//   if (this.selectedArrivalDate && !this.selectedDepartureDate) {
-//     const dateString = selectedDate.toISOString().split('T')[0];
-//     return !this.validDepartureDates.has(dateString);  // Disable all non-departure dates
-//   }
+  // Iterate through each room and its stays
+  this.rooms.forEach(room => {
+    room.availabilities.forEach(avail => {
+      // Ensure the stay allows the selected arrival date
+      if (this.isValidArrivalDate(arrivalDate, avail)) {
+        // First, check if the stay is within the booking window before proceeding
+        const today = new Date();
+        const bookDateFrom = avail.bookDateFrom ? new Date(avail.bookDateFrom) : null;
+        const bookDateTo = avail.bookDateTo ? new Date(avail.bookDateTo) : null;
 
-//   return false;  // Otherwise, the date is enabled
-// }
+        // If today's date is not within the booking window, skip this stay
+        if (!this.isWithinBookingWindow(today, bookDateFrom, bookDateTo)) {
+          return; // Skip this stay as it is not bookable based on the booking window
+        }
 
-// Utility to get the name of the month
-  getMonthName(month: number): string {
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    return monthNames[month - 1];
+        // Calculate the valid departure dates for this specific stay
+        const departureDates = this.calculateValidDepartureDates(arrivalDate, avail);
+
+        // Filter the valid departure dates using the `filterOutReservedDates` function
+        const filteredDepartureDates = this.filterOutReservedDates(departureDates, avail.roomId);
+
+        // For each valid and filtered departure date
+        filteredDepartureDates.forEach(departureDate => {
+          const formattedDepartureDate = this.formatDate(departureDate);
+
+          // Check if this date already exists in the validDepartures array
+          let existingDeparture = validDepartures.find(vd => vd.date === formattedDepartureDate);
+
+          if (existingDeparture) {
+            // If the date already exists, just add the stay to the list
+            existingDeparture.availabilities.push(avail);
+          } else {
+            // If the date doesn't exist, create a new entry
+            validDepartures.push({
+              date: formattedDepartureDate,
+              availabilities: [avail]
+            });
+          }
+
+          validDepartureDates.push(departureDate); // Add the valid date to the array
+        });
+      }
+    });
+  });
+
+  // Remove duplicate dates in validDepartureDates
+  const uniqueDepartureDates = Array.from(new Set(validDepartureDates.map(date => date.getTime()))).map(time => new Date(time));
+
+  return {
+    validDepartureDates: uniqueDepartureDates,
+    validDepartureMap: validDepartures
+  };
+}
+
+filterOutReservedDates(validDates: Date[], roomId: number): Date[] {
+  const reservations = this.reservationService.getReservations()
+    .filter(res => res.roomId === roomId)
+    .map(res => ({
+      arrivalDate: new Date(res.arrivalDate),
+      departureDate: new Date(res.departureDate)
+    }));
+
+  return validDates.filter(date => {
+    return !reservations.some(reservation => {
+      const checkOutTime = 11 * 60 * 60 * 1000;  // 10:00 AM in milliseconds
+      const checkInTime = 12 * 60 * 60 * 1000;   // 11:00 AM in milliseconds
+
+      const reservationStart = new Date(reservation.arrivalDate.getTime() - checkInTime); // Reservation start
+      const reservationEnd = new Date(reservation.departureDate.getTime() + checkOutTime); // Reservation end
+
+      // Case 1: Overlap check (already handled)
+      if (date >= reservationStart && date <= reservationEnd) {
+        console.log(`Date ${date.toDateString()} overlaps with a reservation (from ${reservation.arrivalDate.toDateString()} to ${reservation.departureDate.toDateString()}).`);
+        return true;  // This date overlaps with the reservation, so it's invalid.
+      }
+
+      // Case 2: Engulfing check (new)
+      // Ensure the selected arrival date + departure date doesn't engulf the reservation.
+      // Engulfing: Arrival is before the reservation start and departure is after the reservation end.
+      if (this.selectedArrivalDate && this.selectedArrivalDate < reservation.arrivalDate && date > reservation.departureDate) {
+        console.log(`Date ${date.toDateString()} engulfs a reservation (from ${reservation.arrivalDate.toDateString()} to ${reservation.departureDate.toDateString()}).`);
+        return true;  // This date engulfs the reservation, so it's invalid.
+      }
+      if (this.selectedArrivalDate && this.selectedArrivalDate > reservation.arrivalDate && this.selectedArrivalDate<=reservation.departureDate && date > reservation.departureDate) {
+        console.log(`Date ${date.toDateString()} engulfs a reservation (from ${reservation.arrivalDate.toDateString()} to ${reservation.departureDate.toDateString()}).`);
+        return true;  // This date engulfs the reservation, so it's invalid.
+      }
+
+      // Case 3: Same-day check-in/out allowed (still valid)
+      if (date.getTime() === reservation.arrivalDate.getTime()) {
+        console.log(`Date ${date.toDateString()} is valid for same-day check-out and check-in.`);
+        return false;  // This date is valid.
+      }
+
+      return false;  // If none of the conditions apply, the date is valid.
+    });
+  });
+}
+
+
+isValidArrivalDate(arrivalDate: Date, avail: IRoomAvailability): boolean {
+  // Convert stayDateFrom and stayDateTo to Date objects if they are strings
+  const stayDateFrom = new Date(avail.stayDateFrom);
+  const stayDateTo = new Date(avail.stayDateTo);
+  
+  if (!stayDateFrom || !stayDateTo) {
+    console.log(`Stay dates are missing for room ${avail.roomId}`);
+    return false;
   }
 
+  const arrivalDay = this.getDayOfWeek(arrivalDate); // Get the arrival day (e.g., MON)
+  
+  // Check if the arrivalDate is within the stay's range and on a valid arrival day
+  return (
+    this.isDateWithinRange(arrivalDate, stayDateFrom, stayDateTo) &&
+    avail.arrivalDays.includes(arrivalDay)
+  );
+}
+
+isDateWithinRange(date: Date, startDate: Date, endDate: Date): boolean {
+  return date >= startDate && date <= endDate;
+}
+
+calculateValidDepartureDates(arrivalDate: Date, avail: IRoomAvailability): Date[] {
+  const validDates: Date[] = [];
+
+  // Simplified reservations for this room
+  const reservations: reservationPeriod[] = this.getRoomReservations(avail.roomId);
+
+  const stayDateFrom = new Date(avail.stayDateFrom);
+  const stayDateTo = new Date(avail.stayDateTo);
+
+  if (!avail.departureDays || avail.departureDays.length === 0) {
+    avail.departureDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]; // Default to all days
+  }
+
+  // Apply the booking window constraints before calculating valid departure dates
+  const today = new Date();
+  const bookDateFrom = avail.bookDateFrom ? new Date(avail.bookDateFrom) : null;
+  const bookDateTo = avail.bookDateTo ? new Date(avail.bookDateTo) : null;
+
+  if (!this.isWithinBookingWindow(today, bookDateFrom, bookDateTo)) {
+    console.log(`Stay for Room ${avail.roomId} is not bookable today. Skipping departure date calculation.`);
+    return validDates; // Skip if the stay doesn't fall within the booking window
+  }
+
+  for (let i = avail.minStay; i <= avail.maxStay; i++) {
+    const candidateDepartureDate = new Date(arrivalDate);
+    candidateDepartureDate.setDate(arrivalDate.getDate() + i);
+
+    if (candidateDepartureDate <= stayDateTo && candidateDepartureDate >= stayDateFrom) {
+      if (this.isValidDepartureDay(candidateDepartureDate, avail)) {
+        validDates.push(candidateDepartureDate);
+      }
+    }
+  }
+
+  // Apply filtering for reservations that conflict with the valid departure dates
+  return this.filterOutReservedDates(validDates, avail.roomId);
+}
+
+isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
+  const dayOfWeek = this.getDayOfWeek(date); // Get day as MON, TUE, etc.
+  return avail.departureDays.includes(dayOfWeek); // Check if the departure day is valid
+}
 
   saveSelection(): void {
     if (this.selectedArrivalDate && this.selectedDepartureDate) {
@@ -537,7 +708,7 @@ isDateInRange(day: number, month: number, year: number): boolean {
           const arrivalDay = stayDateFrom.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
           const departureDay = stayDateTo.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
           const isValidArrivalDay = avail.arrivalDays.includes(arrivalDay);
-          const isValidDepartureDay = this.isValidDepartureDay(stayDateFrom, stayDateTo, avail);
+          const isValidDepartureDay = this.isValidDepartureDay( stayDateTo, avail);
     
           if (!isValidArrivalDay || !isValidDepartureDay) {
             return false;
@@ -561,19 +732,19 @@ isDateInRange(day: number, month: number, year: number): boolean {
     
     
     
-    isValidDepartureDay(arrivalDate: Date, departureDate: Date, availability: IRoomAvailability): boolean {
-      const stayDuration = (departureDate.getTime() - arrivalDate.getTime()) / (1000 * 3600 * 24); // Calculate stay duration in days
+    // isValidDepartureDay(arrivalDate: Date, departureDate: Date, availability: IRoomAvailability): boolean {
+    //   const stayDuration = (departureDate.getTime() - arrivalDate.getTime()) / (1000 * 3600 * 24); // Calculate stay duration in days
       
-      // Validate that the stay duration is within the minStay and maxStay range
-      if (stayDuration < availability.minStay || stayDuration > availability.maxStay) {
-        console.log(`Invalid stay duration: ${stayDuration} days (Min: ${availability.minStay}, Max: ${availability.maxStay})`);
-        return false;
-      }
+    //   // Validate that the stay duration is within the minStay and maxStay range
+    //   if (stayDuration < availability.minStay || stayDuration > availability.maxStay) {
+    //     console.log(`Invalid stay duration: ${stayDuration} days (Min: ${availability.minStay}, Max: ${availability.maxStay})`);
+    //     return false;
+    //   }
     
-      // Check that the selected departure day matches one of the room's valid departure days
-      const departureDay = departureDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-      return availability.departureDays.includes(departureDay);
-    }
+    //   // Check that the selected departure day matches one of the room's valid departure days
+    //   const departureDay = departureDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+    //   return availability.departureDays.includes(departureDay);
+    // }
     
     
     getUnavailableRooms(stayDateFrom: Date, stayDateTo: Date): number[] {
@@ -754,71 +925,86 @@ isDateInRange(day: number, month: number, year: number): boolean {
       }
     }
     
-    generateValidArrivalDates(): Set<string> {
-      console.log(" step 1 : inside generateValidArrivalDates()");
-      
-      const currentDate = new Date();
-      const currentTime = currentDate.getTime();
+    generateValidArrivalDates(avail: IRoomAvailability): Set<string> {
+      const arrivalDates = new Set<string>();
     
-      // Clear the set of valid arrival dates and the map
-      this.validArrivalDates.clear();
-      const validArrivalMap: { [key: string]: IRoomAvailability[] } = {};  // Store dates and their corresponding stays
+      // If arrivalDays are missing, allow all days as valid arrival days
+      if (!avail.arrivalDays || avail.arrivalDays.length === 0) {
+        console.log(`Room ${avail.roomId}: No valid arrival days defined, allowing all days as valid.`);
+        avail.arrivalDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]; // Default to all days
+      }
     
-      this.rooms.forEach(room => {
-        room.availabilities.forEach(avail => {
-          const { bookDateFrom, bookDateTo, arrivalDays, minDeviation, maxDeviation } = avail;
+      const today = new Date();
+      const bookDateFrom = avail.bookDateFrom ? new Date(avail.bookDateFrom) : null;
+      const bookDateTo = avail.bookDateTo ? new Date(avail.bookDateTo) : null;
     
-          const bookFrom = bookDateFrom ? new Date(bookDateFrom) : new Date();
-          const bookTo = bookDateTo ? new Date(bookDateTo) : avail.stayDateTo;
+      // Ensure today's date falls within the booking window (before considering deviations)
+      const isBookable = this.isWithinBookingWindow(today, bookDateFrom, bookDateTo);
     
-          if ((bookFrom && currentDate < bookFrom) || (bookTo && currentDate > bookTo)) {
-            return;  // Skip if booking dates are out of range
-          }
+      if (!isBookable) {
+        // console.log(`Room ${avail.roomId} is not bookable today.`);
+        return arrivalDates; // If today's date is not within the booking window, return an empty set
+      }
     
-          const minDate = new Date(currentDate.getTime() + (minDeviation || 0) * 24 * 60 * 60 * 1000);
-          const maxDate = new Date(currentDate.getTime() + (maxDeviation || 0) * 24 * 60 * 60 * 1000);
+      // Handle deviation rules (minDeviation and maxDeviation)
+      const minDeviation = avail.minDeviation ?? 0;
+      const maxDeviation = avail.maxDeviation ?? Infinity;
     
-          // const effectiveFromDate = bookFrom ? (minDate > bookFrom ? minDate : bookFrom) : minDate;
-          // const effectiveToDate = bookTo ? (maxDate < bookTo ? maxDate : bookTo) : maxDate;
+      // Calculate min/max dates with deviation
+      const minDate = new Date(today.getTime() + minDeviation * 24 * 60 * 60 * 1000);
+      const maxDate = new Date(today.getTime() + maxDeviation * 24 * 60 * 60 * 1000);
     
-          for (let date = minDate; date <= maxDate; date.setDate(date.getDate() + 1)) {
-            const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+      // Clamp the dates within the booking window
+      const effectiveMinDate = bookDateFrom && minDate < bookDateFrom ? bookDateFrom : minDate;
+      const effectiveMaxDate = bookDateTo && maxDate > bookDateTo ? bookDateTo : maxDate;
     
-            if (date.toDateString() === currentDate.toDateString()) {
-              const todayNoon = new Date();
-              // todayNoon.setHours(12, 0, 0, 0);
-              if (currentTime >= todayNoon.getTime()) {
-                continue;  // Skip today's date if it's past 12:00 PM
-              }
-            }
+      if (effectiveMaxDate < effectiveMinDate) {
+        return arrivalDates; // No valid dates available if the range is invalid
+      }
     
-            if (arrivalDays.includes(dayOfWeek) && !this.isDateReserved(room.roomId, date)) {
-              const dateString = date.toISOString().split('T')[0];
-              this.validArrivalDates.add(dateString);  // Add to valid arrival dates
+      // Generate valid arrival dates within the effective date range
+      for (let date = new Date(effectiveMinDate); date <= effectiveMaxDate; date.setDate(date.getDate() + 1)) {
+        const dayOfWeek = this.getDayOfWeek(date);
+        if (avail.arrivalDays.includes(dayOfWeek)) {
+          const formattedDate = date.toISOString().split('T')[0];
+          arrivalDates.add(formattedDate);
+        }
+      }
     
-              // Add this stay to the validArrivalMap
-              if (!validArrivalMap[dateString]) {
-                validArrivalMap[dateString] = [];
-              }
-              validArrivalMap[dateString].push(avail);  // Store the availability in the map for this date
-            }
-          }
-        });
-      });
-    
-      console.log("Valid Arrival Dates:", Array.from(this.validArrivalDates));
-      console.log("Valid Arrival Map:", validArrivalMap);
-      return this.validArrivalDates;
+      return arrivalDates;
     }
     
+    isWithinBookingWindow(today: Date, bookDateFrom: Date | null, bookDateTo: Date | null): boolean {
+      // If bookDateFrom is provided, today should not be earlier than bookDateFrom
+      const validFrom = !bookDateFrom || today >= bookDateFrom;
+      
+      // If bookDateTo is provided, today should not be later than bookDateTo
+      const validTo = !bookDateTo || today <= bookDateTo;
+    
+      // Room is only bookable if both conditions hold true
+      return validFrom && validTo;
+    }
     
     
     generateCombinedArrivalDates(): Set<string> {
       const combinedDates = new Set<string>();
+    
+      console.log(`\n\n=== Generating Combined Arrival Dates for All Rooms ===`);
+    
       this.rooms.forEach(room => {
-        const roomDates = this.generateValidArrivalDates();
-        roomDates.forEach(date => combinedDates.add(date));
+        room.availabilities.forEach(avail => {
+          
+          const stayDates = this.generateValidArrivalDates(avail);
+          stayDates.forEach(date => {
+            combinedDates.add(date);
+          });
+        });
       });
+    
+      console.log('\n=== Final Combined Arrival Dates ===');
+      console.log(Array.from(combinedDates));
+      console.log('====================================\n');
+    
       return combinedDates;
     }
   
@@ -861,102 +1047,174 @@ isDateInRange(day: number, month: number, year: number): boolean {
     }
     
   
-    generateValidDepartureDates(): void {
-      console.log(" Step 3: inside generate valid departure days ");
-      
-      if (!this.selectedArrivalDate) {
-        console.error("No arrival date selected.");
-        return;
-      }
+    // generateValidDepartureDates(): void {
+    //   if (!this.selectedArrivalDate) {
+    //     console.error("No arrival date selected.");
+    //     return;
+    //   }
     
-      const selectedArrivalDate = new Date(this.selectedArrivalDate);
-      // console.log(" selected arrival date ", this.selectedArrivalDate);
+    //   const selectedArrivalDate = new Date(this.selectedArrivalDate);
+    //   this.validDepartureDates.clear();  // Clear previous departure dates
+    //   this.validDepartureMap = {};  // Initialize or clear the valid departure map
+    
+    //   this.rooms.forEach(room => {
+    //     room.availabilities.forEach(avail => {
+    //       // Check if the selected arrival date is valid for the availability
+    //       if (this.isValidArrivalForAvailability(selectedArrivalDate, avail)) {
+    //         const minStay = avail.minStay || 1; // Default to 1 night if minStay is null
+    //         const maxStay = avail.maxStay || 365; // Default to 365 days if maxStay is null
+    
+    //         // Calculate the valid range of departure dates based on minStay and maxStay
+    //         const minDepartureDate = new Date(selectedArrivalDate);
+    //         minDepartureDate.setDate(minDepartureDate.getDate() + minStay); // Earliest departure based on minStay
+    
+    //         const maxDepartureDate = new Date(selectedArrivalDate);
+    //         maxDepartureDate.setDate(maxDepartureDate.getDate() + maxStay); // Latest departure based on maxStay
+    
+    //         // Check if the departure dates are within the stayDateFrom and stayDateTo range
+    //         const stayFrom = avail.stayDateFrom ? new Date(avail.stayDateFrom) : new Date(); // Default to today
+    //         const stayTo = avail.stayDateTo ? new Date(avail.stayDateTo) : new Date('2099-12-31'); // Default to far future
+    
+    //         // Clamp the departure dates within the stay range
+    //         const finalMinDeparture = minDepartureDate > stayFrom ? minDepartureDate : stayFrom; // Earliest valid departure
+    //         const finalMaxDeparture = maxDepartureDate < stayTo ? maxDepartureDate : stayTo; // Latest valid departure
+    
+    //         // Loop through the valid range of departure dates
+    //         for (let date = new Date(finalMinDeparture); date <= finalMaxDeparture; date.setDate(date.getDate() + 1)) {
+    //           const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+    
+    //           // Check if the day is valid for departure and no reservations exist on this date
+    //           if (avail.departureDays.includes(dayOfWeek) && !this.isDateReserved(room.roomId, date)) {
+    //             const formattedDate = date.toISOString().split('T')[0];
+    
+    //             // Add the valid departure date
+    //             this.validDepartureDates.add(formattedDate);
+    
+    //             // Add to the valid departure map
+    //             if (!this.validDepartureMap[formattedDate]) {
+    //               this.validDepartureMap[formattedDate] = {
+    //                 date: formattedDate,
+    //                 availabilities: []
+    //               };
+    //             }
+    //             this.validDepartureMap[formattedDate].availabilities.push(avail);  // Track which availabilities generated this departure date
+    //           }
+    //         }
+    //       }
+    //     });
+    //   });
+    
+    //   console.log("Valid Departure Dates:", Array.from(this.validDepartureDates));
+    //   console.log("Valid Departure Map:", this.validDepartureMap);
+    // }
+    
+    // generateValidDepartureDates(): void {
+    //   console.log(" Step 3: inside generate valid departure days ");
       
-      this.validDepartureDates.clear();  // Clear previous departure dates
-      const validDepartureMap: { [key: string]: IRoomAvailability[] } = {};  // Map to track departure dates and their availabilities
-      // console.log(" validDepartureMap ", validDepartureMap);
+    //   if (!this.selectedArrivalDate) {
+    //     console.error("No arrival date selected.");
+    //     return;
+    //   }
+    
+    //   const selectedArrivalDate = new Date(this.selectedArrivalDate);
+    //   // console.log(" selected arrival date ", this.selectedArrivalDate);
       
-      this.rooms.forEach(room => {
-        room.availabilities.forEach(avail => {
-          // Check if this availability allows the selected arrival date
-          if (this.isValidArrivalForAvailability(selectedArrivalDate, avail)) {
-            console.log(" checking if the selected arrival days is valid or not ",  this.isValidArrivalForAvailability(selectedArrivalDate, avail), ' for ', avail.roomId);
+    //   this.validDepartureDates.clear();  // Clear previous departure dates
+    //   const validDepartureMap: { [key: string]: IRoomAvailability[] } = {};  // Map to track departure dates and their availabilities
+    //   // console.log(" validDepartureMap ", validDepartureMap);
+      
+    //   this.rooms.forEach(room => {
+    //     room.availabilities.forEach(avail => {
+    //       // Check if this availability allows the selected arrival date
+    //       if (this.isValidArrivalForAvailability(selectedArrivalDate, avail)) {
+    //         console.log(" checking if the selected arrival days is valid or not ",  this.isValidArrivalForAvailability(selectedArrivalDate, avail), ' for ', avail.roomId);
             
-            const minStay = avail.minStay;
-            const maxStay = avail.maxStay;
+    //         const minStay = avail.minStay;
+    //         const maxStay = avail.maxStay;
     
-            // Calculate the earliest and latest valid departure dates based on min/max stay
-            const minDepartureDate = new Date(selectedArrivalDate);
-            minDepartureDate.setDate(minDepartureDate.getDate() + minStay);  // Min stay departure
+    //         // Calculate the earliest and latest valid departure dates based on min/max stay
+    //         const minDepartureDate = new Date(selectedArrivalDate);
+    //         minDepartureDate.setDate(minDepartureDate.getDate() + minStay);  // Min stay departure
     
-            const maxDepartureDate = new Date(selectedArrivalDate);
-            maxDepartureDate.setDate(maxDepartureDate.getDate() + maxStay);  // Max stay departure
+    //         const maxDepartureDate = new Date(selectedArrivalDate);
+    //         maxDepartureDate.setDate(maxDepartureDate.getDate() + maxStay);  // Max stay departure
     
-            const stayFrom = new Date(avail.stayDateFrom);
-            const stayTo = new Date(avail.stayDateTo);
+    //         const stayFrom = new Date(avail.stayDateFrom);
+    //         const stayTo = new Date(avail.stayDateTo);
     
-            // Handle open-ended `bookDateFrom` and `bookDateTo`
-            const bookFrom = avail.bookDateFrom ? new Date(avail.bookDateFrom) : null;
-            const bookTo = avail.bookDateTo ? new Date(avail.bookDateTo) : null;
+    //         // Handle open-ended `bookDateFrom` and `bookDateTo`
+    //         const bookFrom = avail.bookDateFrom ? new Date(avail.bookDateFrom) : null;
+    //         const bookTo = avail.bookDateTo ? new Date(avail.bookDateTo) : null;
     
-            // Skip if the selected arrival is before the bookable period
-            if (bookFrom && selectedArrivalDate < bookFrom) {
-              console.log(" skipp arrival dated because not in bookable range");
-              return;
-            }
+    //         // Skip if the selected arrival is before the bookable period
+    //         if (bookFrom && selectedArrivalDate < bookFrom) {
+    //           console.log(" skipp arrival dated because not in bookable range");
+    //           return;
+    //         }
     
-            // Calculate final max departure, ensuring `bookDateTo` is respected
-            const finalMaxDeparture = bookTo ? new Date(Math.min(maxDepartureDate.getTime(), bookTo.getTime())) : maxDepartureDate;
+    //         // Calculate final max departure, ensuring `bookDateTo` is respected
+    //         const finalMaxDeparture = bookTo ? new Date(Math.min(maxDepartureDate.getTime(), bookTo.getTime())) : maxDepartureDate;
     
-            // Adjust for `stayDateFrom` and `stayDateTo`
-            const effectiveMinDeparture = minDepartureDate < stayFrom ? stayFrom : minDepartureDate;
-            const effectiveMaxDeparture = maxDepartureDate > stayTo ? stayTo : finalMaxDeparture;
+    //         // Adjust for `stayDateFrom` and `stayDateTo`
+    //         const effectiveMinDeparture = minDepartureDate < stayFrom ? stayFrom : minDepartureDate;
+    //         const effectiveMaxDeparture = maxDepartureDate > stayTo ? stayTo : finalMaxDeparture;
     
-            // Loop through the effective departure range and find valid departure days
-            for (let date = new Date(effectiveMinDeparture); date <= effectiveMaxDeparture; date.setDate(date.getDate() + 1)) {
-              const dayOfWeek = this.getDayOfWeek(date);  // Get the weekday
+    //         // Loop through the effective departure range and find valid departure days
+    //         for (let date = new Date(effectiveMinDeparture); date <= effectiveMaxDeparture; date.setDate(date.getDate() + 1)) {
+    //           const dayOfWeek = this.getDayOfWeek(date);  // Get the weekday
     
-              // Handle cases where `departureDays` is empty by defaulting to all days
-              if (!avail.departureDays || avail.departureDays.length === 0) {
-                avail.departureDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]; // Default to all days
-              }
+    //           // Handle cases where `departureDays` is empty by defaulting to all days
+    //           if (!avail.departureDays || avail.departureDays.length === 0) {
+    //             avail.departureDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]; // Default to all days
+    //           }
     
-              // Skip dates that are outside the booking window
-              if (bookFrom && date < bookFrom) {
-                continue;  // Skip dates before `bookDateFrom`
-              }
-              if (bookTo && date > bookTo) {
-                continue;  // Skip dates after `bookDateTo`
-              }
+    //           // Skip dates that are outside the booking window
+    //           if (bookFrom && date < bookFrom) {
+    //             continue;  // Skip dates before `bookDateFrom`
+    //           }
+    //           if (bookTo && date > bookTo) {
+    //             continue;  // Skip dates after `bookDateTo`
+    //           }
     
-              // Check if the room is reserved on the current departure date
-              if (!this.isDateReserved(room.roomId, date)) {
-                // Check if this day is a valid departure day
-                console.log("inside check of is the departure date reserved for room", room.roomId);
+    //           // Check if the room is reserved on the current departure date
+    //           if (!this.isDateReserved(room.roomId, date)) {
+    //             // Check if this day is a valid departure day
+    //             console.log("inside check of is the departure date reserved for room", room.roomId);
                 
-                if (avail.departureDays.includes(dayOfWeek)) {
-                  const formattedDate = date.toISOString().split('T')[0];
-                  this.validDepartureDates.add(formattedDate);
+    //             if (avail.departureDays.includes(dayOfWeek)) {
+    //               const formattedDate = date.toISOString().split('T')[0];
+    //               this.validDepartureDates.add(formattedDate);
     
-                  // Add this availability to the map for the departure date
-                  if (!validDepartureMap[formattedDate]) {
-                    validDepartureMap[formattedDate] = [];
-                  }
-                  validDepartureMap[formattedDate].push(avail);  // Store the availability for the departure date
-                }
-              } else {
-                console.log(`Skipping date ${date} as room ${room.roomId} is already reserved.`);
-              }
-            }
-          }
-        });
-      });
+    //               // Add this availability to the map for the departure date
+    //               if (!validDepartureMap[formattedDate]) {
+    //                 validDepartureMap[formattedDate] = [];
+    //               }
+    //               validDepartureMap[formattedDate].push(avail);  // Store the availability for the departure date
+    //             }
+    //           } else {
+    //             console.log(`Skipping date ${date} as room ${room.roomId} is already reserved.`);
+    //           }
+    //         }
+    //       }
+    //     });
+    //   });
     
-      console.log("Valid Departure Dates:", Array.from(this.validDepartureDates));
-      console.log("Valid Departure Map:", validDepartureMap);
+    //   console.log("Valid Departure Dates:", Array.from(this.validDepartureDates));
+    //   console.log("Valid Departure Map:", validDepartureMap);
+    // }
+    
+    getRoomReservations(roomId: number): reservationPeriod[] {
+      const Reservations: reservationPeriod[] = this.reservationService.getReservations()
+        .filter(res => res.roomId === roomId)
+        .map(res => ({
+          roomId: res.roomId,
+          arrivalDate: new Date(res.arrivalDate).toISOString().split('T')[0], // Ensure valid date format (YYYY-MM-DD)
+          departureDate: new Date(res.departureDate).toISOString().split('T')[0] // Ensure valid date format (YYYY-MM-DD)
+        }));
+    
+      console.log(`Room ${roomId}: reservation details `, Reservations);
+      return Reservations;
     }
-    
-    
     
     isValidArrivalForAvailability(arrivalDate: Date, avail: IRoomAvailability): boolean {
       console.log("step 4: isvalidArrivalforAvailability called");
