@@ -32,7 +32,7 @@
               <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
             </div>
             <div class="form-group col-md-2 mb-3">
-              <label for="maxPrice" class="form-label">Price per day per person</label>
+              <label for="maxPrice" class="form-label">Price per night per person</label>
               <input type="range" class="form-range" min="0" max="4000" id="maxPrice" formControlName="maxPrice">
               <output id="priceOutput">{{ filterForm.get('maxPrice')?.value }}</output>
             </div>
@@ -112,7 +112,7 @@
               <p class="card-text">
                 <strong>Room Id:</strong> {{ room.roomId }}<br>
                 <strong>Location:</strong> {{ room.locationName }}<br>
-                <strong>Price per day:</strong> ₹{{ room.pricePerDayPerPerson}}<br>
+                <strong>Price per night:</strong> ₹{{ room.pricePerDayPerPerson}}<br>
                 <strong>Guest Capacity:</strong> {{ room.guestCapacity }}<br>
                 <!-- <strong>Min stay:</strong> {{ getMinStay(room) }}<br>
                 <strong>Max stay:</strong> {{ getMaxStay(room) }} -->

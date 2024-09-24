@@ -519,7 +519,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     }else if (isCheckedOut) {
       cellClass = 'checked-out';
     }else if (isAvailable && isArrivalDay) {
-      cellClass = 'available arrival-day';
+      cellClass = 'available-arrival-day';
     } else if (isAvailable) {
       cellClass = 'available';
     } else {

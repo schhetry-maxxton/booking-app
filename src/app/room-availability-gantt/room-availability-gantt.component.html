@@ -97,7 +97,7 @@
           
           <ng-container *ngFor="let room of filteredRooms">
             <div class="room-name">Room {{ room.roomId }}</div>
-            <div *ngFor="let dayObj of days" [ngClass]="getCellClass(room.roomId, dayObj)"
+            <div *ngFor="let dayObj of days" 
               (mousedown)="onMouseDown(room.roomId, dayObj, $event)" 
               (mouseover)="onMouseOver(room.roomId, dayObj, $event)"
               (mouseup)="onMouseUp(dayObj, $event)" class="cell"
@@ -108,6 +108,8 @@
               <span *ngIf="hasReservation(room.roomId, dayObj)" >
                 {{ getCustomerName(room.roomId, dayObj) }}
               </span>
+              <div class="left-half-container" [class.available-arrival-day]="getCellClass(room.roomId, dayObj) == 'available-arrival-day'" [class.reservation-start]="getCellClass(room.roomId, dayObj) == 'reservation-start'"></div>
+              <div class="right-half-container" [class.reservation-end]="getCellClass(room.roomId, dayObj) == 'reservation-end'" ></div>
             </div>
           </ng-container>
 

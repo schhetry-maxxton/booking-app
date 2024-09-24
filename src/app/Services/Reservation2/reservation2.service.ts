@@ -73,4 +73,68 @@ export class ReservationService {
     localStorage.removeItem(this.storageKey);
   }
 
+  calculateTotalReservationsByMonth(): { [key: string]: number } {
+    const reservations = this.getReservations();
+    const totalByMonth: { [key: string]: number } = {};
+
+    reservations.forEach(reservation => {
+      const monthYear = this.getMonthYear(reservation.arrivalDate);
+      totalByMonth[monthYear] = (totalByMonth[monthYear] || 0) + 1;
+    });
+
+    return totalByMonth;
+  }
+
+  // Calculate confirmed reservations per month based on arrivalDate
+  calculateConfirmedReservationsByMonth(): { [key: string]: number } {
+    const reservations = this.getReservations();
+    const confirmedByMonth: { [key: string]: number } = {};
+
+    reservations.forEach(reservation => {
+      if (reservation.status === 'CONFIRM') {
+        const monthYear = this.getMonthYear(reservation.arrivalDate);
+        confirmedByMonth[monthYear] = (confirmedByMonth[monthYear] || 0) + 1;
+      }
+    });
+
+    return confirmedByMonth;
+  }
+
+  // Calculate checked-in reservations per month based on arrivalDate
+  calculateCheckedInReservationsByMonth(): { [key: string]: number } {
+    const reservations = this.getReservations();
+    const checkedInByMonth: { [key: string]: number } = {};
+
+    reservations.forEach(reservation => {
+      if (reservation.status === 'CHECKED-IN') {
+        const monthYear = this.getMonthYear(reservation.arrivalDate);
+        checkedInByMonth[monthYear] = (checkedInByMonth[monthYear] || 0) + 1;
+      }
+    });
+
+    return checkedInByMonth;
+  }
+
+  // Calculate checked-out reservations per month based on arrivalDate
+  calculateCheckedOutReservationsByMonth(): { [key: string]: number } {
+    const reservations = this.getReservations();
+    const checkedOutByMonth: { [key: string]: number } = {};
+
+    reservations.forEach(reservation => {
+      if (reservation.status === 'CHECKED-OUT') {
+        const monthYear = this.getMonthYear(reservation.arrivalDate);
+        checkedOutByMonth[monthYear] = (checkedOutByMonth[monthYear] || 0) + 1;
+      }
+    });
+
+    return checkedOutByMonth;
+  }
+
+  // Utility function to extract month and year from arrivalDate
+  private getMonthYear(date: Date): string {
+    const dateObj = new Date(date);
+    const month = dateObj.toLocaleString('default', { month: 'long' }); // Full month name
+    const year = dateObj.getFullYear();
+    return `${month} ${year}`;
+  }
 }

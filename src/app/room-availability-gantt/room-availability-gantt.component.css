@@ -109,7 +109,7 @@ h4{
   background-color: #d4edda;
 }
 
-.cell {
+/* .cell {
   position: relative;
   height: 40px;
   text-align: center;
@@ -117,7 +117,7 @@ h4{
   border: 1px solid #EAEAEA;
   overflow: visible; 
   overflow: visible !important;
-}
+} */
 
 .cell {
   position: relative;
@@ -128,6 +128,8 @@ h4{
   overflow: hidden; /* Ensure overflow is handled */
   white-space: nowrap; /* Prevent text wrapping */
   text-overflow: visible; /* Show ellipsis for overflowing text */
+  display: flex;
+  width: 100%;
 }
 
 .reservation-span {
@@ -139,19 +141,7 @@ h4{
   text-align: center;
 }
 
-.cell span {
-  position: absolute;
-  top: 50%; /* Align to the top of the cell */
-  /* left: 50%;  */
-  transform: translate(-50%, -50%);
-  width:max-content; /* Span the full width of the reservation cells */
-  /* height: 100%; */
-  white-space: nowrap; /* Prevent text wrapping */
-  overflow: visible; /* Hide overflow */
-  text-overflow: visible; /* Show ellipsis for overflow */
-  display: block; /* Ensure it behaves like a block element within the cell */
-  padding: 0 5px;
-}
+
 
 .cell.reserved {
   position: relative;
@@ -203,7 +193,30 @@ h4{
   border-bottom-left-radius: 40px !important;
 }
 
+.cell div.left-half-container, .cell div.right-half-container{
+  position: relative;
+  /* display: inline-block;
+  width: 50%; */
+  display: inline-block;
+  width: 50%;
+  /* background-color: blue; */
+  height: 40px;
+  /* border: 1px solid red; */
+}
 
+.cell span {
+  position: absolute;
+  top: 50%; /* Align to the top of the cell */
+  /* left: 50%;  */
+  transform: translate(-50%, -50%);
+  width:max-content; /* Span the full width of the reservation cells */
+  /* height: 100%; */
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: visible; /* Hide overflow */
+  text-overflow: visible; /* Show ellipsis for overflow */
+  display: block; /* Ensure it behaves like a block element within the cell */
+  padding: 0 5px;
+}
 
 .selected {
   border: 2px solid #7aec1c; 
@@ -217,7 +230,7 @@ h4{
   border-right: 2px solid #7aec1c;
 }
 
-.cell.available.arrival-day {
+.available-arrival-day {
   background-color: #c3e6cb; /* Slightly greener color for arrival days */
   /* cursor: pointer; */
 }

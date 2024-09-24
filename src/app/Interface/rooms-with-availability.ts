@@ -8,6 +8,7 @@ export interface IRoomWithAvailability {
     pricePerDayPerPerson: number;
     guestCapacity: number;
     availabilities: IRoomAvailability[]; // New field to hold multiple availabilities
+    selectedavail?: IRoomAvailability[];
   }
   
 
