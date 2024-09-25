@@ -40,6 +40,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
+  loading: boolean = true;  
   rooms: IRoom[] = [];
   stays: IRoomAvailability[] = [];
   reservations: IReservation[] = [];
@@ -67,6 +68,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loading = true;
     this.reservationService.getRoomsAndStays().subscribe(({ rooms, stays }) => {
       this.rooms = rooms;
       this.stays = stays;
@@ -78,6 +80,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       this.extractLocations();
       this.extractGuestCapacities();
       this.initializeTooltips(); 
+      this.loading = false;
     });
   }
 
@@ -274,8 +277,8 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       const arrivalDate = new Date(reservation.arrivalDate).toLocaleDateString();
       const departureDate = new Date(reservation.departureDate).toLocaleDateString();
       const stayLength = Math.ceil((new Date(reservation.departureDate).getTime() - new Date(reservation.arrivalDate).getTime()) / (1000 * 60 * 60 * 24));
-  
-      return `Customer: ${customerName} \nArrival: ${arrivalDate} 12:00pm \nDeparture: ${departureDate} 11:00am \nStay: ${stayLength} nights`;
+      const status = reservation.status;
+      return `Customer: ${customerName} \nArrival: ${arrivalDate} 12:00pm \nDeparture: ${departureDate} 11:00am \nStay: ${stayLength} nights \nStatus: ${status}`;
     }
   
     return ''; // Return empty if no reservation is found for the cell
@@ -434,8 +437,14 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       return lastNightDate.toDateString() === date.toDateString(); // Is this the last night before check-out?
     });
   
-    // Build the cell class based on the availability and reservation status
     let cellClass = '';
+
+    if (this.selectedCells.has(`${roomId}-${day}-${month}-${year}`)) {
+      cellClass += ' valid-departure';  // Apply a special class for valid departure days
+    }
+
+    // Build the cell class based on the availability and reservation status
+   
   
     if (isSelected) {
       cellClass = 'selected';
@@ -485,6 +494,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       this.clearSelectionInRoom(this.selectedRoomId, dayObj.month, dayObj.year);
     }
   
+    this.highlightValidDepartureDays(roomId, dayObj);
     this.selectedRoomId = roomId;
     this.startDay = dayObj.day;
     this.addSelection(dayObj.day, dayObj.day, roomId, dayObj.month, dayObj.year); 
@@ -543,6 +553,38 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       }
     }
   }
+
+  highlightValidDepartureDays(roomId: number, dayObj: DayObj): void {
+  const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+  if (!roomData) return;
+
+  const selectedArrivalDay = dayObj.day;
+  const selectedArrivalDate = new Date(dayObj.year, dayObj.month, selectedArrivalDay);
+  selectedArrivalDate.setHours(12, 0, 0, 0); // Align with the check-in time
+
+  const selectedArrivalDayString = selectedArrivalDate
+    .toLocaleDateString('en-US', { weekday: 'short' })
+    .toUpperCase();
+
+  // Fetch valid departure days for the selected arrival day
+  const validDepartureDays = roomData.arrivalDays[selectedArrivalDayString] || [];
+
+  // Loop through all the days and highlight only the valid future departure days
+  this.days.forEach(day => {
+    const currentDate = new Date(day.year, day.month, day.day);
+    currentDate.setHours(12, 0, 0, 0); // Align with the check-in time
+
+    const dayString = currentDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+
+    // Highlight only if the current day is in the future of the selected arrival day
+    if (validDepartureDays.includes(dayString) && currentDate >= selectedArrivalDate) {
+      const cellKey = `${roomId}-${day.day}-${day.month}-${day.year}`;
+      this.selectedCells.add(cellKey);  // Add a class or mark these days as highlighted
+    }
+  });
+}
+
+  
 
   updateSelection(roomId: number,dayObj: DayObj): void {
     if (this.startDay === undefined || this.endDay === undefined) return;

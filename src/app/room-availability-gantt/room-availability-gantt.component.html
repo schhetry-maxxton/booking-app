@@ -1,4 +1,9 @@
-<div class="container-fluid">
+<div *ngIf="loading" class="spinner-container">
+  <div class="spinner"></div>
+</div>
+
+
+<div *ngIf="!loading" class="container-fluid">
   <div class="row">
     <div class="col-md-3">
       <label for="locationFilter">Location:</label>
@@ -48,7 +53,7 @@
             <div class="col-6 col-md-2 d-flex justify-content-center">
               <div class="legend-item">
                 <div class="legend-box" style="background-color: #c3e6cb;"></div>
-                <span class="legend-box-span">Arrival available Days</span>
+                <span class="legend-box-span">Arrival available nights</span>
               </div>
             </div>
     
@@ -56,7 +61,7 @@
             <div class="col-6 col-md-2 d-flex justify-content-center">
               <div class="legend-item">
                 <div class="legend-box" style="background-color: #EAEAEA;"></div>
-                <span class="legend-box-span">Blocked non-arrival Days</span>
+                <span class="legend-box-span">Blocked non-arrival nights</span>
               </div>
             </div>
     

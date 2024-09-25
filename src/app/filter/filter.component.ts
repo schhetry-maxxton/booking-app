@@ -694,7 +694,7 @@ export class FilterComponent implements OnInit {
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text('Thank you for booking with us!', 10, 260);
-    doc.text('For inquiries, contact us at support@companywebsite.com | Phone: +123-456-7890', 10, 270);
+    doc.text('For inquiries, contact us at support@luxstays.com | Phone: +91-8093282515', 10, 270);
 
     doc.save(`Invoice_${this.bookingForm.get('reservationId')?.value}.pdf`);
   }

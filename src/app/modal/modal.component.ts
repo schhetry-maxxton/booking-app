@@ -473,15 +473,7 @@ export class ModalComponent {
   }
 
   redirectToChart(){
-    // After saving booking, navigate to the Gantt chart
-    // setTimeout(() => {
-    //   this.router.navigate(['/planningchart']);
-    // }, 2000); 
     this.router.navigate(['/planningchart']);
-  }
-
-  redirectToReservationDetails(){
-    this.ngOnInit();
   }
 
   resetForms(): void {
@@ -495,11 +487,9 @@ export class ModalComponent {
     this.showButtons = true;
   }
 
-  onCloseButtonClick(): void {
-    this.activeModal.close();
-     // Add your redirection logic here
-     this.router.navigate(['/planningchart']);
-  }
+  // onCloseButtonClick(): void {
+  //   this.activeModal.close();
+  // }
 
   onPaymentModeChange(event: Event): void {
     const paymentMode = (event.target as HTMLSelectElement).value;

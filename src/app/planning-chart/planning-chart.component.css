@@ -1,90 +1,15 @@
-body {
-  font-family: Arial, sans-serif;
-}
+/* planning-chart.component.css */
 
+/* Center the chart and make it responsive */
 .chart-container {
-  overflow-x: auto;
-  margin: 20px 0;
-  width: 100%;
+  width: 80%;
+  margin: 0 auto;  /* Center the chart horizontally */
+  max-width: 1200px; /* Maximum width for larger screens */
+  padding: 2%;
 }
 
-.chart {
-  display: grid;
-  grid-template-columns: repeat(32,1fr); /* Auto-fit columns based on content */
-  grid-gap: 1px;
-  background-color: #dee2e6;
-}
+canvas {
 
-.room-name {
-  grid-column: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f8f9fa;
-  border-right: 1px solid #dee2e6;
-  height: 30px;
-  padding: 0 5px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  /* overflow: hidden; */
-  font-weight: bold;
-}
-
-.day-header {
-  display: flex;
-  flex-direction: column; 
-  align-items: center;
-  justify-content: center;
-  background-color: #f1f1f1;
-  border-bottom: 1px solid #dee2e6;
-  border-right: 1px solid #dee2e6;
-  height: 50px;
-  padding: 5px;  
-}
-
-.cell {
-  height: 30px;
-  text-align: center;
-  vertical-align: middle;
-  cursor: pointer;
-}
-
-.available {
-  background-color: #d4edda;
-}
-
-.not-available {
-  background-color: #ffffff;
-}
-
-.weekend {
-  background-color: #fff3cd; 
-}
-
-.day-header.weekend {
-  background-color: #bca046; 
-}
-
-.cell:hover {
-  background-color: #bee5eb;
-  transform: scale(1.05);
-}
-
-.cell.available:hover {
-  background-color: #c3e6cb;
-}
-
-.cell.not-available:hover {
-  background-color: #f8d7da;
-}
-
-.cell.weekend{
-  background-color: #fff3cd; 
-}
-/* .cell.weekend:hover {
-  background-color: #ffeeba;
-} */
-
-.reserved {
-  background-color: red;
+  width: 100%; /* Make the canvas responsive */
+  height: 800px; /* Adjust height automatically */
 }
