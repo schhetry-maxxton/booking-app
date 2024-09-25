@@ -48,7 +48,7 @@
             <div class="col-6 col-md-2 d-flex justify-content-center">
               <div class="legend-item">
                 <div class="legend-box" style="background-color: #c3e6cb;"></div>
-                <span class="legend-box-span">Arrival available nights</span>
+                <span class="legend-box-span">Arrival available Days</span>
               </div>
             </div>
     
@@ -56,7 +56,7 @@
             <div class="col-6 col-md-2 d-flex justify-content-center">
               <div class="legend-item">
                 <div class="legend-box" style="background-color: #EAEAEA;"></div>
-                <span class="legend-box-span">Blocked non-arrival nights</span>
+                <span class="legend-box-span">Blocked non-arrival Days</span>
               </div>
             </div>
     
@@ -97,29 +97,18 @@
           
           <ng-container *ngFor="let room of filteredRooms">
             <div class="room-name">Room {{ room.roomId }}</div>
-            <div *ngFor="let dayObj of days" 
-              class="cell" 
-              [class.available]="getCellClass(room.roomId, dayObj) == 'available'"
-              
-              [class.not-available]="getCellClass(room.roomId, dayObj) == 'not-available'"
-              [class.selected]="getCellClass(room.roomId, dayObj) == 'selected'"
-              [class.reserved]="getCellClass(room.roomId, dayObj) == 'reserved'"
-              [class.checked-in]="getCellClass(room.roomId, dayObj) == 'checked-in'"
-              [class.checked-out]="getCellClass(room.roomId, dayObj) == 'checked-out'"
+            <div *ngFor="let dayObj of days" [ngClass]="getCellClass(room.roomId, dayObj)"
               (mousedown)="onMouseDown(room.roomId, dayObj, $event)" 
               (mouseover)="onMouseOver(room.roomId, dayObj, $event)"
-              (mouseup)="onMouseUp(dayObj, $event)" 
-              [ngStyle]="{ 'pointer-events': isCellClickable(room.roomId, dayObj) ? 'auto' : 'none' }"
+              (mouseup)="onMouseUp(dayObj, $event)" class="cell"
+              [ngStyle]="{ 'pointer-events':  isCellHoverable(room.roomId, dayObj) ? 'auto' : 'none' }"
               data-bs-toggle="tooltip" data-bs-placement="top"  
-              [title]="getTooltipForCell(room.roomId, dayObj)"
+              [title]="getTooltipForCell(room.roomId, dayObj)" 
+              data-bs-html="true"
             >
               <span *ngIf="hasReservation(room.roomId, dayObj)" >
                 {{ getCustomerName(room.roomId, dayObj) }}
               </span>
-              <div class="left-half-container" [class.departure]="getCellClass(room.roomId, dayObj) == 'available-departure-day'" [class.reservation-end]="getCellClass(room.roomId, dayObj) == ' reservation-end'" ></div>
-              <div class="right-half-container" [class.available-arrival-day]="getCellClass(room.roomId, dayObj) == 'available-arrival-day'" [class.reservation-start]="getCellClass(room.roomId, dayObj) == ' reservation-start'"></div>
-              <!-- <div class="right-half-container" [class.reservation-end]="getCellClass(room.roomId, dayObj) == 'reservation-end'" ></div> 
-               <div class="left-half-container" [class.available-arrival-day]="getCellClass(room.roomId, dayObj) == 'available-arrival-day'" [class.reservation-start]="getCellClass(room.roomId, dayObj) == 'reservation-start'"></div>-->
             </div>
           </ng-container>
 

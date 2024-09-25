@@ -14,7 +14,7 @@ export const router: Routes = [
     { path: '', redirectTo: 'home', pathMatch: 'full' }, //default page
     { path : 'home' , component : HomeComponent},
     { path : 'rooms' , component : FilterComponent},
-    { path : 'ganttChart' , component : PlanningChartComponent},
+    { path : 'reservationChart' , component : PlanningChartComponent},
     { path : 'reservationDetails' , component : BookingReservationComponent},
     { path : 'chart' , component : CharttComponent},
     { path : 'planningchart' , component : RoomAvailabilityGanttComponent},

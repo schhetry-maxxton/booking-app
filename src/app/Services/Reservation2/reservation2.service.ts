@@ -137,4 +137,23 @@ export class ReservationService {
     const year = dateObj.getFullYear();
     return `${month} ${year}`;
   }
+
+  // Add this method to your ReservationService
+getMonthlyReservations(): { month: number, reservations: number }[] {
+  const reservations = this.getReservations();
+  const reservationsByMonth = Array(12).fill(0); // Array to store reservations for each month
+
+  reservations.forEach((reservation) => {
+    const arrivalDate = new Date(reservation.arrivalDate);
+    const month = arrivalDate.getMonth(); // getMonth() returns 0 for January, 11 for December
+    reservationsByMonth[month] += 1;
+  });
+
+  return reservationsByMonth.map((count, index) => ({
+    month: index + 1,  // months start from 1 for January, 2 for February, etc.
+    reservations: count,
+  }));
+}
+
+
 }

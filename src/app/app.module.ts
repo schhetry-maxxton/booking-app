@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { routes } from './app.router';
+// import { NgChartsModule } from 'ng2-charts';
 import { BookingReservationComponent } from './booking-reservation/booking-reservation.component'; 
 import { PlanningChartComponent } from './planning-chart/planning-chart.component';
 import { FilterComponent } from './filter/filter.component';

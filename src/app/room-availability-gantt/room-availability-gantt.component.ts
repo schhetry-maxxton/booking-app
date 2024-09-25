@@ -83,13 +83,10 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
 
   initializeTooltips() {
-    // Use Bootstrap's tooltip initialization
-    setTimeout(() => {
       const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
       tooltipTriggerList.forEach((tooltipTriggerEl) => {
         new bootstrap.Tooltip(tooltipTriggerEl);
       });
-    }, 1000);  // Delay to ensure DOM is loaded
   }
 
   extractLocations(): void {
@@ -154,7 +151,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   }
 
   generateChart(): void {
-    const totalMonths = 3; 
+    const totalMonths = 5; 
     const startMonth = new Date().getMonth();
     const startYear = this.year;
   
@@ -264,25 +261,26 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   }
  
   getTooltipForCell(roomId: number, dayObj: { day: number, month: number, year: number }): string {
+
     const reservation = this.reservations.find(reservation =>
       reservation.roomId === roomId &&
-      new Date(reservation.arrivalDate) <= new Date(dayObj.year, dayObj.month, dayObj.day) &&
-      new Date(reservation.departureDate) >= new Date(dayObj.year, dayObj.month, dayObj.day)
+      new Date(dayObj.year, dayObj.month, dayObj.day).getDate() >= new Date(reservation.arrivalDate).getDate()   &&
+      new Date(dayObj.year, dayObj.month, dayObj.day).getDate() <= (new Date(reservation.departureDate).getDate()-1)
     );
-  
+    
+    
     if (reservation) {
       const customerName = `${reservation.firstName} ${reservation.middleName || ''} ${reservation.lastName}`;
       const arrivalDate = new Date(reservation.arrivalDate).toLocaleDateString();
       const departureDate = new Date(reservation.departureDate).toLocaleDateString();
       const stayLength = Math.ceil((new Date(reservation.departureDate).getTime() - new Date(reservation.arrivalDate).getTime()) / (1000 * 60 * 60 * 24));
   
-      return `Customer: ${customerName}\nArrival: ${arrivalDate}\nDeparture: ${departureDate}\nStay: ${stayLength} nights`;
+      return `Customer: ${customerName} \nArrival: ${arrivalDate} 12:00pm \nDeparture: ${departureDate} 11:00am \nStay: ${stayLength} nights`;
     }
   
     return ''; // Return empty if no reservation is found for the cell
   }
 
-  
   updateRoomAvailability(): void {
     const availabilityMap: { [roomId: number]: Availability[] } = {};
     const reservationMap: { [roomId: number]: Availability[] } = {};
@@ -377,77 +375,6 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     console.log(this.availabilityTable);
   }
   
-  // getCellClass(roomId: number, dayObj: { day: number, month: number, year: number }): string {
-  //   const { day, month, year } = dayObj;
-  //   const date = new Date(year, month, day); // Current day being processed
-  //   date.setHours(12, 0, 0, 0); // Set time to 12 PM to align with check-in
-  
-  //   const roomData = this.availabilityTable.find(data => data.roomId === roomId);
-  
-  //   if (!roomData) return '';
-  
-  //   // Check if the current day is within any availability period
-  //   const isAvailable = roomData.availability.some(
-  //     (avail) => date >= avail.start && date <= avail.end
-  //   );
-  
-  //   // Check if the current day is within any reservation period
-  //   const isReserved = roomData.reservations.some(
-  //     (reserv) => {
-  //       const reservationStartDate = new Date(reserv.start);
-  //       const reservationEndDate = new Date(reserv.end);
-  
-  //       reservationStartDate.setHours(12, 0, 0, 0); // Check-in time
-  //       reservationEndDate.setHours(11, 0, 0, 0); // Check-out time
-  
-  //       return date >= reservationStartDate && date <= reservationEndDate;
-  //     }
-  //   );
-  
-  //   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-  //   const isArrivalDay = roomData.arrivalDays[dayName] ? true : false;
-  
-  //   const isSelected = this.selectedCells.has(`${roomId}-${day}-${month}-${year}`);
-  
-  //   // Check if the current cell is the start of a reservation
-  //   const isReservationStart = roomData.reservations.some(reserv => {
-  //     const reservationStartDate = new Date(reserv.start);
-  //     reservationStartDate.setHours(12, 0, 0, 0); // Set check-in time
-  //     return reservationStartDate.toDateString() === date.toDateString(); // Is this the reservation start date?
-  //   });
-  
-  //   // Check if the current cell is the end of a reservation
-  //   const isReservationEnd = roomData.reservations.some(reserv => {
-  //     const reservationEndDate = new Date(reserv.end);
-  //     reservationEndDate.setHours(11, 0, 0, 0); // Set check-out time
-  //     return reservationEndDate.toDateString() === date.toDateString(); // Is this the reservation end date?
-  //   });
-  
-  //   // Build the cell class based on the availability and reservation status
-  //   let cellClass = '';
-  
-  //   if (isSelected) {
-  //     cellClass = 'selected';
-  //   } else if (isReserved) {
-  //     cellClass = 'reserved';
-  //   } else if (isAvailable && isArrivalDay) {
-  //     cellClass = 'available arrival-day';
-  //   } else if (isAvailable) {
-  //     cellClass = 'available';
-  //   } else {
-  //     cellClass = 'not-available';
-  //   }
-  
-  //   // Append border-radius classes for the start and end of reservations
-  //   if (isReservationStart) {
-  //     cellClass += ' reservation-start';
-  //   }
-  //   if (isReservationEnd) {
-  //     cellClass += ' reservation-end';
-  //   }
-  
-  //   return cellClass;
-  // }
   
   getCellClass(roomId: number, dayObj: { day: number, month: number, year: number }): string {
     const { day, month, year } = dayObj;
@@ -487,8 +414,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   
     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
     const isArrivalDay = roomData.arrivalDays[dayName] ? true : false;
-    // const isDepartureDay = roomData.arrivalDays[dayName].includes(departureDays) ? true : false;
-    const isDepartureDay = this.isDepartureDay(roomData, dayName, dayObj);
+  
     const isSelected = this.selectedCells.has(`${roomId}-${day}-${month}-${year}`);
   
     // Check if the current cell is the start of a reservation
@@ -520,11 +446,9 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     }else if (isCheckedOut) {
       cellClass = 'checked-out';
     }else if (isAvailable && isArrivalDay) {
-      cellClass = 'available-arrival-day';
+      cellClass = 'available arrival-day';
     } else if (isAvailable) {
       cellClass = 'available';
-    } else if (isAvailable && isDepartureDay) {
-      cellClass = 'available-departure-day';
     } else {
       cellClass = 'not-available';
     }
@@ -540,17 +464,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return cellClass;
   }
   
-  isDepartureDay(roomData: RoomData, arrivalDay: string, dayObj: { day: number, month: number, year: number }): boolean {
-    const { day, month, year } = dayObj;
-    const date = new Date(year, month, day);
   
-    // Convert dayObj to a valid day of the week (like 'MON', 'TUE', etc.)
-    const departureDay = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-  
-    // Check if the current day is listed as a valid departure day for the selected arrival day
-    const validDepartureDaysForArrival = roomData.arrivalDays[arrivalDay] || [];
-    return validDepartureDaysForArrival.includes(departureDay);
-  }
   
   getDayName(dayObj: DayObj): string {
     const date = new Date(dayObj.year, dayObj.month, dayObj.day);
@@ -561,21 +475,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     const date = new Date(dayObj.year, dayObj.month, dayObj.day);
     return date.getDay() === 6 || date.getDay() === 0;
   }
-  
-  // onMouseDown(roomId: number, dayObj: DayObj, event: MouseEvent) {
-  //   console.log("On mouse down triggered ");
-    
-  //   event.preventDefault();
-  //   this.isMouseDown = true;
-  
-  //   if (this.selectedRoomId !== null) {
-  //     this.clearSelectionInRoom(this.selectedRoomId,dayObj.month,dayObj.year);
-  //   }
-  
-  //   this.selectedRoomId = roomId;
-  //   this.startDay = dayObj.day;  // Assign DayObj directly here
-  //   this.addSelection(this.startDay, this.startDay, roomId,dayObj.month,dayObj.year);  // Use DayObj for both start and end in selection
-  // }
+
 
   onMouseDown(roomId: number, dayObj: DayObj, event: MouseEvent) {
     event.preventDefault();
@@ -606,29 +506,6 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     }
   }
 
-//   onMouseOver(roomId: number, day: number, event: MouseEvent) {
-//     event.preventDefault();
-//     if (this.isMouseDown && roomId === this.selectedRoomId) {
-//         if (day >= (this.startDay || 0)) {
-//             this.endDay = day; // Update endDay as the mouse moves
-            
-//             // Find the room data for validation
-//             const roomData = this.availabilityTable.find(data => data.roomId === roomId);
-//             if (!roomData) return;
-
-//             // Check if the selection overlaps with a reservation
-//             const currentStart = this.startDay || 0;
-//             const currentEnd = this.endDay;
-
-//             if (this.checkOverlap(currentStart, currentEnd, roomData)) {
-//                 console.log("Selection overlaps with a reservation, clearing selection.");
-//                 this.clearAllSelections(); // Clear selection as soon as overlap is detected
-//             } else {
-//                 this.addSelection(currentStart, currentEnd, roomId); // Update selection only if no overlap
-//             }
-//         }
-//     }
-// }
 
   onMouseUp(dayObj: DayObj, event: MouseEvent) {
     console.log("on mouse up");
@@ -692,6 +569,8 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   checkOverlap(start: number, end: number, roomData: RoomData, dayObj: DayObj): boolean {
     const startDate = new Date(dayObj.year, dayObj.month, start);
     const endDate = new Date(dayObj.year, dayObj.month, end);
+    startDate.setHours(12,0,0,0);
+    endDate.setHours(11,0,0,0);
 
     // Check if the start date and end date overlap with any reservation period
     const overlaps = roomData.reservations.some(reservation => {
@@ -699,10 +578,10 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         const reservationEnd = new Date(reservation.end);
         reservationEnd.setHours(11, 0, 0, 0); // Ensure correct checkout time
 
-        console.log(" startDate ", startDate);
-        console.log(" endDate ", endDate);
-        console.log(" reservationStart ", reservationStart);
-        console.log(" reservationEnd ", reservationEnd);
+        // console.log(" startDate ", startDate);
+        // console.log(" endDate ", endDate);
+        // console.log(" reservationStart ", reservationStart);
+        // console.log(" reservationEnd ", reservationEnd);
         
         // Check if the selection period overlaps with the reservation period
         return startDate <= reservationEnd && endDate >= reservationStart;
@@ -837,6 +716,27 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return (isAvailable && !isBooked);
   }
 
+  isCellHoverable(roomId: number, dayObj: DayObj): boolean {
+    const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+    if (!roomData) return false;
+  
+    // Always allow hover for cells that have reservations (for tooltips)
+    const isReserved = roomData.reservations.some(
+      reserv => {
+        const reservationStartDate = new Date(reserv.start);
+        const reservationEndDate = new Date(reserv.end);
+        reservationStartDate.setHours(12, 0, 0, 0);
+        reservationEndDate.setHours(11, 0, 0, 0);
+        return new Date(dayObj.year, dayObj.month, dayObj.day) >= reservationStartDate &&
+               new Date(dayObj.year, dayObj.month, dayObj.day) <= reservationEndDate;
+      }
+    );
+  
+    // Always allow hover for reserved cells
+    return isReserved || this.isCellClickable(roomId, dayObj);
+  }
+
+  
   openBookingModal(bookingDetails: any): void {
     console.log('Booking Details:', bookingDetails);
     
