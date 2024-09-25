@@ -69,6 +69,19 @@
   .weekdays {
     border-top: none; /* No top border for weekdays */
   }
+
+  .highlight {
+    border: 2px solid darkcyan;  /* Highlight border color */
+    background-color: #e0f7fa;   /* Light cyan background */
+  }
+
+  .selectedArrivalDate{
+    color:rgb(72, 163, 194)
+  }
+
+  .selectedDepartureDate{
+    color:rgb(72, 163, 194)
+  }
   
   /* Empty cell styling */
   .day.empty-cell {
@@ -101,28 +114,28 @@
   }
 
 .day.selected-range {
-  background-color: rgba(0, 123, 255, 0.2);
-  color: black;
+  border-top: rgba(0, 123, 255, 0.2); 
+  border-bottom: rgba(0, 123, 255, 0.2); 
   position: relative;
-  pointer-events: none;
+  /* pointer-events: none; */
 }
 
 /* Connect the range from the arrival date (left side) */
-.day.selected-arrival::after, 
+/* .day.selected-arrival::after, 
 .day.selected-departure::after {
   content: "";
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  height: 100%;  /* Ensure height covers the vertical gap */
-  background-color: rgba(0, 123, 255, 0.2); /* Match the range color */
-  z-index: -1; /* Ensure the range stays behind the circular dates */
-}
+  height: 100%; 
+  background-color: rgba(0, 123, 255, 0.2); 
+  z-index: -1;
+} */
 
 /* Connect the range from the right side of the arrival date */
 .day.selected-arrival::after {
   right: 0;  /* Align to the right of the arrival date */
-  width: 50%; /* Extend to half the cell width */
+  /* width: 50%;  */
   border-bottom-right-radius: 0; /* Remove right-side rounding */
   border-top-right-radius: 0;
 }
@@ -130,22 +143,27 @@
 /* Connect the range from the left side of the departure date */
 .day.selected-departure::after {
   left: 0;  /* Align to the left of the departure date */
-  width: 50%; /* Extend to half the cell width */
+  /* width: 50%; */
   border-bottom-left-radius: 0; /* Remove left-side rounding */
   border-top-left-radius: 0;
 }
 
 /* Circular appearance for selected arrival and departure dates */
-.day.selected-arrival,
-.day.selected-departure {
-  border-radius: 50%; /* Keep them circular */
+.day.selected-arrival {
   position: relative; /* Ensure pseudo-elements stay positioned correctly */
   z-index: 3;  /* Ensure the dates stay on top of the range */
-  background-color: #007bff;
+  background-color: #36393b;
   color: white;
-  border-radius: 50%;
+  /* border-radius: 40%; */
 }
 
+.day.selected-departure{
+  position: relative; /* Ensure pseudo-elements stay positioned correctly */
+  z-index: 3;  /* Ensure the dates stay on top of the range */
+  background-color: #36393b;
+  color: white;
+  /* border-radius: 50%; */
+}
   /* Button styles aligned to the right */
   .calendar-controls-right {
     width: 100%;
@@ -193,11 +211,33 @@
   
   /* Input Box (Non-Rounded Borders) */
   input.no-border {
-    border: none;
+    /* border: none; */
     background-color: #f0f0f0;
     width: 100%;
     box-shadow: none;
     border-radius: 0;
+  }
+
+  .clear-button {
+    position: absolute;
+    top: 40%;
+    bottom: 20%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    font-size: 50px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+  }
+  
+  .clear-button:hover {
+    color: #b09797; /* Red when hovered */
+  }
+  
+  .position-relative {
+    position: relative;
   }
   
    /* Buttons - Apply Green with Flat Design */

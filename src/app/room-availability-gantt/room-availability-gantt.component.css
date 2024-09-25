@@ -235,6 +235,10 @@ h4{
   /* cursor: pointer; */
 }
 
+.available-departure-day{
+  background-color: #14766c;
+}
+
 .cell.selected {
   background-color: #7aec1c !important; /* Blue background for selected cells */
   /* border: 2px solid #007bff !important;  */

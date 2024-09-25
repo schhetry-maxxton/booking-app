@@ -9,7 +9,7 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h3 class="modal-title" id="reservationModalLabel" style="color: darkcyan; text-align: center;">New Reservation Filter</h3>
+          <h3 class="modal-title" id="reservationModalLabel" style=" text-align: center;">New Reservation Filter</h3>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -156,13 +156,25 @@
       <div class="modal-body">
         <!-- Selected Date Fields (aligned with calendar) -->
         <div class="row mb-3" style="width: 720px; margin: 0 auto;">
-          <div class="col-6">
-            <label for="arrivalDate" class="dateSelection form-label">Arrival Date</label>
-            <input type="text" id="arrivalDate" class="form-control no-border" [value]="arrivalDateDisplay" disabled>
+          <div class="col-6 position-relative">
+            <label for="arrivalDate" class="dateSelection form-label"
+            [ngClass]="{'selectedArrivalDate': isArrivalDateSelected}">Arrival Date</label>
+            <input type="text" id="arrivalDate" class="form-control no-border" 
+            [ngClass]="{'highlight': isArrivalDateSelected}" 
+            [value]="arrivalDateDisplay" disabled>
+            <button *ngIf="selectedArrivalDate" type="button" class="clear-button" (click)="clearArrivalDate()">
+              &times;
+            </button>
           </div>
-          <div class="col-6">
-            <label for="departureDate" class="dateSelection form-label">Departure Date</label>
-            <input type="text" id="departureDate" class="form-control no-border" [value]="departureDateDisplay" disabled>
+          <div class="col-6 position-relative">
+            <label for="departureDate" class="dateSelection form-label"
+            [ngClass]="{'selectedDepartureDate': isDepartureDateSelected}">Departure Date</label>
+            <input type="text" id="departureDate" class="form-control no-border" 
+            [ngClass]="{'highlight': isDepartureDateSelected}" 
+            [value]="departureDateDisplay" disabled>
+            <button *ngIf="selectedDepartureDate" type="button" class="clear-button" (click)="clearDepartureDate()">
+              &times;
+            </button>
           </div>
         </div>
 
@@ -215,10 +227,10 @@
 
         <!-- Main container wrapping all elements -->
         <div class="calendar-actions-container">
-          <div *ngIf="selectedArrivalDate && selectedDepartureDate">
+          <!-- <div *ngIf="selectedArrivalDate && selectedDepartureDate">
             <span class="nights-info">{{ arrivalDateDisplay }} - {{ departureDateDisplay }} ({{ nightsDisplay }})</span>
             <a href="javascript:void(0);" class="reset-link" (click)="resetSelection()">Clear dates</a>
-          </div>
+          </div> -->
           <button class="btn btn-primary" (click)="saveSelection()">Save selection</button>
         </div>
       </div>

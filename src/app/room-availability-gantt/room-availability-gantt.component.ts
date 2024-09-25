@@ -154,7 +154,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   }
 
   generateChart(): void {
-    const totalMonths = 5; 
+    const totalMonths = 3; 
     const startMonth = new Date().getMonth();
     const startYear = this.year;
   
@@ -487,7 +487,8 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   
     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
     const isArrivalDay = roomData.arrivalDays[dayName] ? true : false;
-  
+    // const isDepartureDay = roomData.arrivalDays[dayName].includes(departureDays) ? true : false;
+    const isDepartureDay = this.isDepartureDay(roomData, dayName, dayObj);
     const isSelected = this.selectedCells.has(`${roomId}-${day}-${month}-${year}`);
   
     // Check if the current cell is the start of a reservation
@@ -522,6 +523,8 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       cellClass = 'available-arrival-day';
     } else if (isAvailable) {
       cellClass = 'available';
+    } else if (isAvailable && isDepartureDay) {
+      cellClass = 'available-departure-day';
     } else {
       cellClass = 'not-available';
     }
@@ -537,7 +540,17 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return cellClass;
   }
   
+  isDepartureDay(roomData: RoomData, arrivalDay: string, dayObj: { day: number, month: number, year: number }): boolean {
+    const { day, month, year } = dayObj;
+    const date = new Date(year, month, day);
   
+    // Convert dayObj to a valid day of the week (like 'MON', 'TUE', etc.)
+    const departureDay = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  
+    // Check if the current day is listed as a valid departure day for the selected arrival day
+    const validDepartureDaysForArrival = roomData.arrivalDays[arrivalDay] || [];
+    return validDepartureDaysForArrival.includes(departureDay);
+  }
   
   getDayName(dayObj: DayObj): string {
     const date = new Date(dayObj.year, dayObj.month, dayObj.day);
