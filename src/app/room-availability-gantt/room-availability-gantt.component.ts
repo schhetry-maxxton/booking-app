@@ -198,6 +198,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     return reservation ? new Date(reservation.departureDate).getDate() : -1;
   }
   
+  
    // Build a lookup map for reservations to optimize tooltip rendering
    buildReservationMap(): void {
     this.reservationMap = {};
@@ -260,15 +261,17 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       reservation.roomId === roomId &&
       new Date(reservation.arrivalDate).toDateString() === date.toDateString()
     );
-    return reservation ? `${reservation.firstName} ${reservation.middleName} ${reservation.lastName}` : '';
+    // return reservation ? `${reservation.firstName} ${reservation.middleName} ${reservation.lastName}` : '';
+    return reservation ? `${reservation.firstName}` : '';
+
   }
  
   getTooltipForCell(roomId: number, dayObj: { day: number, month: number, year: number }): string {
 
     const reservation = this.reservations.find(reservation =>
       reservation.roomId === roomId &&
-      new Date(dayObj.year, dayObj.month, dayObj.day).getDate() >= new Date(reservation.arrivalDate).getDate()   &&
-      new Date(dayObj.year, dayObj.month, dayObj.day).getDate() <= (new Date(reservation.departureDate).getDate()-1)
+      new Date(dayObj.year, dayObj.month, dayObj.day) >= new Date(reservation.arrivalDate)   &&
+      new Date(dayObj.year, dayObj.month, dayObj.day) <= (new Date(reservation.departureDate))
     );
     
     
@@ -555,36 +558,49 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   }
 
   highlightValidDepartureDays(roomId: number, dayObj: DayObj): void {
-  const roomData = this.availabilityTable.find(data => data.roomId === roomId);
-  if (!roomData) return;
-
-  const selectedArrivalDay = dayObj.day;
-  const selectedArrivalDate = new Date(dayObj.year, dayObj.month, selectedArrivalDay);
-  selectedArrivalDate.setHours(12, 0, 0, 0); // Align with the check-in time
-
-  const selectedArrivalDayString = selectedArrivalDate
-    .toLocaleDateString('en-US', { weekday: 'short' })
-    .toUpperCase();
-
-  // Fetch valid departure days for the selected arrival day
-  const validDepartureDays = roomData.arrivalDays[selectedArrivalDayString] || [];
-
-  // Loop through all the days and highlight only the valid future departure days
-  this.days.forEach(day => {
-    const currentDate = new Date(day.year, day.month, day.day);
-    currentDate.setHours(12, 0, 0, 0); // Align with the check-in time
-
-    const dayString = currentDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-
-    // Highlight only if the current day is in the future of the selected arrival day
-    if (validDepartureDays.includes(dayString) && currentDate >= selectedArrivalDate) {
-      const cellKey = `${roomId}-${day.day}-${day.month}-${day.year}`;
-      this.selectedCells.add(cellKey);  // Add a class or mark these days as highlighted
-    }
-  });
-}
-
+    const roomData = this.availabilityTable.find(data => data.roomId === roomId);
+    if (!roomData) return;
   
+    const selectedArrivalDay = dayObj.day;
+    const selectedArrivalDate = new Date(dayObj.year, dayObj.month, selectedArrivalDay);
+    selectedArrivalDate.setHours(12, 0, 0, 0); // Align with the check-in time
+  
+    const selectedArrivalDayString = selectedArrivalDate
+      .toLocaleDateString('en-US', { weekday: 'short' })
+      .toUpperCase();
+  
+    // Fetch valid departure days for the selected arrival day
+    const validDepartureDays = roomData.arrivalDays[selectedArrivalDayString] || [];
+  
+    // Loop through all the days and highlight only the valid future departure days
+    this.days.forEach(day => {
+      const currentDate = new Date(day.year, day.month, day.day);
+      currentDate.setHours(12, 0, 0, 0); // Align with the check-in time
+  
+      const dayString = currentDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  
+      // Condition: Check if the current day is valid as a departure day and in the future of the selected arrival day
+      const isValidDepartureDay = validDepartureDays.includes(dayString) && currentDate >= selectedArrivalDate;
+  
+      // Condition: Check if the current day is reserved
+      const isReserved = roomData.reservations.some(reservation => {
+        const reservationStart = new Date(reservation.start);
+        const reservationEnd = new Date(reservation.end);
+        reservationEnd.setHours(11, 0, 0, 0); // Set check-out time
+  
+        // Check if the current date falls within a reservation period
+        return currentDate >= reservationStart && currentDate <= reservationEnd;
+      });
+  
+      // Highlight the cell only if it is a valid departure day and not reserved
+      if (isValidDepartureDay && !isReserved) {
+        const cellKey = `${roomId}-${day.day}-${day.month}-${day.year}`;
+        this.selectedCells.add(cellKey);  // Add a class or mark these days as highlighted
+      }
+    });
+  }
+  
+
 
   updateSelection(roomId: number,dayObj: DayObj): void {
     if (this.startDay === undefined || this.endDay === undefined) return;
@@ -787,7 +803,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
     modalRef.result.then((result) => {
         console.log('Modal closed with result:', result);
-        this.ngOnInit();
+        // this.ngOnInit();
         this.clearAllSelections();
     }, (reason) => {
         console.log('Modal dismissed with reason:', reason);

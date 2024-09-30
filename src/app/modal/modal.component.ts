@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReservationService } from '../Services/Reservation/reservation.service';
@@ -9,6 +9,7 @@ import { ICustomer } from '../Interface/icustomer';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { jsPDF } from 'jspdf'; 
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { EventEmitter } from 'stream';
 
 @Component({
   selector: 'app-modal',
@@ -19,7 +20,6 @@ export class ModalComponent {
   @Input() bookingDetails: any;
   @Input() filteredRooms: any[] = []; // Accept filtered rooms from parent
   @Input() filterForm: any; // Accept filter form data from parent
-  // @Input() reservationDetails: any;
   bookingForm: FormGroup;
   customerForm: FormGroup;
   paymentForm: FormGroup;

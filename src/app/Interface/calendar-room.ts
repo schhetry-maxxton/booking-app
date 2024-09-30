@@ -1,17 +1,11 @@
 import { IRoomAvailability } from "./iroom-availability";
 
-export interface IRoomWithAvailability {
+export interface CalendarRoom {
     roomId: number;
     locationId: number;
     locationName: string;
     roomName: string;
     pricePerDayPerPerson: number;
     guestCapacity: number;
-    availabilities: IRoomAvailability[]; // New field to hold multiple availabilities
-    // selectedStay?: IRoomAvailability[];
-  }
-  
- 
-
- 
-  
+    selectedStay?: IRoomAvailability; // The stay that matched the criteria
+}

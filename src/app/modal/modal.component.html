@@ -110,8 +110,12 @@
               (mouseover)="hoveredCustomer = customer"
               [class.hover]="hoveredCustomer === customer"
             >
+            
               <div>
-                {{ customer.firstName }} {{ customer.middleName }} {{ customer.lastName }}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px" style="margin-right: 8px;">
+                  <path d="M12 12c2.66 0 4.8-2.14 4.8-4.8S14.66 2.4 12 2.4 7.2 4.54 7.2 7.2 9.34 12 12 12zM12 14.4c-3.06 0-9 1.54-9 4.6v1.8c0 .22.18.4.4.4h17.2c.22 0 .4-.18.4-.4V19c0-3.06-5.94-4.6-9-4.6z"/>
+                </svg>
+                 {{ customer.firstName }} {{ customer.middleName }} {{ customer.lastName }}
                   <!-- Age: {{ customer.age }} Address: {{ customer.address }} ID: {{ customer.customerId }} -->
               </div>
             </li>
@@ -337,8 +341,8 @@
     </div>
     <div *ngSwitchCase="4">
       <!-- Confirmation Message -->
-      <div class="text-center">
-          <h3>Your booking details have been successfully submitted.</h3>
+      <div class="final-page text-center" >
+          <h3 style="color:darkcyan;">Your booking details have been successfully submitted.</h3>
           <div class="invoice-header">
             <p>Reservation ID: {{ bookingForm.value.reservationId }}</p>
             <p>Room No: {{ bookingForm.value.roomNo }}</p>

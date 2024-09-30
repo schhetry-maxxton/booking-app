@@ -14,8 +14,12 @@
     flex-wrap: wrap; */
     gap: 8px;
   }
+/* 
+ .final-page{
+  box-shadow: #ddd;
+  border: 0.5px black;
+ } */
 
- 
 .modal-footer {
   display: flex;
   justify-content: space-between; /* Space between the buttons */

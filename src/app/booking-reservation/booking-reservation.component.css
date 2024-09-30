@@ -220,13 +220,13 @@
 
   .clear-button {
     position: absolute;
-    top: 40%;
+    top: 46%;
     bottom: 20%;
-    right: 10px;
+    right: 14px;
     transform: translateY(-50%);
     background: transparent;
     border: none;
-    font-size: 50px;
+    font-size: 40px;
     color: #999;
     cursor: pointer;
     padding: 0;
