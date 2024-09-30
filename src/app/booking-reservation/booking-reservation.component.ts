@@ -51,9 +51,8 @@ export class BookingReservationComponent {
   departureDateDisplay: string = '';
   validDepartureDates: Date[] = [];
   validArrivalDates: Set<string> = new Set();
-  // FvalidDepartureDates: Set<string> = new Set();
   nightsDisplay: string = '0 nights'; // Track nights count
-  // validDepartureMap: { [key: string]: { date: string, availabilities: IRoomAvailability[] } } = {};
+
 
   selectedDatesDisplay: string | null = null;
 
@@ -97,6 +96,20 @@ export class BookingReservationComponent {
     console.log("valid arrival dates ", this.generateCombinedArrivalDates());
   }
   
+  nextStep(): void {
+    if (this.currentStep === 1) {
+      this.applyFilters(); // Apply filters and move to the next step
+      this.currentStep = 2; // Move to the next step if there are filtered rooms
+    }
+  }
+
+  previousStep(): void {
+    if (this.currentStep > 1) {
+      this.currentStep -= 1;
+      this.selectedDatesDisplay='Checkin date - Checkout date';
+    }
+  }
+
 
   isPreviousDisabled(): boolean {
     return this.currentMonth === this.today.getMonth() + 1 && this.currentYear === this.today.getFullYear();
@@ -189,17 +202,26 @@ clearDepartureDate(): void {
     this.isArrivalDateSelected = false;
     this.isDepartureDateSelected = false;
     this.arrivalDateDisplay = '';
+    this.currentStep = 1;
+    this.filteredRooms = [];
     this.departureDateDisplay = '';
     this.nightsDisplay = '0 nights'; // Reset to zero nights
     this.selectedDatesDisplay = 'Select your dates';
-  
+    this.isFilterApplied = false;
+    this.generateCalendarDays(); 
+   
     // Clear the form values
     this.filterForm.patchValue({
       dateFrom: '',
-      dateTo: ''
+      dateTo: '',
+      numberOfPersons: 1
     });
   }
   
+  onNewReservationClick(): void {
+    this.resetSelection(); // Reset everything before opening the modal
+    this.openFilterModal(); // Then open the modal
+  }
 
   // Calculate the number of nights based on arrival and departure dates
   getNightsDisplay(): string {
@@ -556,15 +578,15 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
         }
       }
   
-      // Explicitly remove the modal backdrop
-      const modalBackdrop = document.querySelector('.modal-backdrop');
-      if (modalBackdrop) {
-        modalBackdrop.remove();  // Manually remove the modal backdrop
-      }
-  
       // Open the reservation filter modal to allow guest selection
       const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal')!);
       reservationModal.show();
+
+      const modalBackdrop = document.querySelector('.modal-backdrop');
+      if (modalBackdrop) {
+        // console.log("calendar modal backdrop inside open");
+        modalBackdrop.remove();  
+      }
     }
   }
 
@@ -612,9 +634,9 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
       try {
         this.reservationService.updateReservationStatus(reservation);
         console.log('Reservation status updated successfully', reservation.status);
-        setTimeout(() => {
+        // setTimeout(() => {
           this.router.navigate(['/planningchart']);
-        }, 1000); 
+        // }, 1000); 
       } catch (error) {
         console.error('Error updating reservation status', error);
       }
@@ -763,7 +785,7 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
     
       this.filteredRoomsCount = this.filteredRooms.length;
       this.isFilterApplied = true;
-      this.closeFilterModal();
+      // this.closeFilterModal();
     }
     
     
@@ -786,12 +808,6 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
         .map(reservation => reservation.roomId);  // Return the room IDs of unavailable rooms
     }
     
-  
-    // isCapacityMatch(room: IRoomWithAvailability, filters: any): boolean {
-    //   const numberOfPersons = filters.numberOfPersons || 1;
-    //   return room.guestCapacity >= numberOfPersons;
-    // }
-
     private isWithinStayDuration(duration: number, minStay: number, maxStay: number): boolean {
 
       return (duration >= minStay && duration <= maxStay);
@@ -810,10 +826,10 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
       reservationStart.setHours(12,0,0,0);
       reservationEnd.setHours(11,0,0,0);
 
-      console.log(" staydatefrom received from getunreservedrooms", stayDateFrom);
-      console.log(" stayDateTo received from getunreservedrooms", stayDateTo);
-      console.log(" reservationStart received from getunreservedrooms", reservationStart);
-      console.log(" reservationEnd received from getunreservedrooms", reservationEnd);
+      // console.log(" staydatefrom received from getunreservedrooms", stayDateFrom);
+      // console.log(" stayDateTo received from getunreservedrooms", stayDateTo);
+      // console.log(" reservationStart received from getunreservedrooms", reservationStart);
+      // console.log(" reservationEnd received from getunreservedrooms", reservationEnd);
       if (stayDateFrom < reservationEnd && stayDateTo > reservationStart) {
         // Special case: if the stay date overlaps with the departure date, ensure it's after 11:00 AM
         if (stayDateFrom.toDateString() === reservationEnd.toDateString()) {
@@ -939,6 +955,11 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
         modalRef.result.then(
           result => {
             console.log('Modal closed successfully.');
+            this.router.navigate(['/reservationDetails']).then(() => {
+              // console.log(" log triggered");
+              
+              this.ngOnInit(); 
+            });
           },
           reason => {
             console.log('Modal dismissed:', reason);
@@ -960,6 +981,7 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
       // Remove any remaining backdrops manually
       const modalBackdrop = document.querySelector('.modal-backdrop');
       if (modalBackdrop) {
+        console.log("all mpdal backdrop");
         modalBackdrop.remove();
       }
     }
@@ -981,23 +1003,6 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
       reservationModal.show();
     }
   
-    closeBookingModal(): void {
-      const bookingModal = document.getElementById('bookingModal');
-      if (bookingModal) {
-        const modalInstance = bootstrap.Modal.getInstance(bookingModal);
-        if (modalInstance) {
-          modalInstance.hide();
-        }
-      }
-  
-      const modalBackdrop = document.querySelector('.modal-backdrop');
-      
-      if (modalBackdrop) {
-        modalBackdrop.remove();  // Manually remove the modal backdrop
-      }
-      // No reset or filtered rooms action here, just close the modal
-    }
-  
 
     closeFilterModal(): void {
       const reservationModal = document.getElementById('reservationModal');
@@ -1012,6 +1017,7 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
       // Remove the modal backdrop explicitly to avoid the hazy screen issue
       const modalBackdrop = document.querySelector('.modal-backdrop');
       if (modalBackdrop) {
+        console.log("filter  mpdal backdrop");
         modalBackdrop.remove();  // Manually remove the modal backdrop
       }
     }

@@ -5,7 +5,7 @@
 
 
   
-  <div class="modal fade modal-xl" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+  <!-- <div class="modal fade modal-xl" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
@@ -15,15 +15,6 @@
         <div class="modal-body">
           <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
             <div class="row">
-               <!-- <div class="form-group col-md-4 mb-3">
-                <label for="dateFrom" class="form-label">Check In</label>
-                <input id="dateFrom" type="date" formControlName="dateFrom" class="form-control">
-              </div>
-              
-              <div class="form-group col-md-4 mb-3">
-                <label for="dateTo" class="form-label">Check Out</label>
-                <input id="dateTo" type="date" formControlName="dateTo" class="form-control">
-              </div> -->
               <div class="form-group col-md-6 mb-3">
                 <label for="dates" class="dateSelection form-label">Dates</label>
                 <p id="dates" class="form-control" data-bs-toggle="modal" data-bs-target="#CalendarModal" (click)="resetSelection()">
@@ -47,13 +38,12 @@
         </div>
       </div>
     </div>
-  </div>
-
+  </div> -->
+<!-- 
   <div *ngIf="isFilterApplied && filteredRooms.length === 0" class="no-rooms-found">
     <p>No rooms found matching your search criteria.</p>
   </div>
   <div class="container my-2" *ngIf="filteredRooms.length > 0">
-    <!-- <h2 class="text-center mb-4" style="color: slategrey;">Filtered Rooms</h2> -->
      <table class="table table-striped table-bordered table-hover">
       <thead class="thead-dark">
         <tr>
@@ -62,10 +52,6 @@
           <th>Location</th>
           <th>Price per Night</th>
           <th>Guest Capacity</th>
-          <!-- <th>Available from</th>
-          <th>Available to</th>
-          <th>Min Stay</th>
-          <th>Max Stay</th> -->
           <th>Action</th>
         </tr>
       </thead>
@@ -76,12 +62,7 @@
           <td>{{ room.locationName }}</td>
           <td>{{ room.pricePerDayPerPerson }}</td>
           <td>{{ room.guestCapacity }}</td>
-          <!-- <td>{{ room.stayDateFrom }}</td>
-          <td>{{ room.stayDateTo }}</td>
-          <td>{{ room.minStay }}</td>
-          <td>{{ room.maxStay }}</td> -->
           <td>
-            <!-- <button class="btn btn-outline-primary" (click)="openBookingModal(room)" [disabled]="!isFilterApplied">Book Now</button> -->
             <button class="btn btn-outline-primary" *ngIf="isBookingAllowed()" (click)="openBookingModal(room)"> 
               Book Now
             </button>
@@ -89,20 +70,99 @@
         </tr>
       </tbody>
     </table> 
+  </div> -->
+
+  <div class="modal fade modal-xl custom-modal-size" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="reservationModalLabel" style="text-align: center;" (click)="onNewReservationClick()">New Reservation</h3>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="closeAllModals()"></button>
+        </div>
+        <div class="modal-body">
+  
+          <!-- Step 1: Filter Selection -->
+          <div *ngIf="currentStep === 1">
+            <form [formGroup]="filterForm">
+              <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                  <label for="dates" class="dateSelection form-label">Dates</label>
+                  <p id="dates" class="form-control" data-bs-toggle="modal" data-bs-target="#CalendarModal" (click)="resetSelection()">
+                    <span class="date-span" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24px" height="24px"><path d="M22.5 13.5v8.25a.75.75 0 0 1-.75.75H2.25a.75.75 0 0 1-.75-.75V5.25a.75.75 0 0 1 .75-.75h19.5a.75.75 0 0 1 .75.75zm1.5 0V5.25A2.25 2.25 0 0 0 21.75 3H2.25A2.25 2.25 0 0 0 0 5.25v16.5A2.25 2.25 0 0 0 2.25 24h19.5A2.25 2.25 0 0 0 24 21.75zm-23.25-3h22.5a.75.75 0 0 0 0-1.5H.75a.75.75 0 0 0 0 1.5M7.5 6V.75a.75.75 0 0 0-1.5 0V6a.75.75 0 0 0 1.5 0M18 6V.75a.75.75 0 0 0-1.5 0V6A.75.75 0 0 0 18 6M5.095 14.03a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06m.53-1.28a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5m-.53 6.53a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06m.53-1.28a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5m5.845-3.97a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06m.53-1.28A1.125 1.125 0 1 0 12 15a1.125 1.125 0 0 0 0-2.25.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5m-.53 6.53a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06M12 18a1.125 1.125 0 1 0 0 2.25A1.125 1.125 0 0 0 12 18a.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5m5.845-3.97a.75.75 0 1 0 1.06-1.06.75.75 0 0 0-1.06 1.06m.53-1.28a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25.75.75 0 0 0 0 1.5.375.375 0 1 1 0-.75.375.375 0 0 1 0 .75.75.75 0 0 0 0-1.5"></path></svg></span>
+                    {{ selectedDatesDisplay || ' Checkin date - Checkout date' }}
+                  </p>
+                </div>
+                
+                <div class="form-group col-md-6 mb-3">
+                  <label for="numberOfPersons" class="guestSelection form-label">Guests</label>
+                  <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
+                </div>
+              </div>
+              <div class="text-center">
+                <button type="button" class="btn btn-primary" (click)="nextStep()">Next</button>
+              </div>
+            </form>
+          </div>
+  
+          <!-- <div *ngIf="isFilterApplied && filteredRooms.length === 0" class="no-rooms-found">
+            <p>No rooms found matching your search criteria.</p>
+          </div> -->
+          <!-- Step 2: Display Filtered Rooms -->
+          <div *ngIf="currentStep === 2">
+            <div *ngIf="isFilterApplied && filteredRooms.length === 0" class="no-rooms-found text-center">
+              <p>No rooms found matching your search criteria.</p>
+            </div>
+            
+            <div class="container my-2" *ngIf="filteredRooms.length > 0">
+              <h4 style="text-align: center;">Available Rooms</h4>
+              <table class="table table-striped table-bordered table-hover">
+                <thead class="thead-dark">
+                  <tr>
+                    <th>Room ID</th>
+                    <th>Room Name</th>
+                    <th>Location</th>
+                    <th>Price per Night</th>
+                    <th>Guest Capacity</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let room of filteredRooms">
+                    <td>{{ room.roomId }}</td>
+                    <td>{{ room.roomName }}</td>
+                    <td>{{ room.locationName }}</td>
+                    <td>{{ room.pricePerDayPerPerson }}</td>
+                    <td>{{ room.guestCapacity }}</td>
+                    <td>
+                      <button class="btn btn-outline-primary" (click)="openBookingModal(room)">
+                        Book Now
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="text-center">
+              <button type="button" class="btn btn-secondary me-2" (click)="previousStep()">Previous</button>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
   </div>
 
+  
   <h3 style="color: darkcyan; text-align: center;" >Reservations</h3>
 <table class="table table-light table-striped table-hover reservation-table mt-4">
   <thead class="thead-dark">
     <tr>
       <th>Reservation ID</th>
       <th>Customer name</th>
-      <!-- <th>Location ID</th> -->
       <th>Room ID</th>
       <th>Customer ID</th>
       <th>Arrival Date</th>
       <th>Departure Date</th>
-      <!-- <th>No. of Days</th> -->
       <th>Reservation Date</th>
       <th>Status</th>
       <th>Total Price</th>
@@ -115,13 +175,12 @@
   <tbody>
     <tr *ngFor="let reservation of reservations">
       <td>{{ reservation.reservationId }}</td>
-      <!-- <td>{{ reservation.firstName }}</td> -->
       <td>
         {{ reservation.firstName }} 
         {{ reservation.middleName ? reservation.middleName + ' ' : '' }} 
         {{ reservation.lastName }}
       </td>
-      <!-- <td>{{ reservation.locationId }}</td> -->
+ 
       <td>{{ reservation.roomId }}</td>
       <td>{{ reservation.customerId }}</td>
       <td>{{ reservation.arrivalDate | date:'yyyy-MM-dd' }}</td>
@@ -144,8 +203,7 @@
 </table>
 </div>
 
-<!-- <app-calendar></app-calendar> -->
-<!-- Calendar Modal -->
+
 <div class="modal fade" id="CalendarModal" tabindex="-1" aria-labelledby="CalendarModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -154,7 +212,6 @@
         <button type="button" (click)="closeCalendarModal()" (click)="resetSelection()" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <!-- Selected Date Fields (aligned with calendar) -->
         <div class="row mb-3" style="width: 720px; margin: 0 auto;">
           <div class="col-6 position-relative">
             <label for="arrivalDate" class="dateSelection form-label"
@@ -178,13 +235,11 @@
           </div>
         </div>
 
-        <!-- Month Navigation Controls and Month Name/Year -->
         <div class="calendar-controls-right" style="width: 100%; display: flex; justify-content: flex-end;">
           <button *ngIf="showPreviousButton" (click)="previousMonthClick()" class="btn calendar-nav-btn left" [disabled]="isPreviousDisabled()">prev</button>
           <button (click)="nextMonthClick()" class="btn calendar-nav-btn right">next</button>
         </div>
 
-        <!-- Calendar for Current and Next Month -->
         <div class="calendar-container" style="width: 720px; margin: 0 auto;">
           <div class="calendar">
             <div class="month-header-left">
@@ -225,12 +280,7 @@
          
         </div>
 
-        <!-- Main container wrapping all elements -->
         <div class="calendar-actions-container">
-          <!-- <div *ngIf="selectedArrivalDate && selectedDepartureDate">
-            <span class="nights-info">{{ arrivalDateDisplay }} - {{ departureDateDisplay }} ({{ nightsDisplay }})</span>
-            <a href="javascript:void(0);" class="reset-link" (click)="resetSelection()">Clear dates</a>
-          </div> -->
           <button class="btn btn-primary" (click)="saveSelection()">Confirm</button>
         </div>
       </div>

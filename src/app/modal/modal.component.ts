@@ -34,6 +34,7 @@ export class ModalComponent {
   filteredCustomers: ICustomer[] = [];
   hoveredCustomer: ICustomer | null = null;
   noResultsMessage: string | null = null;
+  maxGuestCapacity: number | null = null;
 
   constructor(public activeModal: NgbActiveModal,
     private fb: FormBuilder,
@@ -55,7 +56,7 @@ export class ModalComponent {
       stayDateTo: [''],
       numberOfDays: [''],
       reservationDate:[''],
-      totalNumberOfGuests: [1, [Validators.required, Validators.min(1), Validators.max(10)]], 
+      totalNumberOfGuests: [1, [Validators.required, Validators.min(1)]], 
       pricePerDayPerPerson: [''],
       totalPrice: [0]
     });
@@ -124,6 +125,37 @@ export class ModalComponent {
         numberOfPersons: this.filterForm.numberOfPersons,
       });
     }
+    this.setGuestCapacityValidator();
+  }
+
+  setGuestCapacityValidator(): void {
+    const roomId = this.bookingDetails.roomId;
+
+    // Fetch rooms and stays data from the service
+    this.reservationService.getRoomsAndStays().subscribe(
+      data => {
+        const room = data.rooms.find(r => r.roomId === roomId);
+
+        if (room) {
+          this.maxGuestCapacity = room.guestCapacity; 
+
+          // Set validators for "totalNumberOfGuests" dynamically based on room capacity
+          this.bookingForm.get('totalNumberOfGuests')?.setValidators([
+            Validators.required,
+            Validators.min(1),
+            Validators.max(this.maxGuestCapacity) // Dynamic max capacity
+          ]);
+
+          // Update the form control to validate with the new rules
+          this.bookingForm.get('totalNumberOfGuests')?.updateValueAndValidity();
+        } else {
+          console.error('Room not found for the given roomId:', roomId);
+        }
+      },
+      error => {
+        console.error('Error fetching rooms or setting guest capacity:', error);
+      }
+    );
   }
 
 
@@ -581,4 +613,8 @@ export class ModalComponent {
   doc.save(`Invoice_${this.bookingForm.get('reservationId')?.value}.pdf`);
   }
 
+  refreshPage(): void{
+    this.activeModal.close();
+    this.router.navigate(['/reservationDetails']);
+  }
 }

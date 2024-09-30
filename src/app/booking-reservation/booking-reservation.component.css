@@ -97,16 +97,6 @@
     /* background-color: #f0f0f0; */
   }
 
-  /* .day.disabled::before{
-    position: absolute;
-    content: "";
-    width: 20px;
-    height: 1px;
-    border-bottom: solid 1px #c2c2c2;
-    -webkit-transform: rotate(-32deg);
-    transform: rotate(-32deg);
-  } */
-  
   /* Selected day styling */
   .day.selected {
     background-color: #007bff;
@@ -119,6 +109,26 @@
   position: relative;
   /* pointer-events: none; */
 }
+
+/* Custom Modal Size - This ensures all modals have the same size */
+ /* .custom-modal-size .modal-dialog {
+  width: 80vw; 
+  max-width: none; 
+  height: 60vh;
+  max-height: none; 
+} */
+
+.custom-modal-size .modal-content {
+  height: 80%;
+  display: flex;
+  flex-direction: column; 
+}
+
+.custom-modal-size .modal-body {
+  overflow-y: auto; 
+  flex: 1; 
+} 
+
 
 /* Connect the range from the arrival date (left side) */
 /* .day.selected-arrival::after, 

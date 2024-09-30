@@ -1,7 +1,7 @@
 <div class="modal-header">
   <!-- <h4 class="modal-title">Booking Details</h4> -->
   <h5 class="modal-title" id="bookingModalLabel" style=" font-size: 1.5rem;">Booking Details</h5>
-  <button type="button" class="close" aria-label="Close" (click)="activeModal.close()">
+  <button type="button" class="close" aria-label="Close"  (click)="refreshPage()">
     <span aria-hidden="true">&times;</span>
   </button>
 </div>
@@ -44,7 +44,7 @@
               <small class="text-danger" *ngIf="bookingForm.get('totalNumberOfGuests')?.errors?.['required']">This field is required.</small>
               <small class="text-danger" *ngIf="bookingForm.get('totalNumberOfGuests')?.errors?.['min']">Must be at least 1 guest.</small>
               <small class="text-danger" *ngIf="bookingForm.get('totalNumberOfGuests')?.errors?.['max']">
-                Cannot exceed {{ bookingDetails?.maxGuestCapacity }} guests.
+                Cannot exceed {{ maxGuestCapacity }} guests.
               </small>
             </div>
           </div>
