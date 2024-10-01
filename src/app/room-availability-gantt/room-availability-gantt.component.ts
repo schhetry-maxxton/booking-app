@@ -5,11 +5,12 @@ import { IRoomAvailability } from '../Interface/iroom-availability';
 import { IReservation } from '../Interface/ireservation'; 
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalComponent } from '../modal/modal.component';
+import { Router } from '@angular/router'; 
 
 interface Availability {
   start: Date;
   end: Date;
-  status?: "CONFIRM" | "CHECKED-IN" | "CHECKED-OUT";
+  status?: "CONFIRM" | "CHECKED-IN" | "CHECKED-OUT" | "CANCELLED";
 }
 
 interface RoomData {
@@ -60,7 +61,11 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   selectedLocation: string | null = null;
   reservationMap: { [key: string]: IReservation } = {};
 
-  constructor(private reservationService: ReservationService, private modalService: NgbModal) {
+  constructor(
+    private reservationService: ReservationService, 
+    private modalService: NgbModal, 
+    private router: Router
+  ) {
     const today = new Date();
     this.selectedMonth = today.getMonth(); 
     this.year = today.getFullYear();
@@ -816,8 +821,15 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
     modalRef.result.then((result) => {
         console.log('Modal closed with result:', result);
-        this.ngOnInit();
+        // this.ngOnInit();
+        console.log(" inside mod ref of planning chart");
+        
         this.clearAllSelections();
+        // this.router.navigate(['/planningchart']).then(() => {
+        //   this.ngOnInit(); 
+        // });
+
+        window.location.reload();
     }, (reason) => {
         console.log('Modal dismissed with reason:', reason);
         this.clearAllSelections();

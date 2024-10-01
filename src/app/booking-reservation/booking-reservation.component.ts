@@ -52,12 +52,11 @@ export class BookingReservationComponent {
   validDepartureDates: Date[] = [];
   validArrivalDates: Set<string> = new Set();
   nightsDisplay: string = '0 nights'; // Track nights count
-
-
   selectedDatesDisplay: string | null = null;
-
   selectedArrivalDate: Date | null = null;  // Track the selected arrival date
   selectedDepartureDate: Date | null = null;  // Track the selected departure date 
+  showCancelled: boolean = false; // To toggle between regular and cancelled reservations
+  cancelledReservations: IReservation[] = [];
 
   constructor(private reservationService:ReservationService, private fb: FormBuilder,private modalService: NgbModal,
     private calendarService: CalendarService,private router: Router ,
@@ -94,8 +93,15 @@ export class BookingReservationComponent {
     this.reservations = this.reservationService.getReservations();
     this.generateCalendarDays();
     console.log("valid arrival dates ", this.generateCombinedArrivalDates());
+    this.fetchCancelledReservations();
   }
   
+  fetchCancelledReservations(): void {
+    const cancelled = localStorage.getItem('cancelledReservations');
+    this.cancelledReservations = cancelled ? JSON.parse(cancelled) : [];
+  }
+
+
   nextStep(): void {
     if (this.currentStep === 1) {
       this.applyFilters(); // Apply filters and move to the next step
@@ -635,7 +641,7 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
         this.reservationService.updateReservationStatus(reservation);
         console.log('Reservation status updated successfully', reservation.status);
         // setTimeout(() => {
-          this.router.navigate(['/planningchart']);
+        // this.router.navigate(['/planningchart']);
         // }, 1000); 
       } catch (error) {
         console.error('Error updating reservation status', error);
@@ -672,10 +678,28 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
     //   }
     // }
 
-    removeReservation(reservationId: number): void{
-      this.reservationService.clearReservationById(reservationId);
-      this.ngOnInit();
+    // removeReservation(reservationId: number): void{
+    //   this.reservationService.clearReservationById(reservationId);
+    //   this.ngOnInit();
+    // }
+
+    removeReservation(reservationId: number): void {
+      let reservations = this.reservationService.getReservations();
+      const index = reservations.findIndex(r => r.reservationId === reservationId);
+      if (index !== -1) {
+        reservations.splice(index, 1);
+        this.reservationService.saveReservations(reservations);
+      }
+      
+      // Optionally, remove from cancelled reservations if needed
+      let cancelledReservations = this.reservationService.getCancelledReservations();
+      const cancelledIndex = cancelledReservations.findIndex(r => r.reservationId === reservationId);
+      if (cancelledIndex !== -1) {
+        cancelledReservations.splice(cancelledIndex, 1);
+        localStorage.setItem('cancelledReservations', JSON.stringify(cancelledReservations));
+      }
     }
+    
 
     makeRoomsData(rooms: IRoomWithAvailability[], availabilities: IRoomAvailability[]): IRoomWithAvailability[] {
       console.log('Rooms Data:', rooms); 
@@ -955,10 +979,11 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
         modalRef.result.then(
           result => {
             console.log('Modal closed successfully.');
-            // this.router.navigate(['/reservationDetails']).then(() => {
-            //   this.ngOnInit(); 
-            // });
-            this.ngOnInit(); 
+            console.log(" inside mod ref of reservation details");
+            this.router.navigate(['/reservationDetails']).then(() => {
+              this.ngOnInit(); 
+            });
+            // this.ngOnInit(); 
           },
           reason => {
             console.log('Modal dismissed:', reason);
