@@ -58,7 +58,6 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   guestCapacities: number[] = [];      // List of guest capacity filter options
   selectedGuestCapacity: number | null = null;
   selectedLocation: string | null = null;
-  maxGuestCapacity = 8;
   reservationMap: { [key: string]: IReservation } = {};
 
   constructor(private reservationService: ReservationService, private modalService: NgbModal) {
@@ -81,9 +80,23 @@ export class RoomAvailabilityGanttComponent implements OnInit {
       this.extractGuestCapacities();
       this.initializeTooltips(); 
       this.loading = false;
+      setTimeout(() => {
+        this.scrollToToday();
+    }, 0); 
     });
   }
 
+  scrollToToday(): void {
+    const today = new Date();
+    const dayElementId = `day-${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+
+    // Get the element corresponding to today's date
+    const todayElement = document.getElementById(dayElementId);
+
+    if (todayElement) {
+        todayElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
+    }
+}
 
   initializeTooltips() {
       const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -155,7 +168,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
   generateChart(): void {
     const totalMonths = 5; 
-    const startMonth = new Date().getMonth();
+    const startMonth = new Date().getMonth()-2;
     const startYear = this.year;
   
     this.days = [];
@@ -803,7 +816,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
     modalRef.result.then((result) => {
         console.log('Modal closed with result:', result);
-        // this.ngOnInit();
+        this.ngOnInit();
         this.clearAllSelections();
     }, (reason) => {
         console.log('Modal dismissed with reason:', reason);

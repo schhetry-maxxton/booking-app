@@ -955,11 +955,10 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
         modalRef.result.then(
           result => {
             console.log('Modal closed successfully.');
-            this.router.navigate(['/reservationDetails']).then(() => {
-              // console.log(" log triggered");
-              
-              this.ngOnInit(); 
-            });
+            // this.router.navigate(['/reservationDetails']).then(() => {
+            //   this.ngOnInit(); 
+            // });
+            this.ngOnInit(); 
           },
           reason => {
             console.log('Modal dismissed:', reason);

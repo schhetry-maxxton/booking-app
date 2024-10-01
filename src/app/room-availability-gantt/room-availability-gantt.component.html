@@ -95,7 +95,8 @@
           </div>
 
           <div class="day-header">Room</div>
-          <div *ngFor="let dayObj of days" [ngClass]="{ 'day-header': true, 'weekend': isWeekend(dayObj) }">
+          <!-- <div *ngFor="let dayObj of days" [ngClass]="{ 'day-header': true, 'weekend': isWeekend(dayObj) }"> -->
+            <div *ngFor="let dayObj of days" [id]="'day-' + dayObj.year + '-' + dayObj.month + '-' + dayObj.day" [ngClass]="{ 'day-header': true, 'weekend': isWeekend(dayObj) }">
             {{ dayObj.day }}<br>
             <span>{{ getDayName(dayObj) }}</span>
           </div>
