@@ -31,41 +31,37 @@ export class ReservationService {
     localStorage.setItem('reservations', JSON.stringify(existingReservations));
   }
 
-  // updateReservationStatus(reservation: IReservation): void {
-  //   const allReservations = this.getReservations(); // Get all reservations
-
-  //   const index = allReservations.findIndex(r => r.reservationId === reservation.reservationId);
-  //   if (index !== -1) {
-  //       allReservations[index].status = reservation.status;
-  //       this.saveReservations(allReservations);
-  //   }
-  // } 
-
   updateReservationStatus(reservation: IReservation): void {
-    const allReservations = this.getReservations();
+    const allReservations = this.getReservations(); // Get all reservations
+
     const index = allReservations.findIndex(r => r.reservationId === reservation.reservationId);
-  
     if (index !== -1) {
-      if (reservation.status === 'CANCELLED') {
-        // Remove from current reservations
-        const [cancelledReservation] = allReservations.splice(index, 1);
-        this.saveReservations(allReservations); // Save updated reservations list
-  
-        // Add to cancelled reservations
-        this.addCancelledReservation(cancelledReservation);
-      } else {
-        // Update status as usual if it's not cancelled
         allReservations[index].status = reservation.status;
         this.saveReservations(allReservations);
-      }
+    }
+  } 
+
+  cancelReservation(reservationId: number): void {
+    const allReservations = this.getReservations();
+    const index = allReservations.findIndex(r => r.reservationId === reservationId);
+    if (index !== -1) {
+      // Remove from current reservations
+      const [cancelledReservation] = allReservations.splice(index, 1);
+      this.saveReservations(allReservations); // Save updated reservations list
+
+      // Add to cancelled reservations
+      this.addCancelledReservation(cancelledReservation);
     }
   }
+
 
   addCancelledReservation(reservation: IReservation): void {
     const cancelledReservations = this.getCancelledReservations();
     cancelledReservations.push(reservation);
     localStorage.setItem('cancelledReservations', JSON.stringify(cancelledReservations));
   }
+
+  
   
   // Method to get cancelled reservations from local storage
   getCancelledReservations(): IReservation[] {

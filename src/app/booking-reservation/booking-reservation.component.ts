@@ -101,6 +101,20 @@ export class BookingReservationComponent {
     this.cancelledReservations = cancelled ? JSON.parse(cancelled) : [];
   }
 
+  cancelReservation(reservation: IReservation): void {
+    // Remove the reservation from the current reservations list
+    this.reservations = this.reservations.filter(r => r.reservationId !== reservation.reservationId);
+
+    // Add the reservation to cancelledReservations
+    this.cancelledReservations.push(reservation);
+
+    // Update both reservations in local storage
+    this.reservationService.saveReservations(this.reservations);
+    localStorage.setItem('cancelledReservations', JSON.stringify(this.cancelledReservations));
+  }
+
+
+
 
   nextStep(): void {
     if (this.currentStep === 1) {
@@ -648,40 +662,11 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
       }
     }
 
-    // onStatusChange(reservation: IReservation): void {
-    //   const todayStr = this.formatDate(this.today); // Format today’s date
-    //   const arrivalStr = this.formatDate(reservation.arrivalDate);
-    //   const departureStr = this.formatDate(reservation.departureDate);
+    isCancellable(reservation: IReservation): boolean {
+      return reservation.status === 'CONFIRM';
+    }
     
-    //   // Check if the status change is valid based on the current date
-    //   if (reservation.status === 'CHECKED-IN' && todayStr !== arrivalStr) {
-    //     console.error('Check-in is only allowed on the arrival date.');
-    //   } else if (reservation.status === 'CHECKED-OUT' && todayStr !== departureStr) {
-    //     console.error('Check-out is only allowed on the departure date.');
-    //   } else {
-    //     // If the date is valid, proceed with status update
-    //     this.updateReservationStatusWithRedirect(reservation);
-    //   }
-    // }
     
-    // updateReservationStatusWithRedirect(reservation: IReservation): void {
-    //   try {
-    //     this.reservationService.updateReservationStatus(reservation);
-    //     console.log('Reservation status updated successfully:', reservation.status);
-    
-    //     // Delay for 2 seconds before navigating to the Gantt chart
-    //     setTimeout(() => {
-    //       this.router.navigate(['/planningchart']);
-    //     }, 2000);
-    //   } catch (error) {
-    //     console.error('Error updating reservation status', error);
-    //   }
-    // }
-
-    // removeReservation(reservationId: number): void{
-    //   this.reservationService.clearReservationById(reservationId);
-    //   this.ngOnInit();
-    // }
 
     removeReservation(reservationId: number): void {
       let reservations = this.reservationService.getReservations();
@@ -1191,18 +1176,6 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
       
       return Reservations;
     }
-    
-    // isValidArrivalForAvailability(arrivalDate: Date, avail: IRoomAvailability): boolean {
-    //   console.log("step 4: isvalidArrivalforAvailability called");
-      
-    //   const arrivalDay = arrivalDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-    //   const stayFrom = new Date(avail.stayDateFrom);
-    //   const stayTo = new Date(avail.stayDateTo);
-    
-    //   // console.log(" value for isValidArrivalForAvailability", avail, arrivalDate >= stayFrom && arrivalDate <= stayTo && avail.arrivalDays.includes(arrivalDay));
-      
-    //   return arrivalDate >= stayFrom && arrivalDate <= stayTo && avail.arrivalDays.includes(arrivalDay);
-    // }
     
     getDayOfWeek(date: Date): string {
       const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];

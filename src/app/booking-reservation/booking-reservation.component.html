@@ -242,7 +242,7 @@
       <th>Paid Amount</th>
       <th>Due Amount</th>
       <th>Number of Guests</th>
-      <!-- <th>Action</th> -->
+      <th>Action</th>
     </tr>
   </thead>
   <tbody>
@@ -259,7 +259,6 @@
           <option value="CONFIRM">Confirm</option>
           <option value="CHECKED-IN">Checked-In</option>
           <option value="CHECKED-OUT">Checked-Out</option>
-          <option value="CANCELLED">Cancelled</option>
         </select>
       </td>
       <td>{{ reservation.totalPrice }}</td>
@@ -267,6 +266,10 @@
       <td>{{ reservation.dueAmount }}</td>
       <td>{{ reservation.numberOfGuest }}</td>
       <!-- <td><button class="btn btn-secondary" (click)="removeReservation(reservation.reservationId)">Remove</button></td> -->
+      <td>
+        <button *ngIf="isCancellable(reservation)" class="btn btn-secondary" (click)="cancelReservation(reservation)">Cancel</button>
+      </td>
+      
     </tr>
   </tbody>
 </table>

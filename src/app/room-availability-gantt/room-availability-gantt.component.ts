@@ -825,11 +825,11 @@ export class RoomAvailabilityGanttComponent implements OnInit {
         console.log(" inside mod ref of planning chart");
         
         this.clearAllSelections();
-        // this.router.navigate(['/planningchart']).then(() => {
-        //   this.ngOnInit(); 
-        // });
+        this.router.navigate(['/planningchart']).then(() => {
+          this.ngOnInit(); 
+        });
 
-        window.location.reload();
+        // window.location.reload();
     }, (reason) => {
         console.log('Modal dismissed with reason:', reason);
         this.clearAllSelections();

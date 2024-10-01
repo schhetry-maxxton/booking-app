@@ -11,7 +11,7 @@ export interface IReservation {
     departureDate: Date     // "YYYY-MM-DD",
     reservationDate: Date     // "YYYY-MM-DD HH:MM:SS",
     totalPrice: number,
-    status: 'CONFIRM' | 'CHECKED-IN' | 'CHECKED-OUT' | 'CANCELLED',
+    status: 'CONFIRM' | 'CHECKED-IN' | 'CHECKED-OUT',
     paidAmount : number,
     dueAmount : number,
     numberOfGuest : number,
