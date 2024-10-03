@@ -93,7 +93,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
 
   scrollToToday(): void {
     const today = new Date();
-    const dayElementId = `day-${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+    const dayElementId = `day-${today.getFullYear()}-${today.getMonth()}-${today.getDate()-1}`;
 
     // Get the element corresponding to today's date
     const todayElement = document.getElementById(dayElementId);
@@ -150,15 +150,17 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     this.updateRoomAvailability();
   }
   
-  getMonthSections(): { monthName: string, dayCount: number }[] {
-    const sections: { monthName: string, dayCount: number }[] = [];
+  getMonthSections(): { monthName: string, year: number, dayCount: number }[] {
+    const sections: { monthName: string, year: number, dayCount: number }[] = [];
     let currentMonth = this.days[0].month;
+    let currentYear = this.days[0].year;
     let count = 0;
   
     this.days.forEach(dayObj => {
-      if (dayObj.month !== currentMonth) {
-        sections.push({ monthName: this.months[currentMonth], dayCount: count });
+      if (dayObj.month !== currentMonth || dayObj.year !== currentYear) {
+        sections.push({ monthName: this.months[currentMonth], year: currentYear, dayCount: count });
         currentMonth = dayObj.month;
+        currentYear = dayObj.year;
         count = 1;
       } else {
         count++;
@@ -166,10 +168,11 @@ export class RoomAvailabilityGanttComponent implements OnInit {
     });
   
     // Push the final section for the last month
-    sections.push({ monthName: this.months[currentMonth], dayCount: count });
+    sections.push({ monthName: this.months[currentMonth], year: currentYear, dayCount: count });
     
     return sections;
   }
+  
 
   generateChart(): void {
     const totalMonths = 5; 
@@ -495,7 +498,7 @@ export class RoomAvailabilityGanttComponent implements OnInit {
   }
   
   
-  
+
   getDayName(dayObj: DayObj): string {
     const date = new Date(dayObj.year, dayObj.month, dayObj.day);
     return date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();

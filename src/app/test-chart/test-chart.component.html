@@ -1,9 +1,9 @@
-<!-- <div *ngIf="loading" class="spinner-container">
+<div *ngIf="loading" class="spinner-container">
     <div class="spinner"></div>
-  </div> -->
+  </div>
   
   
-  <div  class="container-fluid">
+  <div *ngIf="!loading" class="container-fluid">
     <div class="row">
       <div class="col-md-3">
         <label for="locationFilter">Location:</label>

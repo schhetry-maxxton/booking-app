@@ -74,7 +74,7 @@ export class TestChartComponent {
   }
 
   ngOnInit(): void {
-    // this.loading = true;
+    this.loading = true;
     this.reservationService.getRoomsAndStays().subscribe(({ rooms, stays }) => {
       this.rooms = rooms;
       this.stays = stays;
@@ -86,7 +86,7 @@ export class TestChartComponent {
       this.extractLocations();
       this.extractGuestCapacities();
       this.initializeTooltips(); 
-      // this.loading = false;
+      this.loading = false;
       setTimeout(() => {
         this.scrollToToday();
     }, 0); 

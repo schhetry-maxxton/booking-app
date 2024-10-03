@@ -1,6 +1,6 @@
 import { Component, Input, Output } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { ReservationService } from '../Services/Reservation/reservation.service';
 import { RandomNumberService } from '../Services/RandomNumber/random-number.service';
 import { CustomersService } from '../Services/Customers/customers.service';
@@ -35,6 +35,8 @@ export class ModalComponent {
   hoveredCustomer: ICustomer | null = null;
   noResultsMessage: string | null = null;
   maxGuestCapacity: number | null = null;
+  inCustomerSelectionStep: boolean = true; 
+
 
   constructor(public activeModal: NgbActiveModal,
     private fb: FormBuilder,
@@ -69,7 +71,7 @@ export class ModalComponent {
       age:  [{value: '', disabled: true}, [Validators.required, Validators.min(1)]],
       birthDate: ['', [Validators.required]],
       address: ['',[Validators.required,Validators.pattern(/^[a-zA-Z0-9\s\,\''\-]*$/)]],
-      mobileNumber: ['', [Validators.required, Validators.pattern(/^(\+?\d{1,4}[\s-]?)?\(?\d{1,4}\)?[\s-]?\d{1,4}[\s-]?\d{1,9}$/)]],
+      mobileNumber: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
       pincode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
       district: ['', [Validators.required]],
       city: ['', [Validators.required]],
@@ -81,7 +83,7 @@ export class ModalComponent {
       paymentId: this.randomNumberService.generateRandomNumber(),
       paymentMode: ['Cash'],
       totalAmount: [''],
-      paidAmount: ['', [Validators.required]],
+      paidAmount: ['', [Validators.required, this.paidAmountValidator]],
       dueAmount: ['']
     });
 
@@ -102,6 +104,21 @@ export class ModalComponent {
       this.updateDueAmount();
     });
   }
+
+  paidAmountValidator: ValidatorFn = (control: AbstractControl) => {
+    const totalAmount = control?.parent?.get('totalAmount')?.value;
+    const paidAmount = control.value;
+  
+    if (paidAmount < 0) {
+      return { negative: true };
+    }
+  
+    if (totalAmount && paidAmount > totalAmount) {
+      return { exceedTotal: true };
+    }
+  
+    return null;
+  };
 
   updateNumberOfDays(): void {
     const stayDateFrom = this.bookingForm.get('stayDateFrom')?.value;
@@ -200,6 +217,26 @@ export class ModalComponent {
     }
   }
 
+  // newCustomer(): void {
+  //   this.customerForm.reset();
+  //   const newCustomerId = this.randomNumberService.generateRandomNumber();
+  //   this.customerForm.patchValue({
+  //     customerId: newCustomerId
+  //   });
+  //   this.showCustomerIdInput = false; // Hide customer ID input field
+  //   this.showCustomerForm = true; // Show the entire customer form
+  //   this.isExistingCustomer = false;
+  //   this.showButtons = false; 
+  //   this.currentStep = 2;
+  // }
+
+  // existingCustomer(): void {
+  //   this.showCustomerIdInput = true; // Show customer ID input field
+  //   this.showCustomerForm = false; // Hide the customer form
+  //   this.isExistingCustomer = true;
+  //   this.showButtons = false;
+  // }
+
   newCustomer(): void {
     this.customerForm.reset();
     const newCustomerId = this.randomNumberService.generateRandomNumber();
@@ -210,14 +247,15 @@ export class ModalComponent {
     this.showCustomerForm = true; // Show the entire customer form
     this.isExistingCustomer = false;
     this.showButtons = false; 
-    this.currentStep = 2;
+    this.inCustomerSelectionStep = false; // We are no longer in the customer selection step
   }
-
+  
   existingCustomer(): void {
     this.showCustomerIdInput = true; // Show customer ID input field
     this.showCustomerForm = false; // Hide the customer form
     this.isExistingCustomer = true;
     this.showButtons = false;
+    this.inCustomerSelectionStep = false; // We are no longer in the customer selection step
   }
 
   searchCustomer(customerIdInput: HTMLInputElement): void {
@@ -417,16 +455,38 @@ export class ModalComponent {
   // }
 
   
+  // previousStep(): void {
+  //   if (this.currentStep > 1) {
+  //     this.currentStep--;
+  //     this.showCustomerForm = false; 
+  //     this.showCustomerIdInput = false;
+  //     this.showButtons = true;
+  //     this.errorMessage=null;
+  //     this.noResultsMessage = null; 
+  //   }
+  // }
+
   previousStep(): void {
-    if (this.currentStep > 1) {
+    if (this.currentStep === 2 && !this.inCustomerSelectionStep) {
+      // If we're in the customer form or search ID step, move back to customer selection
+      this.inCustomerSelectionStep = true;
+      this.showCustomerForm = false; 
+      this.showCustomerIdInput = false;
+      this.errorMessage = null;
+      this.noResultsMessage = null; 
+      this.showButtons = true; // Show customer selection buttons again
+    } else if (this.currentStep > 1) {
       this.currentStep--;
       this.showCustomerForm = false; 
       this.showCustomerIdInput = false;
       this.showButtons = true;
-      this.errorMessage=null;
+      this.errorMessage = null;
       this.noResultsMessage = null; 
+      this.inCustomerSelectionStep = true; // Ensure we are at the selection step for customer
     }
   }
+
+  
 
   private updateCustomerForm(): void {
     this.customerForm.patchValue({

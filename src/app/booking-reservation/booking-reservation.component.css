@@ -75,6 +75,11 @@
     background-color: #e0f7fa;   /* Light cyan background */
   }
 
+  .highlight-label {
+    color: darkcyan;  /* Green color for the label to match the input highlight */
+    font-weight: bold;  /* Make the label bold to draw more attention */
+  }
+
   .selectedArrivalDate{
     color:rgb(72, 163, 194)
   }
@@ -90,6 +95,13 @@
     pointer-events: none; /* Make the cell non-clickable */
   }
   
+
+/* Highlight when an input has been selected */
+.highlight-selected {
+  color:rgb(72, 163, 194)  /* Example style for selected input */
+}
+
+
   /* Disabled days styling */
   .day.disabled {
     pointer-events: none;
@@ -109,6 +121,32 @@
   position: relative;
   /* pointer-events: none; */
 }
+
+/* General styles for the tab buttons */
+.nav-tabs .nav-link {
+  color: black;  /* Default text color for non-selected tabs */
+  border: none;  /* Remove default borders */
+  transition: all 0.3s;  /* Smooth transition effect */
+  background-color: transparent; /* Keep the background color transparent */
+}
+
+/* Style for the active tab */
+.nav-tabs .nav-link.active {
+  color: blue;  /* Text color for the active tab */
+  border-bottom: 2px solid blue;  /* Blue border at the bottom of the selected tab */
+}
+
+/* Hover effect for non-selected tabs */
+.nav-tabs .nav-link:hover {
+  color: blue;  /* Change the text to blue when hovering */
+}
+
+/* Remove default hover background color */
+.nav-tabs .nav-link:hover {
+  background-color: transparent; /* Ensure background remains transparent */
+}
+
+
 
 /* Custom Modal Size - This ensures all modals have the same size */
  /* .custom-modal-size .modal-dialog {
@@ -162,7 +200,7 @@
 .day.selected-arrival {
   position: relative; /* Ensure pseudo-elements stay positioned correctly */
   z-index: 3;  /* Ensure the dates stay on top of the range */
-  background-color: #36393b;
+  background-color: #0a67a5;
   color: white;
   /* border-radius: 40%; */
 }
@@ -170,7 +208,7 @@
 .day.selected-departure{
   position: relative; /* Ensure pseudo-elements stay positioned correctly */
   z-index: 3;  /* Ensure the dates stay on top of the range */
-  background-color: #36393b;
+  background-color: #0a67a5;
   color: white;
   /* border-radius: 50%; */
 }

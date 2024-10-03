@@ -91,7 +91,7 @@
         <div class="chart" [style.grid-template-columns]="'repeat(' + (days.length + 1) + ', 1fr)'">
           <div class="month-header">Month</div>
           <div *ngFor="let section of getMonthSections()" class="month-name" [style.grid-column]="'span ' + section.dayCount">
-            {{ section.monthName }}
+            {{ section.monthName }} {{ section.year }}
           </div>
 
           <div class="day-header">Room</div>
@@ -115,6 +115,7 @@
               <span *ngIf="hasReservation(room.roomId, dayObj)" >
                 {{ getCustomerName(room.roomId, dayObj) }}
               </span>
+              
             </div>
           </ng-container>
 

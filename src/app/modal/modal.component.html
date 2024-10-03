@@ -59,14 +59,26 @@
         </div>
         </div>
         <div class="d-flex justify-content-end mt-3" style="padding: 1rem;">
-          <button type="button" class="btn btn-success" (click)="nextStep()">Next</button>
+          <button 
+          type="button" 
+          class="btn btn-success" 
+          (click)="nextStep()"
+          [disabled]="bookingForm.invalid"
+          [ngClass]="{ 'disabled-button': bookingForm.invalid }"
+          >
+          Next
+          </button>
         </div>
         
       </form>
     </div>
     <div *ngSwitchCase="2">
       <!-- Customer Form Content -->
-      <div *ngIf="showButtons" class="customer">
+      <!-- <div *ngIf="showButtons" class="customer">
+        <button class="btn btn-info" (click)="newCustomer()">New customer</button>
+        <button class="btn btn-info" (click)="existingCustomer()">Existing customer</button>
+      </div> -->
+      <div *ngIf="showButtons && inCustomerSelectionStep" class="customer">
         <button class="btn btn-info" (click)="newCustomer()">New customer</button>
         <button class="btn btn-info" (click)="existingCustomer()">Existing customer</button>
       </div>
@@ -198,7 +210,9 @@
                     <small class="text-danger">Mobile Number is required.</small>
                   </div>
                   <div *ngIf="customerForm.get('mobileNumber')?.hasError('pattern')">
-                    <small class="text-danger">Invalid Mobile Number format.</small>
+                    <small class="text-danger">
+                      Mobile Number must be exactly 10 digits.
+                    </small>
                   </div>
                 </div>
               </div>
@@ -261,11 +275,12 @@
             </div>
           </form>
         </div>
+        <div class="modal-footer" *ngIf="inCustomerSelectionStep && !showCustomerForm && !showCustomerIdInput">
+          <button type="button" class="btn btn-primary" (click)="previousStep()">Previous</button>
+        </div>
     </div>
     <div *ngSwitchCase="3">
-      <!-- Payment Form Content -->
       <form [formGroup]="paymentForm">
-        <!-- Payment Form Fields -->
         <div class="mb-3">
           <label for="paymentId" class="form-label">Payment ID</label>
           <input type="text" id="paymentId" class="form-control" formControlName="paymentId" readonly>
@@ -327,6 +342,18 @@
         <div class="mb-3">
           <label for="paidAmount" class="form-label">Paid Amount</label>
           <input type="number" id="paidAmount" class="form-control" formControlName="paidAmount" (input)="updateDueAmount()">
+          <div *ngIf="paymentForm.get('paidAmount')?.touched">
+            <div *ngIf="paymentForm.get('paidAmount')?.hasError('required')">
+              <small class="text-danger">Paid Amount is required.</small>
+            </div>
+            <div *ngIf="paymentForm.get('paidAmount')?.hasError('negative')">
+              <small class="text-danger">Paid Amount cannot be negative.</small>
+            </div>
+            <div *ngIf="paymentForm.get('paidAmount')?.hasError('exceedTotal')">
+              <small class="text-danger">Paid Amount cannot exceed the total amount.</small>
+            </div>
+          </div>
+          
         </div>
         <div class="mb-3">
           <label for="dueAmount" class="form-label">Due Amount</label>
@@ -341,38 +368,111 @@
     </div>
     <div *ngSwitchCase="4">
       <!-- Confirmation Message -->
-      <div class="final-page text-center" >
-          <h3 style="color:darkcyan;">Your booking details have been successfully submitted.</h3>
-          <div class="invoice-header">
-            <p>Reservation ID: {{ bookingForm.value.reservationId }}</p>
-            <p>Room No: {{ bookingForm.value.roomNo }}</p>
-            <p>Stay From: {{ bookingForm.value.stayDateFrom | date}} </p>
-            <p>Stay To: {{ bookingForm.value.stayDateTo | date}}</p>
-            <p>Number of Days: {{ bookingForm.value.numberOfDays }}</p>
-            <p>Total Guests: {{ bookingForm.value.totalNumberOfGuests }}</p>
-            <!-- <p>Total Price: {{ bookingForm.value.totalPrice }}</p> -->
-          </div>
-          <div class="invoice-section">
-            <h2>Customer Information</h2>
-            <p>Customer ID: {{ customerForm.value.customerId }}</p>
-            <p>Name: {{ customerForm.value.firstName }} {{ customerForm.value.middleName ? customerForm.value.middleName : '' }} {{ customerForm.value.lastName }}</p>
-            <p>Address: {{ customerForm.value.address }}</p>
-          </div>
-          <div class="invoice-section">
-            <h2>Payment Information</h2>
-            <p>Total Amount: {{ paymentForm.value.totalAmount }}</p>
-            <p>Paid Amount: {{ paymentForm.value.paidAmount }}</p>
-            <p>Due Amount: {{ paymentForm.value.dueAmount }}</p>
-          </div>
-          <div class="invoice-footer">
-            Thank you for your booking!
-          </div>
-          
+      <div class="final-page text-center">
+        <h3 style="color:darkcyan;">Your booking details have been successfully submitted.</h3>
+    
+        <!-- Booking Information Section -->
+        <div class="invoice-section">
+          <h4>Booking Information</h4>
+          <table class="table table-bordered">
+            <tbody>
+              <tr>
+                <th>Reservation ID</th>
+                <td>{{ bookingForm.value.reservationId }}</td>
+              </tr>
+              <tr>
+                <th>Room No</th>
+                <td>{{ bookingForm.value.roomNo }}</td>
+              </tr>
+              <tr>
+                <th>Stay From</th>
+                <td>{{ bookingForm.value.stayDateFrom | date }}</td>
+              </tr>
+              <tr>
+                <th>Stay To</th>
+                <td>{{ bookingForm.value.stayDateTo | date }}</td>
+              </tr>
+              <tr>
+                <th>Number of nights</th>
+                <td>{{ bookingForm.value.numberOfDays }}</td>
+              </tr>
+              <tr>
+                <th>Total Guests</th>
+                <td>{{ bookingForm.value.totalNumberOfGuests }}</td>
+              </tr>
+              <!-- <tr>
+                <th>Total Price</th>
+                <td>₹{{ bookingForm.value.totalPrice }}</td>
+              </tr> -->
+            </tbody>
+          </table>
         </div>
-        <div class="d-flex justify-content-end" style="padding: 1rem;">
-          <button type="button"  class="btn btn-success me-2" (click)="downloadInvoicePDF()">Download Invoice</button>
-          <button type="button" class="btn btn-secondary" (click)="resetForms()" (click)="redirectToChart()">Go to Planning chart</button>
+    
+        <!-- Customer Information Section -->
+        <div class="invoice-section">
+          <h4>Customer Information</h4>
+          <table class="table table-bordered">
+            <tbody>
+              <!-- <tr>
+                <th>Customer ID</th>
+                <td>{{ customerForm.value.customerId }}</td>
+              </tr> -->
+              <tr>
+                <th>Name</th>
+                <td>{{ customerForm.value.firstName }} {{ customerForm.value.middleName ? customerForm.value.middleName : '' }} {{ customerForm.value.lastName }}</td>
+              </tr>
+              <tr>
+                <th>Address</th>
+                <td>{{ customerForm.value.address }}</td>
+              </tr>
+              <tr>
+                <th>Pincode</th>
+                <td>{{ customerForm.value.pincode }}</td>
+              </tr>
+              <tr>
+                <th>State</th>
+                <td>{{ customerForm.value.state }}</td>
+              </tr>
+              <tr>
+                <th>Country</th>
+                <td>{{ customerForm.value.country }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+    
+        <!-- Payment Information Section -->
+        <div class="invoice-section">
+          <h4>Payment Information</h4>
+          <table class="table table-bordered">
+            <tbody>
+              <tr>
+                <th>Total Amount</th>
+                <td>₹{{ paymentForm.value.totalAmount }}</td>
+              </tr>
+              <tr>
+                <th>Paid Amount</th>
+                <td>₹{{ paymentForm.value.paidAmount }}</td>
+              </tr>
+              <tr>
+                <th>Due Amount</th>
+                <td>₹{{ paymentForm.value.dueAmount }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+    
+        <div class="invoice-footer">
+          Thank you for your booking!
+        </div>
+      </div>
+    
+      <!-- Buttons for further action -->
+      <div class="d-flex justify-content-end" style="padding: 1rem;">
+        <button type="button" class="btn btn-success me-2" (click)="downloadInvoicePDF()">Download Invoice</button>
+        <button type="button" class="btn btn-secondary" (click)="resetForms()" (click)="redirectToChart()">Go to Planning chart</button>
+      </div>
     </div>
+    
   </ng-container>
 </div>

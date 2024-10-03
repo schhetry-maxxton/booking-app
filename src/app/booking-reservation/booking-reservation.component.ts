@@ -9,6 +9,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalComponent } from '../modal/modal.component';
 import { CalendarService } from '../Services/Calendar/calendar.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface ValidDeparture {
   date: string;  // "YYYY-MM-DD"
@@ -44,8 +45,10 @@ export class BookingReservationComponent {
   daysInNextMonth: { day: number, fromPreviousMonth: boolean }[] = [];
   selectedStartDate: Date | null = null;
   selectedEndDate: Date | null = null;
-  isArrivalDateSelected: boolean = false; // For tracking arrival date selection
+  isArrivalDateSelected: boolean = false; 
   isDepartureDateSelected: boolean = false; 
+  highlightArrival: boolean = true;  
+  highlightDeparture: boolean = false;  
   today: Date = new Date();
   arrivalDateDisplay: string = '';
   departureDateDisplay: string = '';
@@ -59,9 +62,10 @@ export class BookingReservationComponent {
   showCheckedOut: boolean = false; 
   cancelledReservations: IReservation[] = [];
   checkedOutReservations: IReservation[] = [];
+  activeTab: string = 'active';
 
   constructor(private reservationService:ReservationService, private fb: FormBuilder,private modalService: NgbModal,
-    private calendarService: CalendarService,private router: Router ,
+    private calendarService: CalendarService,private router: Router,  private snackBar: MatSnackBar
   ){
 
     this.filterForm = this.fb.group({
@@ -101,6 +105,10 @@ export class BookingReservationComponent {
     this.filterForm.valueChanges.subscribe(() => {
       this.isBookingAllowed(); // Trigger re-calculation whenever form changes
     });
+  }
+
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
   }
   
   fetchReservations(): void {
@@ -144,7 +152,7 @@ export class BookingReservationComponent {
   previousStep(): void {
     if (this.currentStep > 1) {
       this.currentStep -= 1;
-      this.resetSelection(); // Reset selection when going back to Step 1
+      // this.resetSelection(); // Reset selection when going back to Step 1
       this.filteredRooms = []; // Clear the filtered rooms
       this.isFilterApplied = false; // Reset the filter applied flag
       this.filterForm.reset({
@@ -152,7 +160,6 @@ export class BookingReservationComponent {
         dateTo: '',
         numberOfPersons: 1 // Reset to default value for guests
       });
-      this.selectedDatesDisplay = 'Checkin date - Checkout date'; // Reset the date display
       this.nightsDisplay = '0 nights'; // Reset nights count display
     }
   }
@@ -230,17 +237,20 @@ clearArrivalDate(): void {
   this.arrivalDateDisplay = '';
   this.isArrivalDateSelected = false;
   this.isDepartureDateSelected = false;
-  this.selectedDepartureDate = null; // Clear departure as well since it's dependent on arrival
+  this.selectedDepartureDate = null;  // Clear departure as well since it's dependent on arrival
   this.departureDateDisplay = '';
-  this.resetSelection(); // Reset the selection logic
-  this.generateCalendarDays(); // Redraw the calendar to show available arrival dates
+  this.highlightArrival = true;  // Re-highlight arrival date input to prompt user
+  this.highlightDeparture = false;
+  this.resetSelection();
+  this.generateCalendarDays();
 }
 
 clearDepartureDate(): void {
   this.selectedDepartureDate = null;
   this.departureDateDisplay = '';
   this.isDepartureDateSelected = false;
-  this.generateCalendarDays(); // Redraw the calendar to show available departure dates for the selected arrival
+  this.highlightDeparture = true;  // Highlight departure input to prompt user again
+  this.generateCalendarDays();
 }
 
   // Function to reset the selected dates
@@ -281,49 +291,36 @@ clearDepartureDate(): void {
   }
 
   selectDate(day: number, month: number, year: number): void {
-    const selectedDate = new Date(year, month - 1, day);  // Create the selected date object
-  
-    // Convert selectedDate to "YYYY-MM-DD" for comparison with validArrivalDates
+    const selectedDate = new Date(year, month - 1, day);
+
     const selectedDateString = selectedDate.toISOString().split('T')[0];
-  
-    // If no arrival date is selected, check if the selected date is a valid arrival date
+
     if (!this.selectedArrivalDate) {
-      // console.log("step 2:  inside !this.selectedArrivalDate && this.validArrivalDates.has(selectedDateString) ");
-      
       this.selectedArrivalDate = selectedDate;
-      this.selectedArrivalDate.setHours(12, 0, 0, 0); 
-      console.log('Selected Arrival Date:', this.formatDate(this.selectedArrivalDate));
+      this.selectedArrivalDate.setHours(12, 0, 0, 0);
       this.arrivalDateDisplay = this.formatDate(this.selectedArrivalDate);
       this.departureDateDisplay = '';  // Clear the departure date
-      this.nightsDisplay = '0 nights';  // Reset nights display
-      this.selectedDepartureDate = null;  // Clear any previously selected departure date
+      this.highlightArrival = false;   // Arrival selected, remove highlight from arrival
+      this.highlightDeparture = true;  // Highlight departure as the next step
       this.isArrivalDateSelected = true;
-      this.isDepartureDateSelected = false; 
+      this.isDepartureDateSelected = false;
       const { validDepartureDates, validDepartureMap } = this.calculateValidDepartureDatesForArrival(this.selectedArrivalDate);
       this.validDepartureDates = validDepartureDates;
       this.validDepartureMap = validDepartureMap;
-      console.log('Valid Departure Dates:', this.validDepartureDates.map(date => this.formatDate(date)));  // Exit the function since the arrival date has been set
-    }
-  
-    // If an arrival date is already selected and the selected date is after the arrival date
-    else if (this.selectedArrivalDate && selectedDate > this.selectedArrivalDate) {
+    } else if (this.selectedArrivalDate && selectedDate > this.selectedArrivalDate) {
       this.selectedDepartureDate = selectedDate;
       this.selectedDepartureDate.setHours(11, 0, 0, 0);
-      this.isArrivalDateSelected = false; // Arrival already selected
-      this.isDepartureDateSelected = true; 
+      this.isArrivalDateSelected = false;
+      this.isDepartureDateSelected = true;
+      this.highlightDeparture = false;  // Departure selected, remove highlight
       this.departureDateDisplay = this.formatDate(this.selectedDepartureDate);
-      this.nightsDisplay = this.getNightsDisplay();  // Calculate and display the number of nights
-      return;  // Exit the function since the departure date has been set
+      this.nightsDisplay = this.getNightsDisplay();
+      return;
     }
-  
-    this.generateCalendarDays(); 
-    // If no valid selection, don't modify anything
-    // console.log('Selected date is not valid for arrival or departure.');
+
+    this.generateCalendarDays();
   }
   
-  
-  
-
 
   calculateNightStay(arrivalDate: Date, departureDate: Date): number {
     const checkInDate = new Date(arrivalDate);
@@ -660,15 +657,61 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
   
   isCheckInAvailable(reservation: IReservation): boolean {
     const todayStr = this.formatDate(this.today);
-    const arrivalStr = this.formatDate(reservation.arrivalDate);
-    return todayStr === arrivalStr && reservation.status === 'CONFIRM';  // Enable only when it's the arrival day
+    const arrivalStr = this.formatDate(new Date(reservation.arrivalDate));
+    return todayStr === arrivalStr && reservation.status === 'CONFIRM';  
   }
 
-  // Check if today's date matches the departure date, enabling "Check-Out"
+  // isCheckInAvailable(reservation: IReservation): boolean {
+  //   // Get the current date and time
+  //   const now = new Date();
+  
+  //   // Extract today's date components
+  //   const todayYear = now.getFullYear();
+  //   const todayMonth = now.getMonth();
+  //   const todayDate = now.getDate();
+  
+  //   // Set today to 12:00 PM for comparison (start of check-in window)
+  //   const todayStartCheckIn = new Date(todayYear, todayMonth, todayDate, 12, 0, 0, 0);
+    
+  //   // Set today to 11:59 PM for comparison (end of check-in window)
+  //   const todayEndCheckIn = new Date(todayYear, todayMonth, todayDate, 23, 59, 59, 999);
+  
+  //   // Set the arrival date to compare just the date
+  //   const arrivalDate = new Date(reservation.arrivalDate);
+  //   arrivalDate.setHours(0, 0, 0, 0);
+  
+  //   // Set today's date without time for comparison
+  //   const today = new Date(todayYear, todayMonth, todayDate);
+  //   today.setHours(0, 0, 0, 0);
+  
+  //   // Check if today is the arrival date and the current time is within the check-in window
+  //   return (
+  //     today.getTime() === arrivalDate.getTime() && 
+  //     now >= todayStartCheckIn && 
+  //     now <= todayEndCheckIn && 
+  //     reservation.status === 'CONFIRM'
+  //   );
+  // }
+  
+  
   isCheckOutAvailable(reservation: IReservation): boolean {
     const todayStr = this.formatDate(this.today);
-    const departureStr = this.formatDate(reservation.departureDate);
-    return todayStr === departureStr && reservation.status === 'CHECKED-IN';  // Enable only when it's the departure day
+    const departureStr = this.formatDate(new Date(reservation.departureDate));
+
+    // Check if today matches the departure date and if due amount is zero
+    const isDateMatching = todayStr === departureStr;
+    const isDueAmountCleared = reservation.dueAmount <= 0;
+
+    return isDateMatching && isDueAmountCleared && reservation.status === 'CHECKED-IN';
+  }
+
+   showCheckOutError(reservation: IReservation): void {
+    if (reservation.dueAmount > 0) {
+      this.snackBar.open('Checkout is not allowed. Please clear the due amount before proceeding.', 'Close', {
+        duration: 3000,
+        panelClass: ['snackbar-error']
+      });
+    }
   }
 
   // Check if the status dropdown should be editable
@@ -691,16 +734,19 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
     // }
 
     onStatusChange(reservation: IReservation, newStatus: 'CONFIRM' | 'CHECKED-IN' | 'CHECKED-OUT'): void {
+      if (newStatus === 'CHECKED-OUT' && !this.isCheckOutAvailable(reservation)) {
+        this.showCheckOutError(reservation);
+        return;
+      }
+  
       try {
-        // Update the reservation status
         reservation.status = newStatus;
         this.reservationService.updateReservationStatus(reservation);
-    
-        // If the status is updated to 'CHECKED-OUT', remove it from the current reservations list
+  
         if (newStatus === 'CHECKED-OUT') {
           this.reservations = this.reservations.filter(r => r.reservationId !== reservation.reservationId);
         }
-    
+  
         console.log('Reservation status updated successfully:', reservation.status);
       } catch (error) {
         console.error('Error updating reservation status', error);
@@ -1010,15 +1056,15 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
     
         modalRef.result.then(
           result => {
-            console.log('Modal closed successfully.');
-            console.log(" inside mod ref of reservation details");
+            // console.log('Modal closed successfully.');
+            // console.log(" inside mod ref of reservation details");
             this.router.navigate(['/reservationDetails']).then(() => {
               this.ngOnInit(); 
             });
             // this.ngOnInit(); 
           },
           reason => {
-            console.log('Modal dismissed:', reason);
+            // console.log('Modal dismissed:', reason);
           }
         );
       }
@@ -1037,7 +1083,7 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
       // Remove any remaining backdrops manually
       const modalBackdrop = document.querySelector('.modal-backdrop');
       if (modalBackdrop) {
-        console.log("all mpdal backdrop");
+        console.log("all modal backdrop");
         modalBackdrop.remove();
       }
     }
@@ -1052,7 +1098,7 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
         numberOfPersons: 1  // Reset to default value
       });
   
-      this.resetSelection();
+      // this.resetSelection();
       
       // Show the filter modal (for selecting date and number of persons)
       const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal')!);
