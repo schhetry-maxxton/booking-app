@@ -1,8 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { IRoom } from '../Interface/iroom';
-import { IRoomAvailability } from '../Interface/iroom-availability';
+import { Component, OnInit } from '@angular/core';
 import { ReservationService } from '../Services/Reservation2/reservation2.service';
-import { IReservation } from '../Interface/ireservation';
 import Chart from 'chart.js/auto';
 
 @Component({
@@ -16,21 +13,23 @@ export class PlanningChartComponent implements OnInit {
   constructor(private reservationService: ReservationService) {}
 
   ngOnInit(): void {
-    // Fetch data for the chart from the service
-    const totalReservations = this.reservationService.getMonthlyReservations();
+    // Fetch data from the reservation service
+    const totalReservations = this.reservationService.calculateTotalReservationsByMonth();
     const confirmedReservations = this.reservationService.calculateConfirmedReservationsByMonth();
     const checkedInReservations = this.reservationService.calculateCheckedInReservationsByMonth();
     const checkedOutReservations = this.reservationService.calculateCheckedOutReservationsByMonth();
+    const cancelledReservations = this.reservationService.calculateCancelledReservationsByMonth();
 
-    // Prepare data arrays for each dataset
+    // Prepare data arrays for the chart
     const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
-    const totalData = this.getMonthlyData(totalReservations);
+    const totalData = this.getMonthlyDataFromMap(totalReservations);
     const confirmedData = this.getMonthlyDataFromMap(confirmedReservations);
     const checkedInData = this.getMonthlyDataFromMap(checkedInReservations);
     const checkedOutData = this.getMonthlyDataFromMap(checkedOutReservations);
+    const cancelledData = this.getMonthlyDataFromMap(cancelledReservations);
 
-    // Initialize the chart with the fetched data
+    // Create the chart
     this.chart = new Chart('canvas', {
       type: 'bar',
       data: {
@@ -64,6 +63,13 @@ export class PlanningChartComponent implements OnInit {
             borderColor: 'rgba(255, 99, 132, 1)',
             borderWidth: 2,
           },
+          {
+            label: 'Cancelled Reservations',
+            data: cancelledData,
+            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+            borderColor: 'rgba(153, 102, 255, 1)',
+            borderWidth: 2,
+          },
         ],
       },
       options: {
@@ -71,7 +77,7 @@ export class PlanningChartComponent implements OnInit {
           y: {
             beginAtZero: true,
             ticks: {
-              stepSize: 1, // Ensure ticks are at intervals of 1
+              stepSize: 1,
               callback: function(value) { return Number.isInteger(value) ? value : null; } // Show only integers
             },
           },
@@ -80,16 +86,15 @@ export class PlanningChartComponent implements OnInit {
     });
   }
 
-  // Helper function to convert month-wise data to an array (total reservations)
-  getMonthlyData(reservations: { month: number, reservations: number }[]): number[] {
-    const data = Array(12).fill(0); // Array with 12 slots for 12 months
-    reservations.forEach(({ month, reservations }) => {
-      data[month - 1] = reservations; // Month starts from 1 (Jan), so adjust index
-    });
-    return data;
-  }
+  // getMonthlyData(reservations: { month: number, reservations: number }[]): number[] {
+  //   const data = Array(12).fill(0);
+  //   reservations.forEach(({ month, reservations }) => {
+  //     data[month - 1] = reservations;
+  //   });
+  //   return data;
+  // }
 
-  // Helper function to convert map-based data (e.g., confirmed, checked-in, etc.)
+  // Helper function to convert map-based data to an array for each month
   getMonthlyDataFromMap(dataMap: { [key: string]: number }): number[] {
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const data = Array(12).fill(0); // Array with 12 slots for 12 months
@@ -99,6 +104,4 @@ export class PlanningChartComponent implements OnInit {
     });
     return data;
   }
-  }
-
-  
+}

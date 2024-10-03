@@ -2,8 +2,8 @@
   <div class="new-reservation d-flex justify-content-between align-items-center mb-3">
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reservationModal" (click)="resetSelection()">New reservation</button>
     <div class="d-flex gap-2">
-      <button (click)="showCancelled = false" class="btn btn-outline-primary" style="border: none;">View Regular Reservations</button>
-      <button (click)="showCancelled = true" class="btn btn-outline-danger" style="border: none;">View Cancelled Reservations</button>
+      <button  (click)="showCancelled = false; showCheckedOut = false"  class="btn btn-outline-primary" style="border: none;">View Regular Reservations</button>
+      <button (click)="showCancelled = true; showCheckedOut = true" class="btn btn-outline-danger" style="border: none;">View Other Reservations</button>
     </div>
   </div>
 
@@ -112,8 +112,12 @@
                   <input id="numberOfPersons" type="number" formControlName="numberOfPersons" class="form-control">
                 </div>
               </div>
+              <p *ngIf="!isBookingAllowed()" class="text-danger text-center mb-3">
+                Please select both check-in and check-out dates to proceed.
+              </p>
+
               <div class="text-center">
-                <button type="button" class="btn btn-primary" (click)="nextStep()">Next</button>
+                <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="!isBookingAllowed()">Next</button>
               </div>
             </form>
           </div>
@@ -223,11 +227,11 @@
 </div> -->
 
 <!-- Reservations List (Regular or Cancelled) -->
-<h3 style="color: darkcyan; text-align: center;">
-  {{ showCancelled ? 'Cancelled Reservations' : 'Reservations' }}
+<h3 style="color: darkcyan; text-align: center;" *ngIf="!showCancelled && !showCheckedOut">
+  Reservations
 </h3>
 
-<table class="table table-light table-striped table-hover reservation-table mt-4" *ngIf="!showCancelled">
+<table class="table table-light table-striped table-hover reservation-table mt-4" *ngIf="!showCancelled && !showCheckedOut">
   <thead class="thead-dark">
     <tr>
       <th>Reservation ID</th>
@@ -238,6 +242,7 @@
       <th>Departure Date</th>
       <th>Reservation Date</th>
       <th>Status</th>
+      <th>Update Status</th>
       <th>Total Price</th>
       <th>Paid Amount</th>
       <th>Due Amount</th>
@@ -254,28 +259,31 @@
       <td>{{ reservation.arrivalDate | date:'yyyy-MM-dd' }}</td>
       <td>{{ reservation.departureDate | date:'yyyy-MM-dd' }}</td>
       <td>{{ reservation.reservationDate | date:'yyyy-MM-dd HH:mm:ss' }}</td>
-      <td class="status-cell">
-        <select class="form-select status-dropdown" [(ngModel)]="reservation.status" (change)="onStatusChange(reservation)">
-          <option value="CONFIRM">Confirm</option>
-          <option value="CHECKED-IN">Checked-In</option>
-          <option value="CHECKED-OUT">Checked-Out</option>
-        </select>
+      <td>{{ reservation.status }}</td>
+      <td>
+        <button *ngIf="reservation.status === 'CONFIRM'" class="btn btn-success" (click)="onStatusChange(reservation, 'CHECKED-IN')">
+          Check-In
+        </button>
+        <button *ngIf="reservation.status === 'CHECKED-IN'" class="btn btn-warning" (click)="onStatusChange(reservation, 'CHECKED-OUT')">
+          Check-Out
+        </button>
       </td>
+      
       <td>{{ reservation.totalPrice }}</td>
       <td>{{ reservation.paidAmount }}</td>
       <td>{{ reservation.dueAmount }}</td>
       <td>{{ reservation.numberOfGuest }}</td>
-      <!-- <td><button class="btn btn-secondary" (click)="removeReservation(reservation.reservationId)">Remove</button></td> -->
       <td>
         <button *ngIf="isCancellable(reservation)" class="btn btn-secondary" (click)="cancelReservation(reservation)">Cancel</button>
       </td>
-      
     </tr>
   </tbody>
 </table>
 
-<table class="table table-light table-striped table-hover reservation-table mt-4" *ngIf="showCancelled">
-  
+<h3 style="color: darkcyan; text-align: center;" *ngIf="showCancelled && showCheckedOut">
+  Cancelled Reservations
+</h3>
+<table class="table table-light table-striped table-hover reservation-table mt-4" *ngIf="showCancelled && showCheckedOut && cancelledReservations.length > 0"> 
   <thead class="thead-dark">
     <tr>
       <th>Reservation ID</th>
@@ -310,6 +318,42 @@
   </tbody>
 </table>
 
+<h3 style="color: darkcyan; text-align: center;" *ngIf="showCancelled && showCheckedOut">
+  Checked Out Reservations
+</h3>
+
+<table class="table table-light table-striped table-hover reservation-table mt-4" *ngIf="showCancelled && showCheckedOut && checkedOutReservations.length > 0">
+  <thead class="thead-dark">
+    <tr>
+      <th>Reservation ID</th>
+      <th>Customer Name</th>
+      <th>Room ID</th>
+      <th>Customer ID</th>
+      <th>Arrival Date</th>
+      <th>Departure Date</th>
+      <th>Reservation Date</th>
+      <th>Total Price</th>
+      <th>Paid Amount</th>
+      <th>Due Amount</th>
+      <th>Number of Guests</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let reservation of checkedOutReservations">
+      <td>{{ reservation.reservationId }}</td>
+      <td>{{ reservation.firstName }} {{ reservation.middleName ? reservation.middleName + ' ' : '' }} {{ reservation.lastName }}</td>
+      <td>{{ reservation.roomId }}</td>
+      <td>{{ reservation.customerId }}</td>
+      <td>{{ reservation.arrivalDate | date:'yyyy-MM-dd' }}</td>
+      <td>{{ reservation.departureDate | date:'yyyy-MM-dd' }}</td>
+      <td>{{ reservation.reservationDate | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+      <td>{{ reservation.totalPrice }}</td>
+      <td>{{ reservation.paidAmount }}</td>
+      <td>{{ reservation.dueAmount }}</td>
+      <td>{{ reservation.numberOfGuest }}</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 

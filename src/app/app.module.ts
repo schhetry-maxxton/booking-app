@@ -21,7 +21,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ModalComponent } from './modal/modal.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { NewReservationComponent } from './new-reservation/new-reservation.component';
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -39,6 +39,7 @@ import {
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { CalendarComponent } from './calendar/calendar.component';
+import { TestChartComponent } from './test-chart/test-chart.component';
 
 @NgModule({
   declarations: [
@@ -51,8 +52,8 @@ import { CalendarComponent } from './calendar/calendar.component';
     CharttComponent,
     RoomAvailabilityGanttComponent,
     ModalComponent,
-    NewReservationComponent,
     CalendarComponent,
+    TestChartComponent,
   ],
   imports: [
     BrowserModule,

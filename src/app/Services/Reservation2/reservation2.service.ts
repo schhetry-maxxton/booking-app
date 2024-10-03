@@ -31,15 +31,47 @@ export class ReservationService {
     localStorage.setItem('reservations', JSON.stringify(existingReservations));
   }
 
+  // updateReservationStatus(reservation: IReservation): void {
+  //   const allReservations = this.getReservations(); // Get all reservations
+
+  //   const index = allReservations.findIndex(r => r.reservationId === reservation.reservationId);
+  //   if (index !== -1) {
+  //       allReservations[index].status = reservation.status;
+  //       this.saveReservations(allReservations);
+  //   }
+  // } 
+
   updateReservationStatus(reservation: IReservation): void {
     const allReservations = this.getReservations(); // Get all reservations
-
+  
     const index = allReservations.findIndex(r => r.reservationId === reservation.reservationId);
     if (index !== -1) {
-        allReservations[index].status = reservation.status;
-        this.saveReservations(allReservations);
+      allReservations[index].status = reservation.status;
+  
+      // If status changes to 'CHECKED-OUT', move the reservation to checked-out storage
+      if (reservation.status === 'CHECKED-OUT') {
+        const [checkedOutReservation] = allReservations.splice(index, 1);
+        this.saveReservations(allReservations); // Update current reservations in local storage
+        this.addCheckedOutReservation(checkedOutReservation); // Add to checked-out reservations
+      } else {
+        this.saveReservations(allReservations); // Simply update the reservation status
+      }
     }
-  } 
+  }
+  
+  
+
+  addCheckedOutReservation(reservation: IReservation): void {
+    const checkedOutReservations = this.getCheckedOutReservations();
+    checkedOutReservations.push(reservation);
+    localStorage.setItem('checkedOutReservations', JSON.stringify(checkedOutReservations));
+  }
+
+  getCheckedOutReservations(): IReservation[] {
+    const checkedOutReservations = localStorage.getItem('checkedOutReservations');
+    return checkedOutReservations ? JSON.parse(checkedOutReservations) : [];
+  }
+  
 
   cancelReservation(reservationId: number): void {
     const allReservations = this.getReservations();
@@ -102,16 +134,42 @@ export class ReservationService {
   }
 
   calculateTotalReservationsByMonth(): { [key: string]: number } {
-    const reservations = this.getReservations();
-    const totalByMonth: { [key: string]: number } = {};
+    // Fetch all reservations from their respective storages
+    const activeReservations = this.getReservations(); // Confirmed, Checked-In, others still active
+    const cancelledReservations = this.getCancelledReservations();
+    const checkedOutReservations = this.getCheckedOutReservations();
+    
+    const totalReservations: { [key: string]: number } = {};
+  
+    // Combine reservations from all sources
+    const allReservations = [
+      ...activeReservations,
+      ...cancelledReservations,
+      ...checkedOutReservations
+    ];
+  
+    // Calculate reservations per month
+    allReservations.forEach(reservation => {
+      const monthYear = this.getMonthYear(reservation.arrivalDate);
+      totalReservations[monthYear] = (totalReservations[monthYear] || 0) + 1;
+    });
+  
+    return totalReservations;
+  }
+  
+
+  calculateCancelledReservationsByMonth(): { [key: string]: number } {
+    const reservations = this.getCancelledReservations();
+    const cancelledByMonth: { [key: string]: number } = {};
 
     reservations.forEach(reservation => {
       const monthYear = this.getMonthYear(reservation.arrivalDate);
-      totalByMonth[monthYear] = (totalByMonth[monthYear] || 0) + 1;
+      cancelledByMonth[monthYear] = (cancelledByMonth[monthYear] || 0) + 1;
     });
 
-    return totalByMonth;
+    return cancelledByMonth;
   }
+
 
   // Calculate confirmed reservations per month based on arrivalDate
   calculateConfirmedReservationsByMonth(): { [key: string]: number } {
@@ -145,18 +203,18 @@ export class ReservationService {
 
   // Calculate checked-out reservations per month based on arrivalDate
   calculateCheckedOutReservationsByMonth(): { [key: string]: number } {
-    const reservations = this.getReservations();
+    // Fetch checked-out reservations from their dedicated storage
+    const reservations = this.getCheckedOutReservations();
     const checkedOutByMonth: { [key: string]: number } = {};
-
+  
     reservations.forEach(reservation => {
-      if (reservation.status === 'CHECKED-OUT') {
-        const monthYear = this.getMonthYear(reservation.arrivalDate);
-        checkedOutByMonth[monthYear] = (checkedOutByMonth[monthYear] || 0) + 1;
-      }
+      const monthYear = this.getMonthYear(reservation.arrivalDate);
+      checkedOutByMonth[monthYear] = (checkedOutByMonth[monthYear] || 0) + 1;
     });
-
+  
     return checkedOutByMonth;
   }
+  
 
   // Utility function to extract month and year from arrivalDate
   private getMonthYear(date: Date): string {
@@ -182,6 +240,7 @@ getMonthlyReservations(): { month: number, reservations: number }[] {
     reservations: count,
   }));
 }
+
 
 
 }

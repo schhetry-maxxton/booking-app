@@ -55,8 +55,10 @@ export class BookingReservationComponent {
   selectedDatesDisplay: string | null = null;
   selectedArrivalDate: Date | null = null;  // Track the selected arrival date
   selectedDepartureDate: Date | null = null;  // Track the selected departure date 
-  showCancelled: boolean = false; // To toggle between regular and cancelled reservations
+  showCancelled: boolean = false; 
+  showCheckedOut: boolean = false; 
   cancelledReservations: IReservation[] = [];
+  checkedOutReservations: IReservation[] = [];
 
   constructor(private reservationService:ReservationService, private fb: FormBuilder,private modalService: NgbModal,
     private calendarService: CalendarService,private router: Router ,
@@ -93,48 +95,74 @@ export class BookingReservationComponent {
     this.reservations = this.reservationService.getReservations();
     this.generateCalendarDays();
     console.log("valid arrival dates ", this.generateCombinedArrivalDates());
+    this.fetchReservations(); 
     this.fetchCancelledReservations();
+    this.fetchCheckedOutReservations();
+    this.filterForm.valueChanges.subscribe(() => {
+      this.isBookingAllowed(); // Trigger re-calculation whenever form changes
+    });
   }
   
+  fetchReservations(): void {
+    const allReservations = this.reservationService.getReservations();
+    this.reservations = allReservations.filter(reservation => reservation.status !== 'CHECKED-OUT');
+  }
+
   fetchCancelledReservations(): void {
     const cancelled = localStorage.getItem('cancelledReservations');
     this.cancelledReservations = cancelled ? JSON.parse(cancelled) : [];
   }
 
+  fetchCheckedOutReservations(): void {
+    const checkedOut = localStorage.getItem('checkedOutReservations');
+    this.checkedOutReservations = checkedOut ? JSON.parse(checkedOut) : [];
+  }
+
   cancelReservation(reservation: IReservation): void {
     // Remove the reservation from the current reservations list
     this.reservations = this.reservations.filter(r => r.reservationId !== reservation.reservationId);
-
-    // Add the reservation to cancelledReservations
     this.cancelledReservations.push(reservation);
-
-    // Update both reservations in local storage
     this.reservationService.saveReservations(this.reservations);
     localStorage.setItem('cancelledReservations', JSON.stringify(this.cancelledReservations));
   }
 
-
-
-
-  nextStep(): void {
-    if (this.currentStep === 1) {
-      this.applyFilters(); // Apply filters and move to the next step
-      this.currentStep = 2; // Move to the next step if there are filtered rooms
-    }
+  isBookingAllowed(): boolean {
+    const checkInDate = this.filterForm.get('dateFrom')?.value;
+    const checkOutDate = this.filterForm.get('dateTo')?.value;
+    return !!checkInDate && !!checkOutDate; 
   }
 
+  nextStep(): void {
+    if (this.currentStep === 1 && this.isBookingAllowed()) {
+      this.applyFilters(); 
+      this.currentStep = 2; 
+    } else if (!this.isBookingAllowed()) {
+      alert("Please select both check-in and check-out dates before proceeding.");
+    }
+  }
+  
   previousStep(): void {
     if (this.currentStep > 1) {
       this.currentStep -= 1;
-      this.selectedDatesDisplay='Checkin date - Checkout date';
+      this.resetSelection(); // Reset selection when going back to Step 1
+      this.filteredRooms = []; // Clear the filtered rooms
+      this.isFilterApplied = false; // Reset the filter applied flag
+      this.filterForm.reset({
+        dateFrom: '',
+        dateTo: '',
+        numberOfPersons: 1 // Reset to default value for guests
+      });
+      this.selectedDatesDisplay = 'Checkin date - Checkout date'; // Reset the date display
+      this.nightsDisplay = '0 nights'; // Reset nights count display
     }
   }
+  
 
 
   isPreviousDisabled(): boolean {
     return this.currentMonth === this.today.getMonth() + 1 && this.currentYear === this.today.getFullYear();
   }
-  // Generate days for both months, including previous and next month "filler" days
+
   generateCalendarDays(): void {
     this.daysInCurrentMonth = this.generateDaysForMonth(this.currentMonth, this.currentYear);
     this.daysInNextMonth = this.generateDaysForMonth(this.nextMonth, this.nextYear);
@@ -650,17 +678,36 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
   }
 
 
-    onStatusChange(reservation: IReservation): void {
+    // onStatusChange(reservation: IReservation): void {
+    //   try {
+    //     this.reservationService.updateReservationStatus(reservation);
+    //     console.log('Reservation status updated successfully', reservation.status);
+    //     // setTimeout(() => {
+    //     // this.router.navigate(['/planningchart']);
+    //     // }, 1000); 
+    //   } catch (error) {
+    //     console.error('Error updating reservation status', error);
+    //   }
+    // }
+
+    onStatusChange(reservation: IReservation, newStatus: 'CONFIRM' | 'CHECKED-IN' | 'CHECKED-OUT'): void {
       try {
+        // Update the reservation status
+        reservation.status = newStatus;
         this.reservationService.updateReservationStatus(reservation);
-        console.log('Reservation status updated successfully', reservation.status);
-        // setTimeout(() => {
-        // this.router.navigate(['/planningchart']);
-        // }, 1000); 
+    
+        // If the status is updated to 'CHECKED-OUT', remove it from the current reservations list
+        if (newStatus === 'CHECKED-OUT') {
+          this.reservations = this.reservations.filter(r => r.reservationId !== reservation.reservationId);
+        }
+    
+        console.log('Reservation status updated successfully:', reservation.status);
       } catch (error) {
         console.error('Error updating reservation status', error);
       }
     }
+    
+    
 
     isCancellable(reservation: IReservation): boolean {
       return reservation.status === 'CONFIRM';
@@ -716,11 +763,11 @@ isValidDepartureDay(date: Date, avail: IRoomAvailability): boolean {
       
     }
 
-    isBookingAllowed(): boolean {
-      const checkInDate = this.filterForm.get('dateFrom')?.value;
-      const checkOutDate = this.filterForm.get('dateTo')?.value;
-      return checkInDate && checkOutDate; // Returns true only if both dates are filled
-    }
+    // isBookingAllowed(): boolean {
+    //   const checkInDate = this.filterForm.get('dateFrom')?.value;
+    //   const checkOutDate = this.filterForm.get('dateTo')?.value;
+    //   return checkInDate && checkOutDate; // Returns true only if both dates are filled
+    // }
 
     applyFilters(): void {
       const filters = this.filterForm.value;

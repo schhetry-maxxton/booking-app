@@ -1,0 +1,385 @@
+body {
+    font-family: Arial, sans-serif;
+  }
+  
+  .container-fluid {
+    width: 100%;
+    padding: 20px;
+    position: relative; 
+  }
+  
+  .chart-container {
+    overflow-x: auto;
+    margin: 20px 0;
+    white-space: nowrap; 
+  }
+  
+  .chart {
+    display: grid;
+    /* grid-template-columns: repeat(32, 1fr);  */
+    background-color: #dee2e6;
+    width: max-content;
+  }
+  
+  .room-name {
+    grid-column: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border:1px solid #EAEAEA;
+    height: 40px;
+    padding: 0 5px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: bold;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+  }
+  
+  
+  .day-header {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center;
+    background-color: #f1f1f1;
+    /* border-bottom: 1px solid black;
+    border-right: 1px solid black; */
+    /* border: 0.5px  rgb(90, 85, 85);  */
+    border:1px solid #FEFEFE;
+    height: 50px;
+    padding: 5px;  
+    font-weight: bold;
+  }
+  
+  .month-header {
+    font-weight: bold;
+    text-align: center;
+    background-color: #f1f1f1;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #FEFEFE;
+  }
+  
+  .month-name {
+    font-weight: bold;
+    background-color: #f1f1f1;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #FEFEFE;
+    font-size: 16px;
+  }
+  
+  
+  /* .available {
+    background-color: #d4edda;
+  } */
+  
+  .current-month{
+    padding-top: 10px;
+  }
+  
+  h4{
+    color: darkslategray;
+  }
+  
+  .cell.available {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .not-available {
+    background-color: #F7F7F7;
+  }
+  
+  .weekend {
+    background-color: #fff3cd;
+  }
+  
+  
+  .available.weekend {
+    background-color: #d4edda;
+  }
+  
+  .cell {
+    position: relative;
+    height: 40px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #EAEAEA;
+    overflow: visible; 
+    overflow: visible !important;
+  }
+  
+  .cell {
+    position: relative;
+    height: 40px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #EAEAEA;
+    overflow: hidden; /* Ensure overflow is handled */
+    white-space: nowrap; /* Prevent text wrapping */
+    text-overflow: visible; /* Show ellipsis for overflowing text */
+  }
+  
+  
+  
+  .reservation-span {
+    background-color: rgba(90, 90, 207, 0.5);  /* Color for the reservation */
+    color: #fff;
+    padding: 5px;
+    border-radius: 4px;
+    display: block;
+    text-align: center;
+  }
+  
+  .cell span {
+    position: absolute;
+    top: 50%; /* Align to the top of the cell */
+    /* left: 50%;  */
+    transform: translate(-50%, -50%);
+    width: 100%; /* Span the full width of the reservation cells */
+    /* height: 100%; */
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Show ellipsis for overflow */
+    display: inline-block; 
+    padding: 0 5px;
+  }
+  
+  .cell.reserved {
+    position: relative;
+    background-color: rgb(90, 90, 207);
+    color: white;
+    border: none;
+    border-top: 1px solid white;
+    border-bottom:1px solid white;
+    pointer-events: auto;
+    
+  }
+  
+  .cell.checked-in {
+    background-color: orange; /* Orange for checked-in */
+    color: white;
+    border: none;
+    border-top: 1px solid white;
+    border-bottom:1px solid white;
+  }
+  
+  /* Color for 'CHECKED-OUT' status */
+  .cell.checked-out {
+    background-color: #D2B48C; /* Light brown for checked-out */
+    color: white;
+    border: none;
+    border-top: 1px solid white;
+    border-bottom:1px solid white;
+  }
+  
+  .cell.reservation-start {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }
+  
+  .cell.reservation-end {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+  
+  .cell.reserved + .cell.reserved {
+    border-left: none;
+  }
+  
+  .cell.reserved.reservation-end, .cell.checked-in.reservation-end, .cell.checked-out.reservation-end {
+    border-top-right-radius: 40px !important;
+    border-bottom-right-radius: 40px !important;
+  }
+  
+  .cell.reserved.reservation-start, .cell.checked-in.reservation-start, .cell.checked-out.reservation-start  {
+    border-top-left-radius: 40px !important;
+    border-bottom-left-radius: 40px !important;
+  }
+  
+  .cell.valid-departure {
+    border: 2px dashed #1940dc; /* Dashed green border for valid departure days */
+    background-color: #eafbe7;   /* Light green background */
+  }
+  
+  
+  .selected {
+    border: 2px solid #7aec1c; 
+  }
+  
+  .cell.selected-start {
+    border-left: 2px solid #7aec1c;
+  }
+  
+  .cell.selected-end {
+    border-right: 2px solid #7aec1c;
+  }
+  
+  .cell.available.arrival-day {
+    background-color: #c3e6cb; /* Slightly greener color for arrival days */
+    /* cursor: pointer; */
+  }
+  
+  .cell.selected {
+    background-color: #7aec1c !important; /* Blue background for selected cells */
+    /* border: 2px solid #007bff !important;  */
+    border-style: dashed;
+  }
+  
+  .legends {
+    padding-bottom: 15px;
+    padding-top: 15px;
+    text-align: center; /* Center the text inside the legend container */
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center the content inside each legend item */
+    margin-bottom: 10px; /* Space between legend items */
+    font-size: 20px;
+  }
+  
+  .legend-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .legend-box-span {
+    font-size: 16px;
+    color: #333;
+  }
+  
+  @media (max-width: 768px) {
+    .legend-item {
+      font-size: 14px;
+    }
+  
+    .legend-box {
+      width: 15px;
+      height: 15px;
+    }
+  
+    .legend-box-span {
+      font-size: 14px;
+    }
+  }
+  
+  
+  
+  
+  /* ============ CSS for Filter ============= */
+  
+  #locationFilter, #guestCapacityFilter {
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    font-size: 16px;
+    color: #495057;
+    font-family: Arial, sans-serif;
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  /* Add a little shadow for a card-like effect */
+  #locationFilter, #guestCapacityFilter {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Add a transition effect for the hover state */
+  #locationFilter:hover {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  label {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #343a40;
+  }
+  
+  .col-md-3 {
+    margin-bottom: 20px;
+    margin-top: 20px;
+  }
+  
+  select {
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 16px;
+  }
+  
+  #guestCapacityFilter:hover {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* .mat-tooltip {
+    max-width: 200px;
+    font-size: 14px;
+    padding: 8px;
+    white-space: nowrap;
+    z-index: 10000 !important; 
+  } */
+  
+  .mat-tooltip {
+    font-size: 14px;
+    background-color: rgba(63, 81, 181, 0.9); /* Custom background color */
+    color: #ffffff; /* Custom text color */
+    padding: 8px; /* Add some padding */
+    border-radius: 4px; /* Rounded corners */
+    z-index: 10000 !important; 
+  }
+  
+  .tooltip{
+    z-index: 10000 !important; 
+  }
+  
+  /* ======== loading spinner ==========*/
+  
+  /* Spinner container */
+  .spinner-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 1000;
+  }
+  
+  /* Spinner styling */
+  .spinner {
+    border: 12px solid #f3f3f3; /* Light grey */
+    border-top: 12px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    animation: spin 1.5s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
